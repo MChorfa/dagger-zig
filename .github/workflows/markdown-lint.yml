@@ -1,0 +1,84 @@
+name: Documentation CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "**.md"
+      - ".markdownlint.yaml"
+      - "docs/**"
+      - ".github/workflows/markdown-lint.yml"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "**.md"
+      - ".markdownlint.yaml"
+      - "docs/**"
+      - ".github/workflows/markdown-lint.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # Dagger-based markdown linting
+  lint:
+    name: Lint Markdown (Dagger)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint docs with Dagger
+        uses: dagger/dagger-for-github@v5
+        with:
+          version: "0.11"
+          args: call -m ci lint-docs --source=. export --path ./markdown-reports
+        env:
+          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+
+      - name: Upload lint reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: markdown-lint-reports
+          path: markdown-reports/
+          retention-days: 7
+
+  # Build documentation site with Dagger
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build docs with Dagger
+        uses: dagger/dagger-for-github@v5
+        with:
+          version: "0.11"
+          args: call -m ci build-docs --source=. export --path ./_site
+        env:
+          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  # Deploy to GitHub Pages
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [ lint, build-docs ]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

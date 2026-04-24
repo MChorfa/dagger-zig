@@ -1,0 +1,7 @@
+{
+  "name": "schema-validator",
+  "sdk": "zig",
+  "source": ".",
+  "engineVersion": "v0.11.0",
+  "description": "Dagger API Schema Validation for dagger-zig SDK conformance testing"
+}

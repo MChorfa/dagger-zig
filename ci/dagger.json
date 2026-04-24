@@ -1,0 +1,6 @@
+{
+  "name": "ci",
+  "sdk": "zig",
+  "source": ".",
+  "engineVersion": "v0.11.0"
+}

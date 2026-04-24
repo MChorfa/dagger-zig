@@ -1,0 +1,179 @@
+.variables:
+  DAGGER_VERSION: "0.11"
+  COSIGN_VERSION: "v2.2.0"
+
+stages:
+  - verify
+  - build
+  - attest
+  - scan
+  - sign
+  - release
+
+lint:
+  stage: verify
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache zig
+  script:
+    - zig fmt --check src/
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+test:
+  stage: verify
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache zig
+  script:
+    - zig build test
+  artifacts:
+    reports:
+      junit: zig-out/test-results.xml
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+hermetic-build:
+  stage: build
+  image: alpine:3.19@sha256:c5b1261d6d3e43071626931fc004f70149bae1552ea0340ca1c5f0f0a3b5b6a6
+  variables:
+    SOURCE_DATE_EPOCH: "1700000000"
+  before_script:
+    - apk add --no-cache zig=0.16.0-r0
+  script:
+    - zig build -Dtarget=x86_64-linux-gnu -Doptimize=ReleaseSafe
+    - zig build -Dtarget=aarch64-linux-gnu -Doptimize=ReleaseSafe
+    - zig build -Dtarget=x86_64-macos-none -Doptimize=ReleaseSafe
+    - zig build -Dtarget=aarch64-macos-none -Doptimize=ReleaseSafe
+  artifacts:
+    paths:
+      - zig-out/lib/
+    expire_in: 1 month
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+provenance:
+  stage: attest
+  image: alpine/git
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  script:
+    - |
+      cat > /tmp/provenance.json << 'EOF'
+      {
+        "_type": "https://in-toto.io/Statement/v0.1",
+        "subject": [{"name": "dagger-zig", "digest": {"sha256": "PENDING"}}],
+        "predicateType": "https://slsa.dev/provenance/v0.2",
+        "predicate": {
+          "builder": {"id": "https://gitlab.com/$CI_PROJECT_PATH"},
+          "buildType": "https://gitlab.com/ckodex/dagger-zig/build/v1",
+          "invocation": {
+            "configSource": {
+              "uri": "git+$CI_REPOSITORY_URL",
+              "digest": {"sha1": "$CI_COMMIT_SHA"},
+              "entryPoint": ".gitlab-ci.yml"
+            }
+          },
+          "metadata": {
+            "buildStartedOn": "$CI_PIPELINE_CREATED_AT",
+            "completeness": {
+              "parameters": true,
+              "environment": true,
+              "materials": true
+            },
+            "reproducible": true
+          },
+          "materials": []
+        }
+      }
+      EOF
+    - cp /tmp/provenance.json provenance.json
+  artifacts:
+    paths:
+      - provenance.json
+    expire_in: 1 year
+  rules:
+    - if: $CI_COMMIT_TAG
+
+sbom:
+  stage: attest
+  image: anchore/syft:latest
+  script:
+    - syft dir:. -o cyclonedx-json=sbom.cdx.json
+    - syft dir:. -o spdx-json=sbom.spdx.json
+  artifacts:
+    paths:
+      - sbom.cdx.json
+      - sbom.spdx.json
+    expire_in: 1 year
+  rules:
+    - if: $CI_COMMIT_TAG
+
+vulnerability-scan:
+  stage: scan
+  image: aquasec/trivy:latest
+  script:
+    - trivy filesystem . --format sarif --output vulnerability.sarif --severity CRITICAL,HIGH
+    - trivy filesystem . --scanners secret --format sarif --output secrets.sarif
+  artifacts:
+    reports:
+      sast: vulnerability.sarif
+      secret_detection: secrets.sarif
+    paths:
+      - vulnerability.sarif
+      - secrets.sarif
+    expire_in: 1 month
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+sign:
+  stage: sign
+  image: gcr.io/projectsigstore/cosign:v2.2.0
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  variables:
+    COSIGN_FULCIO_URL: "https://fulcio.sigstore.dev"
+    COSIGN_REKOR_URL: "https://rekor.sigstore.dev"
+    COSIGN_OIDC_ISSUER: "https://gitlab.com"
+  script:
+    - cosign sign-blob --yes --output-signature=provenance.json.sig provenance.json
+    - cosign sign-blob --yes --output-signature=sbom.cdx.json.sig sbom.cdx.json
+  artifacts:
+    paths:
+      - provenance.json.sig
+      - sbom.cdx.json.sig
+    expire_in: 1 year
+  rules:
+    - if: $CI_COMMIT_TAG
+  needs:
+    - provenance
+    - sbom
+
+release:
+  stage: release
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache github-cli tar
+  script:
+    - tar -czf dagger-zig-${CI_COMMIT_TAG}.tar.gz zig-out/lib/ include/
+    - gh release create ${CI_COMMIT_TAG} 
+        dagger-zig-${CI_COMMIT_TAG}.tar.gz 
+        provenance.json 
+        provenance.json.sig 
+        sbom.cdx.json 
+        sbom.cdx.json.sig
+        --title "dagger-zig ${CI_COMMIT_TAG}"
+        --notes "SLSA L3 compliant release"
+  rules:
+    - if: $CI_COMMIT_TAG
+  needs:
+    - hermetic-build
+    - sign

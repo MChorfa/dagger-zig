@@ -1,0 +1,163 @@
+name: SLSA Provenance & Sigstore Signing
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write # Needed for release uploads
+  id-token: write # Needed for Sigstore keyless signing
+  actions: read
+
+jobs:
+  # Build artifacts and generate SLSA provenance
+  build:
+    name: Build & Generate Provenance
+    runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.13.0
+
+      - name: Build SDK
+        run: |
+          zig build -Doptimize=ReleaseSafe
+          mkdir -p artifacts
+          cp zig-out/lib/* artifacts/ || true
+          cp zig-out/bin/* artifacts/ || true
+
+      - name: Generate hashes
+        id: hash
+        run: |
+          cd artifacts
+          sha256sum * > ../hashes.txt
+          echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts/
+          retention-days: 30
+
+  # SLSA Level 4 provenance generator (reusable workflow)
+  provenance:
+    name: Generate SLSA Provenance
+    needs: [ build ]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      provenance-name: "dagger-zig.intoto.jsonl"
+      upload-assets: true
+
+  # Sigstore keyless signing
+  sign:
+    name: Sign with Sigstore
+    needs: [ build, provenance ]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for Sigstore OIDC
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts/
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign artifacts with Sigstore
+        run: |
+          cd artifacts
+          for file in *; do
+            cosign sign-blob \
+              --yes \
+              --output-signature "${file}.sig" \
+              --output-certificate "${file}.cert" \
+              "${file}"
+          done
+
+      - name: Upload signatures
+        uses: actions/upload-artifact@v4
+        with:
+          name: signatures
+          path: artifacts/*.sig
+          retention-days: 90
+
+      - name: Upload certificates
+        uses: actions/upload-artifact@v4
+        with:
+          name: certificates
+          path: artifacts/*.cert
+          retention-days: 90
+
+  # SBOM generation
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload SBOMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sboms
+          path: |
+            sbom.cdx.json
+            sbom.spdx.json
+          retention-days: 90
+
+  # Verify provenance (demonstrates verification workflow)
+  verify:
+    name: Verify Provenance
+    needs: [ build, provenance, sign ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts/
+
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: provenance
+          path: provenance/
+
+      - name: Install slsa-verifier
+        uses: slsa-framework/slsa-verifier/actions/installer@v2.5.1
+
+      - name: Verify SLSA provenance
+        run: |
+          slsa-verifier verify-artifact \
+            --provenance-path provenance/*.intoto.jsonl \
+            --source-uri github.com/${{ github.repository }} \
+            --source-branch ${{ github.ref_name }} \
+            artifacts/*

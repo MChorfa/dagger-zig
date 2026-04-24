@@ -1,0 +1,37 @@
+# Markdownlint configuration
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Default state for all rules
+default: true
+
+# MD013/line-length - Line length (relaxed for code blocks and tables)
+MD013:
+  line_length: 120
+  heading_line_length: 80
+  code_blocks: false
+  tables: false
+
+# MD024/no-duplicate-heading - Allow duplicate headings at different nesting levels
+MD024:
+  siblings_only: true
+
+# MD033/no-inline-html - Allow inline HTML (needed for badges, etc.)
+MD033: false
+
+# MD034/no-bare-urls - Allow bare URLs (common in docs)
+MD034: false
+
+# MD040/fenced-code-language - Don't require language on code blocks
+MD040: false
+
+# MD041/first-line-heading - Don't require first line to be h1
+MD041: false
+
+# MD046/code-block-style - Don't enforce code block style
+MD046: false
+
+# MD049/emphasis-style - Don't enforce emphasis style
+MD049: false
+
+# MD050/strong-style - Don't enforce strong style
+MD050: false

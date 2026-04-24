@@ -1,0 +1,17 @@
+# act configuration for local GitHub Actions testing
+# https://github.com/nektos/act
+
+# Use medium image (has most tools pre-installed)
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+
+# Show job outputs
+--verbose
+
+# Bind current directory
+--bind
+
+# Use local workflow files
+--workflows .github/workflows/
+
+# Environment variables for testing
+--env-file .env.local

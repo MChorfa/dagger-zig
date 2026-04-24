@@ -1,0 +1,101 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: release-please-manifest.json
+
+  build-and-attest:
+    name: build-and-attest
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64-linux-gnu, aarch64-linux-gnu, x86_64-macos-none, aarch64-macos-none]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: setup zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: build
+        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe
+        env:
+          SOURCE_DATE_EPOCH: "1700000000"
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.target }}
+          path: zig-out/lib/
+
+      - name: attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: zig-out/lib/*
+          push-to-registry: false
+
+  sbom-and-sign:
+    name: sbom-and-sign
+    needs: [release-please, build-and-attest]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: generate sbom
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: sign sbom
+        run: |
+          cosign sign-blob --yes --output-signature sbom.spdx.json.sig sbom.spdx.json
+
+      - name: upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: |
+            sbom.spdx.json
+            sbom.spdx.json.sig
+            artifacts/**/*

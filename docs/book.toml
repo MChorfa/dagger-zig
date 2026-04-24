@@ -1,0 +1,38 @@
+[book]
+title = "dagger-zig Documentation"
+authors = ["CKODEX Contributors"]
+description = "A native Zig SDK for the Dagger programmable CI/CD engine"
+language = "en"
+multilingual = false
+src = "."
+
+[build]
+build-dir = "_site"
+create-missing = false
+
+[preprocessor.links]
+
+[output.html]
+git-repository-url = "https://github.com/ckodex/dagger-zig"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/ckodex/dagger-zig/edit/main/docs/{path}"
+no-section-label = true
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+limit-results = 20
+teaser-word-count = 30
+
+[output.html.print]
+enable = true
+
+[output.html.redirect]
+"/getting-started.html" = "getting-started.md"
+"/architecture.html" = "architecture.md"
+"/compliance.html" = "compliance.md"
+
+[rust]
+edition = "2021"

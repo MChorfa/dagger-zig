@@ -1,0 +1,343 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dagger.io/schema/dagger-api.json",
+  "title": "Dagger GraphQL API Schema",
+  "description": "Schema definition for Dagger GraphQL API types and operations",
+  "version": "v0.11.0",
+  
+  "definitions": {
+    "Container": {
+      "type": "object",
+      "description": "An OCI-compatible container",
+      "fields": {
+        "from": {
+          "args": { "address": "String!" },
+          "returns": "Container!",
+          "description": "Initialize container from image address"
+        },
+        "withDirectory": {
+          "args": { "path": "String!", "directory": "DirectoryID!" },
+          "returns": "Container!",
+          "description": "Mount directory at path"
+        },
+        "withFile": {
+          "args": { "path": "String!", "file": "FileID!" },
+          "returns": "Container!",
+          "description": "Add file at path"
+        },
+        "withExec": {
+          "args": { "args": "[String!]!" },
+          "returns": "Container!",
+          "description": "Execute command"
+        },
+        "stdout": {
+          "args": {},
+          "returns": "File!",
+          "description": "Get stdout as file"
+        },
+        "stderr": {
+          "args": {},
+          "returns": "File!",
+          "description": "Get stderr as file"
+        },
+        "file": {
+          "args": { "path": "String!" },
+          "returns": "File!",
+          "description": "Get file at path"
+        },
+        "directory": {
+          "args": { "path": "String!" },
+          "returns": "Directory!",
+          "description": "Get directory at path"
+        },
+        "export": {
+          "args": { "path": "String!" },
+          "returns": "Boolean!",
+          "description": "Export container as tarball"
+        },
+        "publish": {
+          "args": { "address": "String!" },
+          "returns": "String!",
+          "description": "Publish container to registry"
+        }
+      }
+    },
+    
+    "Directory": {
+      "type": "object",
+      "description": "A directory",
+      "fields": {
+        "withNewFile": {
+          "args": { "path": "String!", "contents": "String!" },
+          "returns": "Directory!",
+          "description": "Create new file"
+        },
+        "withNewDirectory": {
+          "args": { "path": "String!" },
+          "returns": "Directory!",
+          "description": "Create new directory"
+        },
+        "withFile": {
+          "args": { "path": "String!", "file": "FileID!" },
+          "returns": "Directory!",
+          "description": "Add file"
+        },
+        "withDirectory": {
+          "args": { "path": "String!", "directory": "DirectoryID!" },
+          "returns": "Directory!",
+          "description": "Add directory"
+        },
+        "file": {
+          "args": { "path": "String!" },
+          "returns": "File!",
+          "description": "Get file at path"
+        },
+        "entries": {
+          "args": { "path": { "type": "String", "optional": true } },
+          "returns": "[String!]!",
+          "description": "List directory entries"
+        },
+        "export": {
+          "args": { "path": "String!" },
+          "returns": "Boolean!",
+          "description": "Export directory"
+        }
+      }
+    },
+    
+    "File": {
+      "type": "object",
+      "description": "A file",
+      "fields": {
+        "contents": {
+          "args": {},
+          "returns": "String!",
+          "description": "Get file contents"
+        },
+        "size": {
+          "args": {},
+          "returns": "Int!",
+          "description": "Get file size in bytes"
+        },
+        "export": {
+          "args": { "path": "String!" },
+          "returns": "Boolean!",
+          "description": "Export file to host"
+        }
+      }
+    },
+    
+    "Secret": {
+      "type": "object",
+      "description": "A secret value",
+      "fields": {
+        "plaintext": {
+          "args": {},
+          "returns": "String!",
+          "description": "Get secret plaintext value"
+        },
+        "name": {
+          "args": {},
+          "returns": "String!",
+          "description": "Get secret name"
+        }
+      }
+    },
+    
+    "Service": {
+      "type": "object",
+      "description": "A TCP service",
+      "fields": {
+        "hostname": {
+          "args": {},
+          "returns": "String!",
+          "description": "Get service hostname"
+        },
+        "endpoint": {
+          "args": { 
+            "port": { "type": "Int", "optional": true },
+            "scheme": { "type": "String", "optional": true }
+          },
+          "returns": "String!",
+          "description": "Get service endpoint URL"
+        },
+        "ports": {
+          "args": {},
+          "returns": "[Port!]!",
+          "description": "List exposed ports"
+        },
+        "start": {
+          "args": {},
+          "returns": "ServiceID!",
+          "description": "Start the service"
+        },
+        "stop": {
+          "args": { "kill": { "type": "Boolean", "optional": true } },
+          "returns": "ServiceID!",
+          "description": "Stop the service"
+        }
+      }
+    },
+    
+    "CacheVolume": {
+      "type": "object",
+      "description": "A cache volume",
+      "fields": {
+        "id": {
+          "args": {},
+          "returns": "CacheVolumeID!",
+          "description": "Get cache volume ID"
+        }
+      }
+    },
+    
+    "Socket": {
+      "type": "object",
+      "description": "A Unix or TCP socket",
+      "fields": {
+        "id": {
+          "args": {},
+          "returns": "SocketID!",
+          "description": "Get socket ID"
+        }
+      }
+    },
+    
+    "Port": {
+      "type": "object",
+      "description": "A port exposed by a container",
+      "fields": {
+        "port": {
+          "args": {},
+          "returns": "Int!",
+          "description": "Port number"
+        },
+        "protocol": {
+          "args": {},
+          "returns": "NetworkProtocol!",
+          "description": "Transport protocol (TCP/UDP)"
+        }
+      }
+    },
+    
+    "Platform": {
+      "type": "scalar",
+      "description": "Platform configuration OS/architecture",
+      "format": "[os]/[platform]/[version]"
+    },
+    
+    "GitRepository": {
+      "type": "object",
+      "description": "A git repository",
+      "fields": {
+        "branch": {
+          "args": { "name": "String!" },
+          "returns": "GitRef!",
+          "description": "Get branch reference"
+        },
+        "tag": {
+          "args": { "name": "String!" },
+          "returns": "GitRef!",
+          "description": "Get tag reference"
+        },
+        "commit": {
+          "args": { "id": "String!" },
+          "returns": "GitRef!",
+          "description": "Get commit reference"
+        }
+      }
+    },
+    
+    "GitRef": {
+      "type": "object",
+      "description": "A git reference (branch, tag, commit)",
+      "fields": {
+        "tree": {
+          "args": {},
+          "returns": "Directory!",
+          "description": "Get directory at this ref"
+        },
+        "commit": {
+          "args": {},
+          "returns": "String!",
+          "description": "Get commit SHA"
+        }
+      }
+    },
+    
+    "EnvVariable": {
+      "type": "object",
+      "description": "An environment variable",
+      "fields": {
+        "name": {
+          "args": {},
+          "returns": "String!",
+          "description": "Variable name"
+        },
+        "value": {
+          "args": {},
+          "returns": "String!",
+          "description": "Variable value"
+        }
+      }
+    }
+  },
+  
+  "query": {
+    "container": {
+      "args": { "platform": { "type": "Platform", "optional": true } },
+      "returns": "Container!",
+      "description": "Create a scratch container"
+    },
+    "directory": {
+      "args": {},
+      "returns": "Directory!",
+      "description": "Create an empty directory"
+    },
+    "file": {
+      "args": { 
+        "name": "String!",
+        "contents": "String!",
+        "permissions": { "type": "Int", "optional": true, "default": 420 }
+      },
+      "returns": "File!",
+      "description": "Create a file with contents"
+    },
+    "secret": {
+      "args": { "name": "String!" },
+      "returns": "Secret!",
+      "description": "Create a secret reference"
+    },
+    "git": {
+      "args": { 
+        "url": "String!",
+        "keepGitDir": { "type": "Boolean", "optional": true, "default": true }
+      },
+      "returns": "GitRepository!",
+      "description": "Query a git repository"
+    },
+    "http": {
+      "args": { 
+        "url": "String!",
+        "name": { "type": "String", "optional": true },
+        "permissions": { "type": "Int", "optional": true }
+      },
+      "returns": "File!",
+      "description": "Download file from HTTP URL"
+    },
+    "cacheVolume": {
+      "args": { 
+        "key": "String!",
+        "source": { "type": "DirectoryID", "optional": true },
+        "sharing": { "type": "CacheSharingMode", "optional": true }
+      },
+      "returns": "CacheVolume!",
+      "description": "Construct a cache volume"
+    },
+    "defaultPlatform": {
+      "args": {},
+      "returns": "Platform!",
+      "description": "Get the default platform of the engine"
+    }
+  }
+}
