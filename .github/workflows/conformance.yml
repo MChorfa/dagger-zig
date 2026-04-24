@@ -12,31 +12,21 @@ permissions:
   actions: read
 
 jobs:
-  # Conformance testing via Dagger (containerized execution)
+  # Schema validation (native Zig)
   conformance:
-    name: Conformance via Dagger
+    name: Conformance
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Install Dagger
-        run: |
-          cd /usr/local
-          curl -L https://dl.dagger.io/dagger/install.sh | sh
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
+        with:
+          version: 0.16.0
 
-      - name: Verify SDK builds (via Dagger)
-        run: |
-          dagger run --source=. sh -c '
-            cd /src &&
-            apk add --no-cache zig &&
-            zig build
-          '
+      - name: Verify SDK builds
+        run: zig build
 
-      - name: Verify tests compile (via Dagger)
-        run: |
-          dagger run --source=. sh -c '
-            cd /src &&
-            apk add --no-cache zig &&
-            zig build test
-          '
+      - name: Verify tests compile
+        run: zig build test
         continue-on-error: true

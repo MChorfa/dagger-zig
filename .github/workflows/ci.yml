@@ -11,41 +11,25 @@ permissions:
   actions: read
 
 jobs:
-  # Build and test via Dagger (containerized execution)
+  # Build and test with Zig (native - fast and reliable)
   build:
-    name: Build & Test via Dagger
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Install Dagger
-        run: |
-          cd /usr/local
-          curl -L https://dl.dagger.io/dagger/install.sh | sh
-          dagger version
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
+        with:
+          version: 0.16.0
 
-      - name: Lint (via Dagger)
-        run: |
-          dagger run --source=. sh -c '
-            cd /src &&
-            apk add --no-cache zig &&
-            zig fmt --check src/
-          '
+      - name: Lint
+        run: zig fmt --check src/
         continue-on-error: true
 
-      - name: Build (via Dagger)
-        run: |
-          dagger run --source=. sh -c '
-            cd /src &&
-            apk add --no-cache zig &&
-            zig build
-          '
+      - name: Build
+        run: zig build
 
-      - name: Test (via Dagger)
-        run: |
-          dagger run --source=. sh -c '
-            cd /src &&
-            apk add --no-cache zig &&
-            zig build test
-          '
+      - name: Test
+        run: zig build test
         continue-on-error: true
