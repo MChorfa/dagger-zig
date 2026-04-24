@@ -8,17 +8,17 @@
 [![Zig Version](https://img.shields.io/badge/Zig-0.16-orange.svg)](https://ziglang.org)
 [![CI](https://github.com/MChorfa/dagger-zig/actions/workflows/ci.yml/badge.svg)](https://github.com/MChorfa/dagger-zig/actions)
 [![Security](https://github.com/MChorfa/dagger-zig/actions/workflows/security.yml/badge.svg)](https://github.com/MChorfa/dagger-zig/actions)
-[![SLSA](https://img.shields.io/badge/SLSA-Level%204-green.svg)](https://slsa.dev)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/MChorfa/dagger-zig/badge)](https://securityscorecards.dev/viewer/?uri=github.com/MChorfa/dagger-zig)
+[![SLSA](https://img.shields.io/badge/SLSA-In%20Progress-yellow.svg)](https://slsa.dev)
 [![Sigstore](https://img.shields.io/badge/Sigstore-signed-blue.svg)](https://sigstore.dev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Compliance](https://img.shields.io/badge/Compliance-SOC2%2FISO27001-purple.svg)](docs/compliance.md)
 
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 > **📚 Looking for Dagger?** Visit [dagger.io](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger)
 
-> **Status:** v0.1.0-RC. Compiled and tested with Zig 0.16.  
-> **Enterprise Ready:** SLSA Level 4, Sigstore signing, SOC2/ISO27001 compliant
+> **Status:** v0.1.0. Compiled and tested with Zig 0.16.  
+> **Security Hardened:** OpenSSF Scorecard, SLSA provenance (in progress), Sigstore signing
 
 Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0
 so pipelines can use `std.Io.async` + `Io.Group` for genuinely parallel
@@ -309,6 +309,16 @@ See [`docs/local-ci-testing.md`](docs/local-ci-testing.md) for detailed setup.
 | [`SPIFFE_IMPL.md`](SPIFFE_IMPL.md)             | SPIFFE Workload API implementation spec     |
 | [`SECURITY.md`](SECURITY.md)                   | Security policy and vulnerability reporting |
 | [`docs/compliance.md`](docs/compliance.md)     | SOC2/ISO27001 compliance mappings           |
+
+## CI Setup Required
+
+⚠️ **Before CI will pass**, you need to configure these secrets in GitHub:
+
+- `DAGGER_CLOUD_TOKEN` — Optional, for Dagger Cloud tracing
+- `FOSSA_API_KEY` — For license scanning (optional)
+- `GITLEAKS_LICENSE` — For secret scanning (optional)
+
+The workflows will run but some jobs may skip if secrets are missing.
 
 ## Dagger Integration
 

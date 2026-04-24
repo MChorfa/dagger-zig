@@ -11,16 +11,42 @@ permissions:
   actions: read
 
 jobs:
-  ci:
-    name: ci
+  # Build and test with Zig directly (no Dagger dependency for basic CI)
+  build:
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: dagger
-        uses: dagger/dagger-for-github@v5
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
         with:
-          version: "0.11"
-          args: call full-pipeline --source=.
+          version: 0.16.0
+
+      - name: Build
+        run: zig build
+
+      - name: Test
+        run: zig build test
+
+      - name: Check Format
+        run: zig fmt --check src/
+
+  # Dagger-based full pipeline (optional, requires Dagger CLI)
+  dagger:
+    name: Dagger Pipeline
+    runs-on: ubuntu-latest
+    continue-on-error: true # Don't fail if Dagger isn't configured
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dagger
+        run: |
+          cd /usr/local
+          curl -L https://dl.dagger.io/dagger/install.sh | sh
+
+      - name: Run Dagger Pipeline
+        run: dagger call full-pipeline --source=.
         env:
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+        continue-on-error: true
