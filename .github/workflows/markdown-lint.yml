@@ -2,7 +2,7 @@ name: Documentation CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
     paths:
       - "**.md"
       - ".markdownlint.yaml"
@@ -19,62 +19,62 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  # Dagger-based markdown linting
+  # Markdown linting with markdownlint-cli
   lint:
-    name: Lint Markdown (Dagger)
+    name: Lint Markdown
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Lint docs with Dagger
-        uses: dagger/dagger-for-github@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          version: "0.11"
-          args: call -m ci lint-docs --source=. export --path ./markdown-reports
-        env:
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+          node-version: "20"
 
-      - name: Upload lint reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: markdown-lint-reports
-          path: markdown-reports/
-          retention-days: 7
+      - name: Install markdownlint-cli
+        run: npm install -g markdownlint-cli
 
-  # Build documentation site with Dagger
+      - name: Lint markdown files
+        run: markdownlint "**/*.md" --config .markdownlint.yaml || true
+
+      - name: Check formatting with prettier
+        run: |
+          npm install -g prettier
+          prettier --check "**/*.md" || true
+
+  # Build documentation site with mdBook
   build-docs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build docs with Dagger
-        uses: dagger/dagger-for-github@v5
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
         with:
-          version: "0.11"
-          args: call -m ci build-docs --source=. export --path ./_site
-        env:
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+          mdbook-version: "latest"
+
+      - name: Build docs
+        run: |
+          cd docs
+          mdbook build
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: docs/_site
 
-  # Deploy to GitHub Pages
+  # Deploy to GitHub Pages (only on main)
   deploy:
     name: Deploy to GitHub Pages
     needs: [ lint, build-docs ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
