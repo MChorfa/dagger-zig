@@ -20,12 +20,12 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@2a1ab1b0e50edf7ebfdf94d8fd43b6e345b5c6d3 # v2.2.1
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         with:
           version: 0.16.0
 
       - name: Cache Zig dependencies
-        uses: actions/cache@d4323d4df104b026a6bf633e851c81e7d3240b58 # v4.2.2
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: |
             ~/.cache/zig
@@ -46,7 +46,7 @@ jobs:
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@60a0d83039c74a4aee280528258c0f5b6b5e5a35 # v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const fs = require('fs');
@@ -70,12 +70,12 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@2a1ab1b0e50edf7ebfdf94d8fd43b6e345b5c6d3 # v2.2.1
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         with:
           version: 0.16.0
 
       - name: Cache Zig dependencies
-        uses: actions/cache@d4323d4df104b026a6bf633e851c81e7d3240b58 # v4.2.2
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: |
             ~/.cache/zig
@@ -114,7 +114,7 @@ jobs:
           ref: main
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@2a1ab1b0e50edf7ebfdf94d8fd43b6e345b5c6d3 # v2.2.1
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         with:
           version: 0.16.0
 
@@ -123,7 +123,7 @@ jobs:
           zig build bench 2>&1 | tee baseline-results.txt
 
       - name: Download PR results
-        uses: actions/download-artifact@cc203385981b70ca67e1bd2c5d1dc844c773385 # v4.1.9
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
         with:
           name: micro-benchmarks
 
@@ -135,7 +135,7 @@ jobs:
           diff baseline-results.txt benchmark-results.txt || true
 
       - name: Comment regression status
-        uses: actions/github-script@60a0d83039c74a4aee280528258c0f5b6b5e5a35 # v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             github.rest.issues.createComment({

@@ -58,7 +58,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run GitLeaks
-        uses: gitleaks/gitleaks-action@a8519626edf08f5e6179e62089a09f8f4c4995d0 # v2.3.7
+        uses: gitleaks/gitleaks-action@83373cf2f8c4db6e24b41c1a9b086bb9619e9cd3 # v2.3.7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
@@ -97,7 +97,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@6c175e9c4083f852c5bc8ddf6a1a7d8c9d53d84f # v0.30.0
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # v0.30.0
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -119,7 +119,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run FOSSA scan
-        uses: fossas/fossa-action@93f6aa31684f1ac80e87a5a26983ee01c3f2aa50 # v1.5.0
+        uses: fossas/fossa-action@93a52ecf7c3ac7eb40f5de77fd69b1a19524de94 # v1.5.0
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
           run-tests: true
