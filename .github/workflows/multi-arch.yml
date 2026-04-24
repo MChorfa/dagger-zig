@@ -38,15 +38,15 @@ jobs:
             zig_target: aarch64-macos
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
+        uses: goto-bus-stop/setup-zig@2a1ab1b0e50edf7ebfdf94d8fd43b6e345b5c6d3 # v2.2.1
         with:
           version: 0.16.0
 
       - name: Cache Zig dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@d4323d4df104b026a6bf633e851c81e7d3240b58 # v4.2.2
         with:
           path: |
             ~/.cache/zig
@@ -66,7 +66,7 @@ jobs:
           zig build test
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec6d1c0373796067e7a92d81eb8e3c1015c31c # v4.6.1
         with:
           name: build-${{ matrix.target }}
           path: |
@@ -89,15 +89,15 @@ jobs:
           - x86_64-linux-musl
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
+        uses: goto-bus-stop/setup-zig@2a1ab1b0e50edf7ebfdf94d8fd43b6e345b5c6d3 # v2.2.1
         with:
           version: 0.16.0
 
       - name: Cache Zig dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@d4323d4df104b026a6bf633e851c81e7d3240b58 # v4.2.2
         with:
           path: |
             ~/.cache/zig

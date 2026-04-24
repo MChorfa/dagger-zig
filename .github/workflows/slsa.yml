@@ -20,10 +20,10 @@ jobs:
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
+        uses: goto-bus-stop/setup-zig@2a1ab1b0e50edf7ebfdf94d8fd43b6e345b5c6d3 # v2.2.1
         with:
           version: 0.13.0
 
@@ -42,7 +42,7 @@ jobs:
           echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec6d1c0373796067e7a92d81eb8e3c1015c31c # v4.6.1
         with:
           name: build-artifacts
           path: artifacts/
@@ -56,7 +56,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@f2f1f3f4f5f6f7f8f9fafbfcfdfefff0f1f2f3f4 # v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       provenance-name: "dagger-zig.intoto.jsonl"
@@ -72,13 +72,13 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@cc203385981b70ca67e1bd2c5d1dc844c773385 # v4.1.9
         with:
           name: build-artifacts
           path: artifacts/
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@3450212bb3fc9c24df51bb6a733102e8fc5e9bda # v3.8.2
 
       - name: Sign artifacts with Sigstore
         run: |
@@ -92,14 +92,14 @@ jobs:
           done
 
       - name: Upload signatures
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec6d1c0373796067e7a92d81eb8e3c1015c31c # v4.6.1
         with:
           name: signatures
           path: artifacts/*.sig
           retention-days: 90
 
       - name: Upload certificates
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec6d1c0373796067e7a92d81eb8e3c1015c31c # v4.6.1
         with:
           name: certificates
           path: artifacts/*.cert
@@ -110,22 +110,22 @@ jobs:
     name: Generate SBOM
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Generate CycloneDX SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e8c8991d85b111fc38338481576e22d34cb38ee2 # v0.19.0
         with:
           format: cyclonedx-json
           output-file: sbom.cdx.json
 
       - name: Generate SPDX SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e8c8991d85b111fc38338481576e22d34cb38ee2 # v0.19.0
         with:
           format: spdx-json
           output-file: sbom.spdx.json
 
       - name: Upload SBOMs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec6d1c0373796067e7a92d81eb8e3c1015c31c # v4.6.1
         with:
           name: sboms
           path: |
@@ -140,19 +140,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@cc203385981b70ca67e1bd2c5d1dc844c773385 # v4.1.9
         with:
           name: build-artifacts
           path: artifacts/
 
       - name: Download provenance
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@cc203385981b70ca67e1bd2c5d1dc844c773385 # v4.1.9
         with:
           name: provenance
           path: provenance/
 
       - name: Install slsa-verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@v2.5.1
+        uses: slsa-framework/slsa-verifier/actions/installer@665e7a2930d0645e2695c4354bed92796c6d4be1 # v2.7.0
 
       - name: Verify SLSA provenance
         run: |
