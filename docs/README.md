@@ -6,6 +6,8 @@
 
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
+> **🔗 Dagger Resources**: [Website](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger) • [Discord](https://discord.gg/dagger)
+
 ## Overview
 
 Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0 with `std.Io.async` support for parallel container operations.
