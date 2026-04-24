@@ -64,6 +64,58 @@ make workflow-lint
 
 See [Local CI Testing Guide](local-ci-testing.md) for detailed setup.
 
+## Git Flow Branching Model
+
+This project uses the [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/) branching model:
+
+### Branches
+
+- **main** — Production-ready code only
+- **develop** — Integration branch for features
+- **feature/*** — New features (branch from develop)
+- **release/*** — Release preparation (branch from develop)
+- **hotfix/*** — Emergency fixes (branch from main)
+
+### Quick Commands
+
+Use the helper script (no git-flow CLI required):
+
+```shell
+# Initialize git-flow
+./scripts/git-flow-helper.sh init
+
+# Start a new feature
+./scripts/git-flow-helper.sh feature start my-feature
+
+# Finish a feature (merges to develop)
+./scripts/git-flow-helper.sh feature finish my-feature
+
+# Start a release
+./scripts/git-flow-helper.sh release start 0.2.0
+
+# Finish a release (merges to main & develop, creates tag)
+./scripts/git-flow-helper.sh release finish 0.2.0
+
+# Check status
+./scripts/git-flow-helper.sh status
+```
+
+Or with git-flow CLI:
+
+```shell
+# Install git-flow
+curl -fsSL https://raw.githubusercontent.com/nvie/gitflow/develop/contrib/gitflow-installer.sh | sudo bash
+
+# Initialize
+git flow init -d
+
+# Start feature
+git flow feature start my-feature
+
+# Finish feature
+git flow feature finish my-feature
+```
+
 ## Code Style
 
 - Follow Zig naming conventions
