@@ -12,7 +12,7 @@ permissions:
   actions: read
 
 jobs:
-  # Linux builds via Dagger (cross-compilation)
+  # Linux builds via Dagger (cross-compilation in containers)
   linux:
     name: Linux Cross-Builds via Dagger
     runs-on: ubuntu-latest
@@ -24,12 +24,22 @@ jobs:
           cd /usr/local
           curl -L https://dl.dagger.io/dagger/install.sh | sh
 
-      - name: Build Linux x86_64 via Dagger
-        run: dagger call -m ci slsa-build --source=. --target=x86_64-linux-gnu
+      - name: Build Linux x86_64 (via Dagger)
+        run: |
+          dagger run --source=. sh -c '
+            cd /src &&
+            apk add --no-cache zig &&
+            zig build -Dtarget=x86_64-linux-gnu -Doptimize=ReleaseSafe
+          '
         continue-on-error: true
 
-      - name: Build Linux ARM64 via Dagger
-        run: dagger call -m ci slsa-build --source=. --target=aarch64-linux-gnu
+      - name: Build Linux ARM64 (via Dagger)
+        run: |
+          dagger run --source=. sh -c '
+            cd /src &&
+            apk add --no-cache zig &&
+            zig build -Dtarget=aarch64-linux-gnu -Doptimize=ReleaseSafe
+          '
         continue-on-error: true
 
   # macOS builds on native runners (Dagger doesn't support macOS containers)
