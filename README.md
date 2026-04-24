@@ -1,6 +1,21 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="dagger-zig logo" width="200" height="200">
+</p>
+
 # dagger-zig
 
-A Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
+[![Dagger](https://img.shields.io/badge/Powered%20by-Dagger-blue.svg)](https://dagger.io)
+[![Zig Version](https://img.shields.io/badge/Zig-0.16-orange.svg)](https://ziglang.org)
+[![CI](https://github.com/MChorfa/dagger-zig/actions/workflows/ci.yml/badge.svg)](https://github.com/MChorfa/dagger-zig/actions)
+[![Security](https://github.com/MChorfa/dagger-zig/actions/workflows/security.yml/badge.svg)](https://github.com/MChorfa/dagger-zig/actions)
+[![SLSA](https://img.shields.io/badge/SLSA-Level%204-green.svg)](https://slsa.dev)
+[![Sigstore](https://img.shields.io/badge/Sigstore-signed-blue.svg)](https://sigstore.dev)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Compliance](https://img.shields.io/badge/Compliance-SOC2%2FISO27001-purple.svg)](docs/compliance.md)
+
+A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
+
+> **📚 Looking for Dagger?** Visit [dagger.io](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger)
 
 > **Status:** v0.1.0-RC. Compiled and tested with Zig 0.16.  
 > **Enterprise Ready:** SLSA Level 4, Sigstore signing, SOC2/ISO27001 compliant
@@ -294,6 +309,28 @@ See [`docs/local-ci-testing.md`](docs/local-ci-testing.md) for detailed setup.
 | [`SPIFFE_IMPL.md`](SPIFFE_IMPL.md)             | SPIFFE Workload API implementation spec     |
 | [`SECURITY.md`](SECURITY.md)                   | Security policy and vulnerability reporting |
 | [`docs/compliance.md`](docs/compliance.md)     | SOC2/ISO27001 compliance mappings           |
+
+## Dagger Integration
+
+This SDK is a **Community SDK** for [Dagger](https://dagger.io). It follows the official Dagger SDK patterns and integrates with the Dagger Engine.
+
+### Dagger Resources
+
+- 🌐 **Website**: [dagger.io](https://dagger.io)
+- 📚 **Documentation**: [docs.dagger.io](https://docs.dagger.io)
+- 💻 **GitHub**: [github.com/dagger/dagger](https://github.com/dagger/dagger)
+- 🎓 **SDKs**: [docs.dagger.io/sdk](https://docs.dagger.io/sdk)
+- 💬 **Discord**: [discord.gg/dagger](https://discord.gg/dagger)
+- 🐦 **Twitter**: [@dagger_io](https://twitter.com/dagger_io)
+
+### Official Dagger SDKs
+
+- [Go SDK](https://github.com/dagger/dagger/tree/main/sdk/go)
+- [Python SDK](https://github.com/dagger/dagger/tree/main/sdk/python)
+- [TypeScript SDK](https://github.com/dagger/dagger/tree/main/sdk/typescript)
+- [Rust SDK](https://github.com/kpenfound/dagger-rust-sdk)
+
+This Zig SDK aims to be proposed as an official community SDK once it reaches v1.0.
 
 ## License
 
