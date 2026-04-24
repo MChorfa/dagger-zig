@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../assets/logo.svg" alt="dagger-zig logo" width="150" height="150">
+</p>
+
 # dagger-zig Documentation
 
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.

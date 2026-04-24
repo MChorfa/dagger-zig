@@ -132,6 +132,59 @@ git flow feature finish my-feature
 4. **Test locally** — `make workflow-lint && make ci-local`
 5. **Run full CI** — `dagger call ci --source=.`
 
+## Commit Message Format
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) with commitlint enforcement:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Types
+
+- **feat**: New feature
+- **fix**: Bug fix
+- **docs**: Documentation only changes
+- **style**: Code style changes (formatting, semicolons, etc.)
+- **refactor**: Code changes that neither fix bugs nor add features
+- **perf**: Performance improvements
+- **test**: Adding or updating tests
+- **build**: Build system or external dependencies
+- **ci**: CI/CD configuration changes
+- **chore**: Other changes that don't modify src or test files
+- **revert**: Reverts a previous commit
+- **sec**: Security-related changes
+- **deps**: Dependency updates
+
+### Scopes
+
+- **sdk**: SDK core functionality
+- **ci**: CI/CD pipeline
+- **docs**: Documentation
+- **security**: Security features
+- **compliance**: Compliance-related
+- **observability**: Observability features
+- **build**: Build system
+- **test**: Testing
+- **deps**: Dependencies
+- **release**: Release automation
+
+### Examples
+
+```
+feat(sdk): add support for cache volumes
+
+fix(ci): resolve race condition in test pipeline
+
+docs(security): update threat model for v0.2.0
+
+sec(deps): update dependencies for CVE-2024-XXXX
+```
+
 ## Security
 
 - Never commit secrets — Use Dagger secrets or environment variables
