@@ -1,4 +1,16 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="dagger-zig logo" width="200" height="200">
+</p>
+
 # dagger-zig
+
+[![Zig Version](https://img.shields.io/badge/Zig-0.16-orange.svg)](https://ziglang.org)
+[![CI](https://github.com/MChorfa/dagger-zig/actions/workflows/ci.yml/badge.svg)](https://github.com/MChorfa/dagger-zig/actions)
+[![Security](https://github.com/MChorfa/dagger-zig/actions/workflows/security.yml/badge.svg)](https://github.com/MChorfa/dagger-zig/actions)
+[![SLSA](https://img.shields.io/badge/SLSA-Level%204-green.svg)](https://slsa.dev)
+[![Sigstore](https://img.shields.io/badge/Sigstore-signed-blue.svg)](https://sigstore.dev)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Compliance](https://img.shields.io/badge/Compliance-SOC2%2FISO27001-purple.svg)](docs/compliance.md)
 
 A Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
