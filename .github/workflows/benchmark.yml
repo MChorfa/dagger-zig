@@ -22,7 +22,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.13.0
+          version: 0.16.0
 
       - name: Cache Zig dependencies
         uses: actions/cache@v4
@@ -51,7 +51,7 @@ jobs:
           script: |
             const fs = require('fs');
             const results = fs.readFileSync('benchmark-results.txt', 'utf8');
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -59,10 +59,11 @@ jobs:
               body: `## Benchmark Results\n\n\`\`\`\n${results}\n\`\`\``
             });
 
-  # Integration benchmarks (requires Dagger engine)
+  # Integration benchmarks (optional - requires Dagger engine)
   integration:
     name: Integration Benchmarks
     runs-on: ubuntu-latest
+    continue-on-error: true
     # Only run on main branch or when explicitly requested
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
@@ -71,7 +72,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.13.0
+          version: 0.16.0
 
       - name: Cache Zig dependencies
         uses: actions/cache@v4
@@ -83,13 +84,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-zig-
 
+      - name: Install Dagger
+        run: |
+          cd /usr/local
+          curl -L https://dl.dagger.io/dagger/install.sh | sh
+
       - name: Run integration benchmarks with Dagger
-        uses: dagger/dagger-for-github@v5
-        with:
-          version: "0.11"
-          args: run --source=. zig build bench
+        run: dagger run --source=. zig build bench
         env:
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+        continue-on-error: true
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -101,7 +105,7 @@ jobs:
   # Performance regression check
   regression:
     name: Regression Check
-    needs: [micro]
+    needs: [ micro ]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
@@ -112,7 +116,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.13.0
+          version: 0.16.0
 
       - name: Run baseline benchmarks
         run: |
@@ -144,7 +148,7 @@ jobs:
   # Summary
   summary:
     name: Benchmark Summary
-    needs: [micro, integration]
+    needs: [ micro, integration ]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -152,13 +156,13 @@ jobs:
         run: |
           echo "## Performance Benchmark Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ needs.micro.result }}" == "success" ]; then
             echo "| Micro Benchmarks | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Micro Benchmarks | ❌ Fail |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ needs.integration.result }}" == "success" ]; then
             echo "| Integration Benchmarks | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.integration.result }}" == "skipped" ]; then

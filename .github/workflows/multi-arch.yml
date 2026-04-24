@@ -43,7 +43,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.13.0
+          version: 0.16.0
 
       - name: Cache Zig dependencies
         uses: actions/cache@v4
@@ -94,7 +94,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.13.0
+          version: 0.16.0
 
       - name: Cache Zig dependencies
         uses: actions/cache@v4
@@ -122,7 +122,7 @@ jobs:
   # Compatibility matrix summary
   summary:
     name: Build Summary
-    needs: [build, cross-compile]
+    needs: [ build, cross-compile ]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -130,7 +130,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
-          pattern: '*'
+          pattern: "*"
 
       - name: Generate summary
         run: |
@@ -138,7 +138,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Target | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          
+
           for dir in artifacts/*/; do
             target=$(basename "$dir")
             if [ -d "$dir" ] && [ "$(ls -A $dir)" ]; then
@@ -147,6 +147,6 @@ jobs:
               echo "| $target | ❌ |" >> $GITHUB_STEP_SUMMARY
             fi
           done
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Total targets: $(ls -d artifacts/*/ 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
