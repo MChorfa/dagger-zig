@@ -78,13 +78,13 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
         with:
-          languages: javascript
+          languages: python
           queries: security-extended,security-and-quality
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
         with:
-          category: "/language:javascript"
+          category: "/language:python"
 
   # Dependency vulnerability scanning
   trivy:
@@ -95,12 +95,13 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # v0.30.0
+        uses: aquasecurity/trivy-action@d5f5fc0ba4a84b0f44f1a319391a8d5cb5bab5ad # v0.30.1
         with:
           scan-type: "fs"
           scan-ref: "."
           format: "sarif"
           output: "trivy-results.sarif"
+          exit-code: 1
 
       - name: Upload Trivy results
         uses: github/codeql-action/upload-sarif@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
@@ -116,7 +117,18 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Check FOSSA API Key
+        id: check-key
+        run: |
+          if [ -z "${{ secrets.FOSSA_API_KEY }}" ]; then
+            echo "has_key=false" >> $GITHUB_OUTPUT
+            echo "FOSSA_API_KEY not configured - skipping scan"
+          else
+            echo "has_key=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run FOSSA scan
+        if: steps.check-key.outputs.has_key == 'true'
         uses: fossas/fossa-action@93a52ecf7c3ac7eb40f5de77fd69b1a19524de94 # v1.5.0
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
