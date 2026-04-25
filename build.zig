@@ -34,6 +34,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     const unit_tests = b.addTest(.{ .root_module = unit_mod });
     const run_unit = b.addRunArtifact(unit_tests);
@@ -45,6 +46,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("tests/integration.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
         .imports = &.{.{ .name = "dagger_sdk", .module = dagger_mod }},
     });
     const integ_tests = b.addTest(.{ .root_module = integ_mod });
@@ -57,6 +59,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("tests/module_e2e.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
         .imports = &.{.{ .name = "dagger_sdk", .module = dagger_mod }},
     });
     const mod_e2e = b.addTest(.{ .root_module = mod_e2e_mod });
@@ -69,6 +72,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("codegen/src/main.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
         .imports = &.{.{ .name = "dagger_sdk", .module = dagger_mod }},
     });
     const codegen_exe = b.addExecutable(.{
@@ -146,6 +150,7 @@ fn addExample(
         .root_source_file = b.path(src),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
         .imports = &.{.{ .name = "dagger_sdk", .module = mod }},
     });
     const exe = b.addExecutable(.{ .name = name, .root_module = ex_mod });
