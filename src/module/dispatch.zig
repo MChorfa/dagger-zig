@@ -127,7 +127,7 @@ fn makeInvoker(
         for (0..user_arg_count) |i| {
             types[i] = fn_info.params[i + 2].type orelse
                 @compileError("dagger-zig: method `" ++ method_name ++
-                "` has a param with no declared type");
+                    "` has a param with no declared type");
         }
         break :blk std.meta.Tuple(&types);
     };
