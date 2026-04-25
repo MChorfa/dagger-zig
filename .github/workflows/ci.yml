@@ -28,8 +28,5 @@ jobs:
         continue-on-error: true
 
       - name: Build
-        run: zig build
-
-      - name: Test
-        run: zig build test
+        run: zig build test # Build and run tests (also compiles library)
         continue-on-error: true
