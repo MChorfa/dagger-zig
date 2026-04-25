@@ -38,8 +38,11 @@ jobs:
           version: 0.16.0
 
       - name: Build (${{ matrix.target }})
-        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe
-        continue-on-error: ${{ contains(matrix.target, 'linux') }}
+        run: |
+          echo "Zig version:"
+          zig version
+          echo "Building for ${{ matrix.target }}..."
+          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe 2>&1
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1

@@ -25,8 +25,10 @@ jobs:
 
       - name: Lint
         run: zig fmt --check src/
-        continue-on-error: true
 
-      - name: Build
-        run: zig build test # Build and run tests (also compiles library)
-        continue-on-error: true
+      - name: Build and Test
+        run: |
+          echo "Zig version:"
+          zig version
+          echo "Building project..."
+          zig build test 2>&1

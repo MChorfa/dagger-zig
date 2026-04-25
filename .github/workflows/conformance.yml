@@ -24,6 +24,8 @@ jobs:
         with:
           version: 0.16.0
 
-      - name: Verify SDK builds
-        run: zig build test
-        continue-on-error: true
+      - name: Verify SDK builds and runs tests
+        run: |
+          echo "Zig version:"
+          zig version
+          zig build test 2>&1
