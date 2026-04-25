@@ -1,5 +1,7 @@
 name: OpenSSF Scorecard
 
+# Re-triggered to fix action SHA resolution
+
 on:
   branch_protection_rule:
   schedule:
