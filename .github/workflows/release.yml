@@ -59,16 +59,32 @@ jobs:
         env:
           SOURCE_DATE_EPOCH: "1700000000"
 
+      - name: package artifacts
+        run: |
+          mkdir -p dist
+          # Package libraries, binaries, and headers
+          tar -czf dist/dagger-zig-${{ matrix.target }}.tar.gz \
+            -C zig-out \
+            lib/ bin/ include/ 2>/dev/null || \
+          tar -czf dist/dagger-zig-${{ matrix.target }}.tar.gz \
+            -C zig-out \
+            lib/ bin/ 2>/dev/null || \
+          tar -czf dist/dagger-zig-${{ matrix.target }}.tar.gz \
+            -C zig-out \
+            lib/
+          # Generate checksums
+          cd dist && sha256sum dagger-zig-${{ matrix.target }}.tar.gz > dagger-zig-${{ matrix.target }}.tar.gz.sha256
+
       - name: upload artifact
         uses: actions/upload-artifact@4cec6d1c0373796067e7a92d81eb8e3c1015c31c # v4.6.1
         with:
           name: build-${{ matrix.target }}
-          path: zig-out/lib/
+          path: dist/
 
       - name: attest build provenance
         uses: actions/attest-build-provenance@520d128f165991a6c774bcb264f323e3d70747f4 # v2.2.0
         with:
-          subject-path: zig-out/lib/*
+          subject-path: dist/*
           push-to-registry: false
 
   sbom-and-sign:
@@ -108,4 +124,5 @@ jobs:
           files: |
             sbom.spdx.json
             sbom.spdx.json.sig
-            artifacts/**/*
+            artifacts/**/*.tar.gz
+            artifacts/**/*.sha256
