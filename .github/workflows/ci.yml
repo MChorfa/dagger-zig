@@ -21,14 +21,19 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         with:
-          version: 0.16.0
+          version: 0.16.1
+
+      - name: Verify Zig installation
+        run: |
+          which zig
+          zig version
+          zig env
 
       - name: Lint
         run: zig fmt --check src/
 
-      - name: Build and Test
-        run: |
-          echo "Zig version:"
-          zig version
-          echo "Building project..."
-          zig build test 2>&1
+      - name: Build
+        run: zig build
+
+      - name: Test
+        run: zig build test

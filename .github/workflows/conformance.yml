@@ -22,10 +22,13 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         with:
-          version: 0.16.0
+          version: 0.16.1
 
-      - name: Verify SDK builds and runs tests
+      - name: Verify Zig installation
         run: |
-          echo "Zig version:"
+          which zig
           zig version
-          zig build test 2>&1
+          zig env
+
+      - name: Build and Test
+        run: zig build test
