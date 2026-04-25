@@ -22,6 +22,10 @@ jobs:
       - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4.2.0
         id: release
         with:
+          # NOTE: If you get "GitHub Actions is not permitted to create or approve pull requests",
+          # either:
+          # 1. Enable in Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests"
+          # 2. Use a Personal Access Token: token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: release-please-manifest.json
