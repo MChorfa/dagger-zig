@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Grype vulnerability scanner
-        uses: anchore/scan-action@7c05671f72ed35f4b9464aa9509c5e0564a9d6c5 # v6.0.0
+        uses: anchore/scan-action@a629fe68a50d1c1d5470506a1fa5698bab4da6e4 # v6.0.0
         id: scan
         with:
           path: "."
