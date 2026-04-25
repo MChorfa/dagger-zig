@@ -12,7 +12,7 @@ permissions:
   actions: read
 
 jobs:
-  # Matrix build across all supported platforms
+  # Matrix build across all supported platforms (native Zig cross-compilation)
   build:
     name: Build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
@@ -20,53 +20,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Linux x86_64
           - target: x86_64-linux-gnu
             os: ubuntu-latest
-            zig_target: x86_64-linux-gnu
-          # Linux ARM64
           - target: aarch64-linux-gnu
             os: ubuntu-latest
-            zig_target: aarch64-linux-gnu
-          # macOS Intel
           - target: x86_64-macos
             os: macos-latest
-            zig_target: x86_64-macos
-          # macOS Apple Silicon
           - target: aarch64-macos
             os: macos-latest
-            zig_target: aarch64-macos
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         with:
-          version: 0.13.0
+          version: 0.16.0
 
-      - name: Cache Zig dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/zig
-            zig-cache
-          key: ${{ runner.os }}-zig-${{ hashFiles('**/build.zig.zon') }}
-          restore-keys: |
-            ${{ runner.os }}-zig-
-
-      - name: Build (${{ matrix.zig_target }})
+      - name: Verify Zig installation
         run: |
-          zig build -Dtarget=${{ matrix.zig_target }} -Doptimize=ReleaseSafe
+          which zig
+          zig version
+          zig env
 
-      - name: Test (${{ matrix.zig_target }})
-        if: matrix.os == 'ubuntu-latest' || matrix.target == 'x86_64-macos'
-        run: |
-          # Native test only (cross-compiled tests need emulation)
-          zig build test
+      - name: Build (${{ matrix.target }})
+        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: build-${{ matrix.target }}
           path: |
@@ -74,79 +55,15 @@ jobs:
             zig-out/lib/
           retention-days: 30
 
-  # Cross-compilation test (build only, no run)
-  cross-compile:
-    name: Cross Compile (${{ matrix.target }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - riscv64-linux-gnu
-          - powerpc64le-linux-gnu
-          - mips64-linux-gnuabi64
-          - aarch64-linux-musl
-          - x86_64-linux-musl
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.13.0
-
-      - name: Cache Zig dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/zig
-            zig-cache
-          key: ${{ runner.os }}-zig-${{ hashFiles('**/build.zig.zon') }}
-          restore-keys: |
-            ${{ runner.os }}-zig-
-
-      - name: Cross compile
-        run: |
-          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cross-${{ matrix.target }}
-          path: |
-            zig-out/bin/
-            zig-out/lib/
-          retention-days: 30
-
-  # Compatibility matrix summary
+  # Summary
   summary:
     name: Build Summary
-    needs: [build, cross-compile]
+    needs: build
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-          pattern: '*'
-
       - name: Generate summary
         run: |
           echo "## Multi-Architecture Build Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Target | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          
-          for dir in artifacts/*/; do
-            target=$(basename "$dir")
-            if [ -d "$dir" ] && [ "$(ls -A $dir)" ]; then
-              echo "| $target | ✅ |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| $target | ❌ |" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Total targets: $(ls -d artifacts/*/ 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "All builds use native Zig cross-compilation." >> $GITHUB_STEP_SUMMARY

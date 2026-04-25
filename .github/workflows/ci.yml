@@ -11,16 +11,29 @@ permissions:
   actions: read
 
 jobs:
-  ci:
-    name: ci
+  # Build and test with Zig (native - fast and reliable)
+  build:
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: dagger
-        uses: dagger/dagger-for-github@v5
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         with:
-          version: "0.11"
-          args: call full-pipeline --source=.
-        env:
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+          version: 0.16.0
+
+      - name: Verify Zig installation
+        run: |
+          which zig
+          zig version
+          zig env
+
+      - name: Lint
+        run: zig fmt --check src/
+
+      - name: Build
+        run: zig build
+
+      - name: Test
+        run: zig build test

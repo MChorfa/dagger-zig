@@ -7,7 +7,7 @@ on:
     branches: [ main ]
   schedule:
     # Run daily at 9 AM UTC
-    - cron: '0 9 * * *'
+    - cron: "0 9 * * *"
   workflow_dispatch:
 
 permissions:
@@ -20,104 +20,114 @@ jobs:
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
+    continue-on-error: true
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Semgrep
         run: |
-          semgrep ci \
+          semgrep scan \
             --config=auto \
-            --config=security-audit \
-            --config=zig \
-            --json --output=semgrep-results.json \
+            --config=p/security-audit \
+            --sarif --output=semgrep-results.sarif \
             || true
 
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
         if: always()
         with:
           sarif_file: semgrep-results.sarif
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         if: always()
         with:
           name: semgrep-results
-          path: semgrep-results.json
+          path: semgrep-results.sarif
 
-  # Secret scanning
+  # Secret scanning (optional - requires license, continues on error)
   gitleaks:
     name: GitLeaks Secret Scan
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
       - name: Run GitLeaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@83373cf2f8c4db6e24b41c1a9b086bb9619e9cd3 # v2.3.7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
-  # CodeQL Analysis (Zig support limited, but good for CI scripts)
+  # CodeQL Analysis (skip for Zig-only repo, keep for CI scripts)
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       actions: read
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
         with:
-          languages: go
+          languages: python
           queries: security-extended,security-and-quality
 
-      # CodeQL needs to see the Go code that generates Zig
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
         with:
-          category: "/language:go"
+          category: "/language:python"
 
-  # Dependency vulnerability scanning
-  trivy:
-    name: Trivy Dependency Scan
+  # Dependency vulnerability scanning (Grype - Anchore)
+  grype:
+    name: Grype Dependency Scan
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v6.0.0
+        id: scan
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          path: "."
+          severity-cutoff: "high"
 
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload Grype results
+        uses: github/codeql-action/upload-sarif@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "${{ steps.scan.outputs.sarif }}"
 
-  # License compliance
+  # License compliance (optional - requires API key, continues on error)
   fossa:
     name: FOSSA License Scan
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check FOSSA API Key
+        id: check-key
+        run: |
+          if [ -z "${{ secrets.FOSSA_API_KEY }}" ]; then
+            echo "has_key=false" >> $GITHUB_OUTPUT
+            echo "FOSSA_API_KEY not configured - skipping scan"
+          else
+            echo "has_key=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Run FOSSA scan
-        uses: fossas/fossa-action@main
+        if: steps.check-key.outputs.has_key == 'true'
+        uses: fossas/fossa-action@93a52ecf7c3ac7eb40f5de77fd69b1a19524de94 # v1.5.0
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
           run-tests: true

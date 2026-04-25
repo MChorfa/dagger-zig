@@ -50,3 +50,6 @@ _site/
 
 # act (local GitHub Actions runner)
 .actrc.user
+
+# Zig cache
+.zig-cache
