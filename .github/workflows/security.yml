@@ -101,7 +101,7 @@ jobs:
 
       - name: Upload Grype results
         uses: github/codeql-action/upload-sarif@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
-        if: always()
+        if: steps.scan.outcome == 'success'
         with:
           sarif_file: "${{ steps.scan.outputs.sarif }}"
 
