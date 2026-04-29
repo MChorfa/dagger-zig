@@ -129,6 +129,29 @@ pub const Query = struct {
             .gql = self.gql,
         };
     }
+
+    /// Load a git repository.
+    pub fn git(self: Query, url: []const u8) !GitRepository {
+        const s1 = try self.selection.select(self.arena, "git");
+        const s2 = try s1.argStr(self.arena, "url", url);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    /// Load the host filesystem.
+    pub fn host(self: Query) !Host {
+        const s = try self.selection.select(self.arena, "host");
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s,
+            .gql = self.gql,
+        };
+    }
 };
 
 // ─────────────────────────── Container ──────────────────────────────────────
@@ -377,6 +400,256 @@ fn walkToArrayLeaf(v: std.json.Value) ?std.json.Array {
         else => null,
     };
 }
+
+// ─────────────────────────── Service ──────────────────────────────────────────
+
+pub const Service = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    /// Start the service and return a running service reference.
+    pub fn up(self: Service) !Service {
+        const s = try self.selection.select(self.arena, "up");
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s,
+            .gql = self.gql,
+        };
+    }
+
+    /// Get the endpoint URL for connecting to this service.
+    pub fn endpoint(self: Service) ![]u8 {
+        const s = try self.selection.select(self.arena, "endpoint");
+        return executeScalarString(self.allocator, s, self.gql);
+    }
+
+    /// Get the hostname for connecting to this service.
+    pub fn hostname(self: Service) ![]u8 {
+        const s = try self.selection.select(self.arena, "hostname");
+        return executeScalarString(self.allocator, s, self.gql);
+    }
+
+    /// Stop the service.
+    pub fn stop(self: Service) !void {
+        const s = try self.selection.select(self.arena, "stop");
+        _ = try executeScalarString(self.allocator, s, self.gql);
+    }
+
+    /// Expose a port on this service.
+    pub fn withExposedPort(self: Service, port: u16) !Service {
+        const s1 = try self.selection.select(self.arena, "withExposedPort");
+        const s2 = try s1.arg(self.arena, "port", .{ .eager = try std.fmt.allocPrint(self.arena, "{d}", .{port}) });
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    pub fn id(self: Service) !ServiceID {
+        const s = try self.selection.select(self.arena, "id");
+        const raw = try executeScalarString(self.allocator, s, self.gql);
+        return .{ .value = raw };
+    }
+};
+
+pub const ServiceID = struct {
+    value: []const u8,
+    pub fn deinit(self: *ServiceID, allocator: std.mem.Allocator) void {
+        allocator.free(self.value);
+    }
+};
+
+// ─────────────────────────── GitRepository ──────────────────────────────────
+
+pub const GitRepository = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    /// Get a reference to a specific branch.
+    pub fn branch(self: GitRepository, name: []const u8) !GitRef {
+        const s1 = try self.selection.select(self.arena, "branch");
+        const s2 = try s1.argStr(self.arena, "name", name);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    /// Get a reference to a specific tag.
+    pub fn tag(self: GitRepository, name: []const u8) !GitRef {
+        const s1 = try self.selection.select(self.arena, "tag");
+        const s2 = try s1.argStr(self.arena, "name", name);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    /// Get the default branch (usually main/master).
+    pub fn head(self: GitRepository) !GitRef {
+        const s = try self.selection.select(self.arena, "head");
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s,
+            .gql = self.gql,
+        };
+    }
+
+    pub fn id(self: GitRepository) !GitRepositoryID {
+        const s = try self.selection.select(self.arena, "id");
+        const raw = try executeScalarString(self.allocator, s, self.gql);
+        return .{ .value = raw };
+    }
+};
+
+pub const GitRepositoryID = struct {
+    value: []const u8,
+    pub fn deinit(self: *GitRepositoryID, allocator: std.mem.Allocator) void {
+        allocator.free(self.value);
+    }
+};
+
+// ─────────────────────────── GitRef ─────────────────────────────────────────────
+
+pub const GitRef = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    /// Get the filesystem tree at this ref.
+    pub fn tree(self: GitRef) !Directory {
+        const s = try self.selection.select(self.arena, "tree");
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s,
+            .gql = self.gql,
+        };
+    }
+
+    /// Get the commit message.
+    pub fn commitMessage(self: GitRef) ![]u8 {
+        const s = try self.selection.select(self.arena, "commitMessage");
+        return executeScalarString(self.allocator, s, self.gql);
+    }
+
+    /// Get the commit SHA.
+    pub fn commit(self: GitRef) ![]u8 {
+        const s = try self.selection.select(self.arena, "commit");
+        return executeScalarString(self.allocator, s, self.gql);
+    }
+
+    pub fn id(self: GitRef) !GitRefID {
+        const s = try self.selection.select(self.arena, "id");
+        const raw = try executeScalarString(self.allocator, s, self.gql);
+        return .{ .value = raw };
+    }
+};
+
+pub const GitRefID = struct {
+    value: []const u8,
+    pub fn deinit(self: *GitRefID, allocator: std.mem.Allocator) void {
+        allocator.free(self.value);
+    }
+};
+
+// ─────────────────────────── Host ─────────────────────────────────────────────
+
+pub const Host = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    /// Access a directory on the host.
+    pub fn directory(self: Host, path: []const u8) !Directory {
+        const s1 = try self.selection.select(self.arena, "directory");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    /// Access a file on the host.
+    pub fn file(self: Host, path: []const u8) !File {
+        const s1 = try self.selection.select(self.arena, "file");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    /// Access a Unix socket on the host.
+    pub fn unixSocket(self: Host, path: []const u8) !Socket {
+        const s1 = try self.selection.select(self.arena, "unixSocket");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    /// Access an environment variable.
+    pub fn envVariable(self: Host, name: []const u8) ![]u8 {
+        const s1 = try self.selection.select(self.arena, "envVariable");
+        const s2 = try s1.argStr(self.arena, "name", name);
+        return executeScalarString(self.allocator, s2, self.gql);
+    }
+
+    pub fn id(self: Host) !HostID {
+        const s = try self.selection.select(self.arena, "id");
+        const raw = try executeScalarString(self.allocator, s, self.gql);
+        return .{ .value = raw };
+    }
+};
+
+pub const HostID = struct {
+    value: []const u8,
+    pub fn deinit(self: *HostID, allocator: std.mem.Allocator) void {
+        allocator.free(self.value);
+    }
+};
+
+pub const Socket = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    pub fn id(self: Socket) !SocketID {
+        const s = try self.selection.select(self.arena, "id");
+        const raw = try executeScalarString(self.allocator, s, self.gql);
+        return .{ .value = raw };
+    }
+};
+
+pub const SocketID = struct {
+    value: []const u8,
+    pub fn deinit(self: *SocketID, allocator: std.mem.Allocator) void {
+        allocator.free(self.value);
+    }
+};
 
 // ─────────────────────────── tests (offline) ────────────────────────────────
 
