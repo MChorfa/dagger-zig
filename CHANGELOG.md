@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/MChorfa/dagger-zig/compare/v0.1.1...v0.1.2) (2026-04-25)
+
+
+### Bug Fixes
+
+* **release:** add tag trigger support for manual releases ([b9f3fbd](https://github.com/MChorfa/dagger-zig/commit/b9f3fbd1e08aa1d19789d7f85eb38b9654522486))
+* **release:** add tag trigger support for manual releases ([c1bc1f4](https://github.com/MChorfa/dagger-zig/commit/c1bc1f402743cd19be44f424cbd4c85ca6107134))
+
 ## [0.1.1](https://github.com/MChorfa/dagger-zig/compare/v0.1.0...v0.1.1) (2026-04-25)
 
 
