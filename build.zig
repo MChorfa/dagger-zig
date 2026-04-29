@@ -67,6 +67,19 @@ pub fn build(b: *std.Build) void {
     const mod_e2e_step = b.step("test-module", "Offline: prove module runtime comptime plumbing");
     mod_e2e_step.dependOn(&run_mod_e2e.step);
 
+    // ── comprehensive test suite ───────────────────────────────────────
+    const test_suite_mod = b.createModule(.{
+        .root_source_file = b.path("src/test_suite.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{.{ .name = "dagger_sdk", .module = dagger_mod }},
+    });
+    const test_suite = b.addTest(.{ .root_module = test_suite_mod });
+    const run_test_suite = b.addRunArtifact(test_suite);
+    const test_suite_step = b.step("test-suite", "Run comprehensive test suite (platform, telemetry, performance)");
+    test_suite_step.dependOn(&run_test_suite.step);
+
     // ── codegen tool ────────────────────────────────────────────────────
     const codegen_mod = b.createModule(.{
         .root_source_file = b.path("codegen/src/main.zig"),
