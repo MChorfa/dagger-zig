@@ -28,8 +28,17 @@ jobs:
 
       - name: Lint PR commits
         run: |
-          commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          else
+            echo "No PR context available (running locally), linting last commit only"
+            commitlint --from HEAD~1 --to HEAD --verbose
+          fi
 
       - name: Check PR title
         run: |
-          echo "${{ github.event.pull_request.title }}" | commitlint --verbose
+          if [ -n "${{ github.event.pull_request.title }}" ]; then
+            echo "${{ github.event.pull_request.title }}" | commitlint --verbose
+          else
+            echo "No PR title available (running locally), skipping"
+          fi
