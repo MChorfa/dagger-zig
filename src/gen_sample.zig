@@ -330,6 +330,29 @@ pub const Container = struct {
         const s2 = try s1.argStr(self.arena, "address", address);
         return executeScalarString(self.allocator, s2, self.gql);
     }
+
+    /// Convert this container to a service (after exposing ports).
+    pub fn asService(self: Container) !Service {
+        const s = try self.selection.select(self.arena, "asService");
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s,
+            .gql = self.gql,
+        };
+    }
+
+    /// Get a file from this container.
+    pub fn file(self: Container, path: []const u8) !File {
+        const s1 = try self.selection.select(self.arena, "file");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
 };
 
 // ─────────────────────────── Directory ──────────────────────────────────────

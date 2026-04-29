@@ -19,22 +19,17 @@ pub fn main(init: std.process.Init) !void {
     var client = try dagger.connect(gpa, io, .{});
     defer client.close();
 
-    // Get secret from environment (in real use, use proper secret management)
-    const api_key = blk: {
-        break :blk std.process.getEnvVarOwned(gpa, "API_KEY") catch {
-            std.log.info("Using dummy API_KEY for demo. Set API_KEY env var for real test.", .{});
-            break :blk try gpa.dupe(u8, "dummy-api-key-12345");
-        };
-    };
+    // In production, load from secure secret management (Vault, 1Password, etc.)
+    // For demo, we use a hardcoded value - NEVER do this in production!
+    const api_key = try gpa.dupe(u8, "sk-demo-api-key-12345-abcdef");
     defer gpa.free(api_key);
 
     // Set the secret in Dagger
     const secret = try client.dag().setSecret("api-key", api_key);
 
     // Build a container that uses the secret
-    const ctr = try client.dag()
-        .container()
-        .from("alpine:latest");
+    const ctr_raw = try client.dag().container();
+    const ctr = try ctr_raw.from("alpine:latest");
 
     // Mount the secret and use it (safely - doesn't leak in logs)
     const ctr_with_secret = try ctr

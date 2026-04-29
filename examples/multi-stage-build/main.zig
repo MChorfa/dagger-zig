@@ -21,30 +21,27 @@ pub fn main(init: std.process.Init) !void {
     defer client.close();
 
     // Stage 1: Build environment
-    const build_ctr = try client.dag()
-        .container()
-        .from("golang:1.22-alpine");
+    const build_ctr_raw = try client.dag().container();
+    const build_ctr = try build_ctr_raw.from("golang:1.22-alpine");
 
     // Add build dependencies
     const build_with_deps = try build_ctr
-        .withExec(&.{"apk", "add", "--no-cache", "git"});
+        .withExec(&.{ "apk", "add", "--no-cache", "git" });
 
     // Simulate a Go build (creating a simple binary)
     const build_with_code = try build_with_deps
-        .withExec(&.{"sh", "-c", "mkdir -p /src && echo 'package main; import \"fmt\"; func main() { fmt.Println(\"Hello from multi-stage!\") }' > /src/main.go"});
+        .withExec(&.{ "sh", "-c", "mkdir -p /src && echo 'package main; import \"fmt\"; func main() { fmt.Println(\"Hello from multi-stage!\") }' > /src/main.go" });
 
     // Build the binary
-    const build_output = try build_with_code
-        .withWorkdir("/src")
-        .withExec(&.{"go", "build", "-o", "app", "main.go"});
+    const build_wd = try build_with_code.withWorkdir("/src");
+    const build_output = try build_wd.withExec(&.{ "go", "build", "-o", "app", "main.go" });
 
     // Export the binary
     const binary = try build_output.file("/src/app");
 
     // Stage 2: Runtime environment (minimal)
-    const runtime_ctr = try client.dag()
-        .container()
-        .from("alpine:latest");
+    const runtime_ctr_raw = try client.dag().container();
+    const runtime_ctr = try runtime_ctr_raw.from("alpine:latest");
 
     // Only copy the binary, not the full Go toolchain
     const runtime_with_app = try runtime_ctr
@@ -52,23 +49,21 @@ pub fn main(init: std.process.Init) !void {
 
     // Make it executable and run
     const final = try runtime_with_app
-        .withExec(&.{"chmod", "+x", "/app"});
+        .withExec(&.{ "chmod", "+x", "/app" });
 
     // Test the application
-    const out = try final
-        .withExec(&.{"/app"})
-        .stdout();
+    const final_test = try final.withExec(&.{"/app"});
+    const out = try final_test.stdout();
     defer gpa.free(out);
 
     // Show size comparison
-    const size_info = try final
-        .withExec(&.{"sh", "-c", "echo 'Final image size:' && du -sh / | tail -1"})
-        .stdout();
+    const size_check = try final.withExec(&.{ "sh", "-c", "echo 'Final image size:' && du -sh / | tail -1" });
+    const size_info = try size_check.stdout();
     defer gpa.free(size_info);
 
     var stdout_file = std.Io.File.stdout();
     defer stdout_file.close(io);
-    
+
     try stdout_file.writeStreamingAll(io, "=== Application Output ===\n");
     try stdout_file.writeStreamingAll(io, out);
     try stdout_file.writeStreamingAll(io, "\n=== Size Info ===\n");
