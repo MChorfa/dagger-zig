@@ -212,6 +212,95 @@ pub const Container = struct {
         return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
     }
 
+    /// Add a secret as a mounted file. The secret value is never exposed in logs.
+    pub fn withSecret(self: Container, path: []const u8, secret: Secret) !Container {
+        var secret_id = try secret.id();
+        defer secret_id.deinit(self.allocator);
+        const id_lit = try qb.serializeString(self.arena, secret_id.value);
+        const s1 = try self.selection.select(self.arena, "withSecret");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        const s3 = try s2.arg(self.arena, "secret", .{ .eager = id_lit });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
+    }
+
+    /// Add a service binding, making the service accessible to this container.
+    pub fn withService(self: Container, alias: []const u8, svc: Service) !Container {
+        var svc_id = try svc.id();
+        defer svc_id.deinit(self.allocator);
+        const id_lit = try qb.serializeString(self.arena, svc_id.value);
+        const s1 = try self.selection.select(self.arena, "withService");
+        const s2 = try s1.argStr(self.arena, "alias", alias);
+        const s3 = try s2.arg(self.arena, "service", .{ .eager = id_lit });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
+    }
+
+    /// Mount a file from the host or another container.
+    pub fn withFile(self: Container, path: []const u8, source: File) !Container {
+        var file_id = try source.id();
+        defer file_id.deinit(self.allocator);
+        const id_lit = try qb.serializeString(self.arena, file_id.value);
+        const s1 = try self.selection.select(self.arena, "withFile");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        const s3 = try s2.arg(self.arena, "source", .{ .eager = id_lit });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
+    }
+
+    /// Create a new file with the given contents.
+    pub fn withNewFile(self: Container, path: []const u8, contents: []const u8) !Container {
+        const s1 = try self.selection.select(self.arena, "withNewFile");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        const s3 = try s2.argStr(self.arena, "contents", contents);
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
+    }
+
+    /// Mount a directory from the host or another container.
+    pub fn withMountedDirectory(self: Container, path: []const u8, source: Directory) !Container {
+        var dir_id = try source.id();
+        defer dir_id.deinit(self.allocator);
+        const id_lit = try qb.serializeString(self.arena, dir_id.value);
+        const s1 = try self.selection.select(self.arena, "withMountedDirectory");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        const s3 = try s2.arg(self.arena, "source", .{ .eager = id_lit });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
+    }
+
+    /// Expose a network port.
+    pub fn withExposedPort(self: Container, port: u16) !Container {
+        const s1 = try self.selection.select(self.arena, "withExposedPort");
+        const port_str = try std.fmt.allocPrint(self.arena, "{d}", .{port});
+        const s2 = try s1.arg(self.arena, "port", .{ .eager = port_str });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s2, .gql = self.gql };
+    }
+
+    /// Set the entrypoint for the container.
+    pub fn withEntrypoint(self: Container, entrypoint: []const []const u8) !Container {
+        const lit = try qb.serializeStringList(self.arena, entrypoint);
+        const s1 = try self.selection.select(self.arena, "withEntrypoint");
+        const s2 = try s1.arg(self.arena, "args", .{ .eager = lit });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s2, .gql = self.gql };
+    }
+
+    /// Remove the default entrypoint.
+    pub fn withoutEntrypoint(self: Container) !Container {
+        const s = try self.selection.select(self.arena, "withoutEntrypoint");
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s, .gql = self.gql };
+    }
+
+    /// Set the default command (CMD) for the container.
+    pub fn withDefaultArgs(self: Container, args: []const []const u8) !Container {
+        const lit = try qb.serializeStringList(self.arena, args);
+        const s1 = try self.selection.select(self.arena, "withDefaultArgs");
+        const s2 = try s1.arg(self.arena, "args", .{ .eager = lit });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s2, .gql = self.gql };
+    }
+
+    /// Set the user for subsequent operations.
+    pub fn withUser(self: Container, user: []const u8) !Container {
+        const s1 = try self.selection.select(self.arena, "withUser");
+        const s2 = try s1.argStr(self.arena, "name", user);
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s2, .gql = self.gql };
+    }
+
     // ── terminal operations ──
 
     /// Return stdout of the last exec. Caller owns the returned slice.
