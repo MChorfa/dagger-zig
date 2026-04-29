@@ -89,6 +89,10 @@ pub fn build(b: *std.Build) void {
     addExample(b, dagger_mod, target, optimize, "first-pipeline", "examples/first-pipeline/main.zig");
     addExample(b, dagger_mod, target, optimize, "build-app", "examples/build-app/main.zig");
     addExample(b, dagger_mod, target, optimize, "parallel", "examples/parallel/main.zig");
+    addExample(b, dagger_mod, target, optimize, "secrets", "examples/secrets/main.zig");
+    addExample(b, dagger_mod, target, optimize, "cache", "examples/cache/main.zig");
+    addExample(b, dagger_mod, target, optimize, "multi-stage-build", "examples/multi-stage-build/main.zig");
+    addExample(b, dagger_mod, target, optimize, "service-containers", "examples/service-containers/main.zig");
 
     // ── C shared + static libraries ─────────────────────────────────────
     const c_api_mod = b.createModule(.{
