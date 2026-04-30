@@ -69,7 +69,7 @@
     "header-max-length": [
       2,
       "always",
-      72
+      100
     ]
   },
   "helpUrl": "https://github.com/conventional-changelog/commitlint/#what-is-commitlint"
