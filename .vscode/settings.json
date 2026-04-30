@@ -1,0 +1,23 @@
+{
+  "zig.formattingProvider": "zls",
+  "editor.formatOnSave": true,
+  "[zig]": {
+    "editor.defaultFormatter": "ziglang.vscode-zig",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false,
+    "editor.detectIndentation": false
+  },
+  "files.associations": {
+    "*.zig": "zig",
+    "build.zig": "zig",
+    "build.zig.zon": "zig"
+  },
+  "search.exclude": {
+    "zig-out/**": true,
+    "zig-cache/**": true,
+    ".zig-cache/**": true
+  },
+  "files.exclude": {
+    "**/.zig-cache": true
+  }
+}

@@ -13,11 +13,17 @@ zig-cache/
 dagger.gen.json
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# VS Code - allow project settings, ignore user-specific
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
 # OS
 .DS_Store
