@@ -1,5 +1,7 @@
 {
-  "extends": ["@commitlint/config-conventional"],
+  "extends": [
+    "@commitlint/config-conventional"
+  ],
   "rules": {
     "type-enum": [
       2,
@@ -17,7 +19,8 @@
         "chore",
         "revert",
         "sec",
-        "deps"
+        "deps",
+        "merge"
       ]
     ],
     "scope-enum": [
@@ -36,13 +39,38 @@
         "release"
       ]
     ],
-    "subject-case": [0],
-    "subject-empty": [2, "never"],
-    "subject-full-stop": [2, "never", "."],
-    "subject-max-length": [2, "always", 100],
-    "body-max-line-length": [2, "always", 120],
-    "footer-max-line-length": [2, "always", 120],
-    "header-max-length": [2, "always", 72]
+    "subject-case": [
+      0
+    ],
+    "subject-empty": [
+      2,
+      "never"
+    ],
+    "subject-full-stop": [
+      2,
+      "never",
+      "."
+    ],
+    "subject-max-length": [
+      2,
+      "always",
+      100
+    ],
+    "body-max-line-length": [
+      2,
+      "always",
+      120
+    ],
+    "footer-max-line-length": [
+      2,
+      "always",
+      120
+    ],
+    "header-max-length": [
+      2,
+      "always",
+      72
+    ]
   },
   "helpUrl": "https://github.com/conventional-changelog/commitlint/#what-is-commitlint"
 }

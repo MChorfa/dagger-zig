@@ -28,7 +28,6 @@ teaser-word-count = 30
 [output.html.print]
 enable = true
 
-[output.html.redirect]
-"/getting-started.html" = "getting-started.md"
-"/architecture.html" = "architecture.md"
-"/compliance.html" = "compliance.md"
+# Redirects disabled - can be added later if needed
+# [output.html.redirect]
+# "/getting-started.html" = "/getting-started/index.html"
