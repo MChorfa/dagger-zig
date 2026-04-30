@@ -56,8 +56,11 @@ jobs:
   build-and-attest:
     name: build-and-attest
     needs: [ detect-release, release-please ]
-    if: ${{ needs.detect-release.outputs.should_build == 'true' ||
-      needs.release-please.outputs.release_created == 'true' }}
+    # Only run on main repo and when release is detected
+    if: |
+      github.repository == 'MChorfa/dagger-zig' &&
+      (needs.detect-release.outputs.should_build == 'true' ||
+       needs.release-please.outputs.release_created == 'true')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -115,8 +118,11 @@ jobs:
   sbom-and-sign:
     name: sbom-and-sign
     needs: [ detect-release, release-please, build-and-attest ]
-    if: ${{ needs.detect-release.outputs.should_build == 'true' ||
-      needs.release-please.outputs.release_created == 'true' }}
+    # Only run on main repo and when release is detected
+    if: |
+      github.repository == 'MChorfa/dagger-zig' &&
+      (needs.detect-release.outputs.should_build == 'true' ||
+       needs.release-please.outputs.release_created == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

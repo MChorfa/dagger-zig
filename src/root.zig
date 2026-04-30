@@ -100,11 +100,21 @@ pub const Directory = api.Directory;
 pub const File = api.File;
 pub const Secret = api.Secret;
 pub const CacheVolume = api.CacheVolume;
+pub const Service = api.Service;
+pub const GitRepository = api.GitRepository;
+pub const GitRef = api.GitRef;
+pub const Host = api.Host;
+pub const Socket = api.Socket;
 pub const ContainerID = api.ContainerID;
 pub const DirectoryID = api.DirectoryID;
 pub const FileID = api.FileID;
 pub const SecretID = api.SecretID;
 pub const CacheVolumeID = api.CacheVolumeID;
+pub const ServiceID = api.ServiceID;
+pub const GitRepositoryID = api.GitRepositoryID;
+pub const GitRefID = api.GitRefID;
+pub const HostID = api.HostID;
+pub const SocketID = api.SocketID;
 
 /// A live Dagger client. Holds:
 ///   - the subprocess (if we spawned one)
