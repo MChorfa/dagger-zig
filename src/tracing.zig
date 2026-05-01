@@ -48,6 +48,7 @@ pub const Span = struct {
     /// Initialize a new span.
     pub fn init(allocator: std.mem.Allocator, name: []const u8, opts: SpanOptions) !Span {
         span_counter += 1;
+        // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
         const now = @as(i64, @intCast(span_counter));
         return .{
             .name = name,
@@ -73,6 +74,7 @@ pub const Span = struct {
     pub fn end(self: *Span) void {
         if (self.end_time == null) {
             span_counter += 1;
+            // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
             self.end_time = @as(i64, @intCast(span_counter));
         }
     }
@@ -92,6 +94,7 @@ pub const Span = struct {
     pub fn addEvent(self: *Span, name: []const u8, attrs: anytype) !void {
         _ = attrs;
         span_counter += 1;
+        // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
         const event = SpanEvent{
             .name = name,
             .timestamp = @as(i64, @intCast(span_counter)),

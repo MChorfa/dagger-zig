@@ -16,25 +16,25 @@ const dagger = @import("dagger_sdk");
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-    
+
     var io_impl: std.Io.Threaded = .init(gpa.allocator(), .{});
     defer io_impl.deinit();
-    
+
     var client = try dagger.connect(gpa.allocator(), io_impl.io(), .{});
     defer client.close();
-    
+
     // Create a query group for concurrent operations
     var group = try dagger.async.QueryGroup.init(gpa.allocator(), io_impl.io());
     defer group.deinit();
-    
+
     // Add multiple container builds
     const alpine = try group.add(client.dag().container().from("alpine:latest"));
     const ubuntu = try group.add(client.dag().container().from("ubuntu:latest"));
     const fedora = try group.add(client.dag().container().from("fedora:latest"));
-    
+
     // Wait for all to complete
     try group.awaitAll();
-    
+
     // Get results
     const alpine_id = try alpine.getResult(dagger.Container);
     const ubuntu_id = try ubuntu.getResult(dagger.Container);

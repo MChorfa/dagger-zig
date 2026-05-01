@@ -31,6 +31,10 @@ pub const BuildError = error{
     EmptyGroup,
     /// Maximum retry attempts exceeded.
     RetryExceeded,
+    /// Selection chain exceeded maximum depth limit.
+    SelectionTooDeep,
+    /// Too many arguments in a single selection.
+    TooManyArguments,
 };
 
 pub const QueryError = error{

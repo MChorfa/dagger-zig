@@ -12,7 +12,8 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0 with `std.Io.async` support for parallel container operations.
 
-**Enterprise Ready:** SLSA Level 4 provenance, Sigstore signing, SOC2/ISO27001 compliant, multi-architecture support including Windows.
+**Enterprise Ready:** SLSA Level 4 provenance, Sigstore signing, SOC2/ISO27001 compliant, multi-architecture support
+including Windows.
 
 ## Documentation Structure
 

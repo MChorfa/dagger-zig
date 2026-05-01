@@ -4,7 +4,8 @@ OpenTelemetry-compatible tracing for Dagger SDK operations.
 
 ## Overview
 
-The `dagger.tracing` module provides distributed tracing capabilities for pipeline operations, compatible with OpenTelemetry and exportable to various backends (Jaeger, Zipkin, OTLP collectors).
+The `dagger.tracing` module provides distributed tracing capabilities for pipeline operations, compatible with
+OpenTelemetry and exportable to various backends (Jaeger, Zipkin, OTLP collectors).
 
 ## Quick Start
 

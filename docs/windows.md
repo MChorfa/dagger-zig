@@ -25,12 +25,12 @@ zig build test
 
 ### Socket Types
 
-| Platform | Default | Notes |
-|----------|---------|-------|
-| Linux/macOS | Unix domain socket | Full feature support |
-| Windows 10 1803+ | Unix domain socket (AF_UNIX) | When available |
-| Windows <1803 | Named pipes | Fallback transport |
-| All platforms | TCP loopback | Emergency fallback |
+| Platform         | Default                      | Notes                |
+| ---------------- | ---------------------------- | -------------------- |
+| Linux/macOS      | Unix domain socket           | Full feature support |
+| Windows 10 1803+ | Unix domain socket (AF_UNIX) | When available       |
+| Windows <1803    | Named pipes                  | Fallback transport   |
+| All platforms    | TCP loopback                 | Emergency fallback   |
 
 ### Path Handling
 
@@ -81,13 +81,16 @@ strategy:
 
 ## Known Limitations
 
-1. **Unix socket paths**: On Windows, socket paths are limited to ~260 characters (MAX_PATH). The SDK handles this by using shorter temp directory paths.
+1. **Unix socket paths**: On Windows, socket paths are limited to ~260 characters (MAX_PATH). The SDK handles this by
+   using shorter temp directory paths.
 
 2. **Signal handling**: Windows doesn't support Unix signals. The SDK uses `GenerateConsoleCtrlEvent` for subprocess management.
 
-3. **File permissions**: Windows ACLs don't map 1:1 to Unix permissions. Container `withExec` operations that rely on specific permissions may behave differently.
+3. **File permissions**: Windows ACLs don't map 1:1 to Unix permissions. Container `withExec` operations that rely on
+   specific permissions may behave differently.
 
-4. **Line endings**: Git's `core.autocrlf` can cause issues with scripts inside containers. Use `.gitattributes` to force LF:
+4. **Line endings**: Git's `core.autocrlf` can cause issues with scripts inside containers. Use `.gitattributes` to
+   force LF:
 
 ```gitattributes
 * text=auto eol=lf

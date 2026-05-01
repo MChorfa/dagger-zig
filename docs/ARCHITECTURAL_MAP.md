@@ -83,7 +83,7 @@ config:
 ---
 flowchart TB
     Root["src/root.zig<br/>Public API"]
-    
+
     subgraph Core["core/*.zig — Client Kernel"]
         Config["config.zig"]
         Engine["engine.zig"]
@@ -94,7 +94,7 @@ flowchart TB
         Secrets["secrets.zig"]
         Version["version.zig"]
     end
-    
+
     subgraph Module["module/ — Authoring"]
         Mod["mod.zig"]
         Server["server.zig"]
@@ -102,19 +102,19 @@ flowchart TB
         TypeDef["typedef.zig"]
         Serde["serde.zig"]
     end
-    
+
     subgraph SPIFFE["spiffe/ — Workload Identity"]
         SPIFFEFiles["..."]
     end
-    
+
     Root --> Errors["src/errors.zig<br/>Error sets"]
     Root --> QueryBuilder["src/querybuilder.zig<br/>GraphQL DSL"]
     Root --> GenSample["src/gen_sample.zig<br/>Generated API"]
-    
+
     Errors --> Core
     QueryBuilder --> Core
     GenSample --> Core
-    
+
     Core --> Module
     Core --> SPIFFE
 ```
@@ -142,24 +142,24 @@ sequenceDiagram
     User->>Fluent: .dag().container().from("alpine").withExec(...).stdout()
     Fluent->>QB: Build Selection chain
     Note over QB: Immutable chains, arena-allocated
-    
+
     QB->>GC: query(builder)
     Note over GC: Serialize to JSON
-    
+
     GC->>RE: execute(operation)
     Note over RE: Check circuit breaker
-    
+
     RE->>HTTP: POST with retry loop
     Note over HTTP: std.Io transport, timeouts
     HTTP-->>RE: Response
-    
+
     RE->>RE: Record metrics<br/>(success/failure)
     RE-->>GC: Result
-    
+
     GC->>Resp: Process response
     Note over Resp: JSON deserialize, error extraction
     Resp-->>GC: Parsed result
-    
+
     GC-->>User: Return result
 ```
 
@@ -169,7 +169,7 @@ sequenceDiagram
 
 ### Circuit Breaker State Machine
 
-```mermaid
+````mermaid
 ---
 config:
   theme: neo
@@ -178,27 +178,27 @@ config:
 ---
 stateDiagram-v2
     [*] --> Closed: Initialize
-    
+
     Closed --> Closed: Success (reset counter)
     Closed --> Open: Failure count ≥ threshold
-    
+
     Open --> HalfOpen: skip_requests elapsed
     Open --> Open: Requests blocked
-    
+
     HalfOpen --> Closed: Success (success_threshold reached)
     HalfOpen --> Open: Failure (immediate)
-    
+
     note right of Closed
         Normal operation
         Requests allowed
     end note
-    
+
     note right of Open
         Circuit broken
         Requests blocked
         Skip counter running
     end note
-    
+
     note right of HalfOpen
         Probing mode
         Limited requests
@@ -214,9 +214,10 @@ Attempt 2: 200ms + jitter(±10%)
 Attempt 3: 400ms + jitter(±10%)
 ...
 Max: 5000ms (capped)
-```
+````
 
 **Input Validation**:
+
 - NaN/Inf protection on jitter_factor
 - Overflow protection on counter increments
 - f32 precision guards (maximum representable: 2^24)

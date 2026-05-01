@@ -16,7 +16,6 @@
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 > **📚 Looking for Dagger?** Visit [dagger.io](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger)
-
 > **Status:** v0.2.0. Multi-platform support, async patterns, tracing.  
 > **Security Hardened:** OpenSSF Scorecard, SLSA provenance, Sigstore signing
 
@@ -345,7 +344,8 @@ The workflows will run but some jobs may skip if secrets are missing.
 
 ## Dagger Integration
 
-This SDK is a **Community SDK** for [Dagger](https://dagger.io). It follows the official Dagger SDK patterns and integrates with the Dagger Engine.
+This SDK is a **Community SDK** for [Dagger](https://dagger.io). It follows the official Dagger SDK patterns
+and integrates with the Dagger Engine.
 
 ### Dagger Resources
 

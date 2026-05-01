@@ -24,6 +24,7 @@ curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo ba
 ```
 
 Verify installation:
+
 ```bash
 act --version      # Should show 0.2.x or later
 gh --version       # GitHub CLI
@@ -46,6 +47,7 @@ make auth-status
 ```
 
 **No manual token setup needed!** The Makefile and scripts automatically use:
+
 - `gh auth token` for GitHub workflows
 - `glab config get token` for GitLab workflows
 
@@ -123,6 +125,7 @@ act push -W .github/workflows/ci.yml \
 ```
 
 **Local adaptations:**
+
 - Dagger Cloud token is mocked
 - Full pipeline runs with local source
 - Artifacts are not uploaded to GitHub
@@ -138,6 +141,7 @@ act push -W .github/workflows/security.yml \
 ```
 
 **Local adaptations:**
+
 - GitLeaks license check may fail (expected)
 - FOSSA scan requires real API key
 - Semgrep runs in container (may be slow)
@@ -151,6 +155,7 @@ act push -W .github/workflows/multi-arch.yml
 ```
 
 **Local adaptations:**
+
 - Only `ubuntu-latest` jobs run locally
 - macOS jobs are skipped (no macOS runner in act)
 - Cross-compilation jobs work fully
@@ -160,11 +165,13 @@ act push -W .github/workflows/multi-arch.yml
 ⚠️ **These workflows require secrets and should not be run locally**
 
 They require:
+
 - Sigstore OIDC flow (needs real GitHub Actions OIDC)
 - SLSA generator (needs GitHub Actions infrastructure)
 - Real signing keys
 
 **For local artifact testing:**
+
 ```bash
 # Build artifacts without signing
 act push -W .github/workflows/slsa.yml \
@@ -188,6 +195,7 @@ act push --container-daemon-socket "unix://$(podman machine inspect --format '{{
 ### "403 Resource not accessible by integration"
 
 Some workflows require real GitHub token with write permissions:
+
 ```bash
 # Create fine-grained personal access token
 # https://github.com/settings/tokens
@@ -199,6 +207,7 @@ act push -W .github/workflows/ci.yml \
 ### Slow performance
 
 Use smaller runner images:
+
 ```bash
 # Default (large, full tools)
 act push
@@ -223,16 +232,19 @@ act push --registry http://localhost:5000
 ## Best Practices
 
 1. **Always test locally first**
+
    ```bash
    make ci-local  # Before git push
    ```
 
 2. **Use dry-run for quick validation**
+
    ```bash
    act push --dry-run
    ```
 
 3. **Test incrementally**
+
    ```bash
    # Test one workflow at a time
    act push -W .github/workflows/ci.yml
@@ -240,10 +252,11 @@ act push --registry http://localhost:5000
    ```
 
 4. **Check workflow syntax**
+
    ```bash
    # Use GitHub CLI for validation
    gh workflow view ci.yml --yaml | yamllint -
-   
+
    # Or use act dry-run
    act push --dry-run
    ```
@@ -277,17 +290,17 @@ act push --registry http://localhost:5000
 
 ## Comparison: Local vs Remote
 
-| Feature           | Local (act)   | Remote (GitHub)  |
-| ----------------- | ------------- | ---------------- |
-| Ubuntu jobs       | ✅ Works       | ✅ Works          |
-| macOS jobs        | ❌ Skipped     | ✅ Works          |
-| Windows jobs      | ❌ Skipped     | ✅ Works          |
-| Container actions | ✅ Works       | ✅ Works          |
-| OIDC/Sigstore     | ❌ Fails       | ✅ Works          |
-| Artifact upload   | ✅ Local only  | ✅ GitHub storage |
-| Caching           | ✅ Local       | ✅ GitHub cache   |
-| Secrets           | Manual config | GitHub Secrets   |
-| Performance       | Faster        | Variable         |
+| Feature           | Local (act)   | Remote (GitHub)   |
+| ----------------- | ------------- | ----------------- |
+| Ubuntu jobs       | ✅ Works      | ✅ Works          |
+| macOS jobs        | ❌ Skipped    | ✅ Works          |
+| Windows jobs      | ❌ Skipped    | ✅ Works          |
+| Container actions | ✅ Works      | ✅ Works          |
+| OIDC/Sigstore     | ❌ Fails      | ✅ Works          |
+| Artifact upload   | ✅ Local only | ✅ GitHub storage |
+| Caching           | ✅ Local      | ✅ GitHub cache   |
+| Secrets           | Manual config | GitHub Secrets    |
+| Performance       | Faster        | Variable          |
 
 ## Advanced Usage
 
