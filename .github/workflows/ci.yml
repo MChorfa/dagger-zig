@@ -11,10 +11,14 @@ permissions:
   actions: read
 
 jobs:
-  # Build and test with Zig (native - fast and reliable)
-  build:
-    name: Build & Test
-    runs-on: ubuntu-latest
+  # Multi-platform build matrix
+  build-matrix:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -23,9 +27,17 @@ jobs:
         with:
           version: 0.16.0
 
-      - name: Verify Zig installation
+      - name: Verify Zig installation (Unix)
+        if: runner.os != 'Windows'
         run: |
           which zig
+          zig version
+          zig env
+
+      - name: Verify Zig installation (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Get-Command zig
           zig version
           zig env
 
@@ -37,3 +49,27 @@ jobs:
 
       - name: Test
         run: zig build test
+
+  # Cross-compilation for additional targets
+  cross-compile:
+    name: Cross-compile (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-linux-gnu
+          - aarch64-linux-gnu
+          - x86_64-macos-none
+          - aarch64-macos-none
+          - x86_64-windows-gnu
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
+        with:
+          version: 0.16.0
+
+      - name: Cross-compile
+        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe

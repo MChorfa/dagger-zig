@@ -139,3 +139,152 @@ pub fn isExecutable(path: []const u8) bool {
 pub fn joinPath(allocator: std.mem.Allocator, parts: []const []const u8) ![]u8 {
     return try std.fs.path.join(allocator, parts);
 }
+
+// ─────────────────────────── Socket Abstractions ───────────────────────────
+
+/// Platform-specific socket handle
+pub const Socket = struct {
+    fd: i32, // Unix: file descriptor, Windows: SOCKET (cast)
+
+    /// Socket operation errors.
+    pub const Error = @import("errors.zig").PlatformError;
+
+    /// Connect to a Unix domain socket (POSIX) or named pipe (Windows)
+    pub fn connectUnix(path: []const u8) !Socket {
+        if (is_windows) {
+            // Windows: Use AF_UNIX if available (Windows 10 1803+), else named pipe
+            return connectWindowsSocket(path);
+        } else {
+            // POSIX: Standard Unix domain socket
+            return connectPosixSocket(path);
+        }
+    }
+
+    fn connectPosixSocket(path: []const u8) !Socket {
+        const fd = try std.posix.socket(std.posix.AF.UNIX, std.posix.SOCK.STREAM, 0);
+        errdefer std.posix.close(fd);
+
+        var addr: std.posix.sockaddr.un = undefined;
+        addr.family = std.posix.AF.UNIX;
+
+        const path_len = @min(path.len, addr.path.len - 1);
+        @memcpy(addr.path[0..path_len], path[0..path_len]);
+        addr.path[path_len] = 0;
+
+        const addr_len = @offsetOf(std.posix.sockaddr.un, "path") + path_len + 1;
+        try std.posix.connect(fd, @ptrCast(&addr), @intCast(addr_len));
+
+        return Socket{ .fd = fd };
+    }
+
+    fn connectWindowsSocket(path: []const u8) !Socket {
+        // v0.2.0: Windows socket support not yet implemented
+        // Windows 10 1803+ has AF_UNIX support, or use named pipes
+        // v0.3.0: Will implement using Windows named pipes or AF_UNIX
+        _ = path;
+
+        // Provide helpful error message about limitation
+        std.log.warn("Windows socket support not yet implemented in v0.2.0. " ++
+            "Use WSL2 or wait for v0.3.0.", .{});
+        return error.NotSupported;
+    }
+
+    /// Read from socket
+    pub fn read(self: Socket, buffer: []u8) !usize {
+        if (is_windows) {
+            std.log.warn("Socket.read(fd={}, buf_len={}) not supported on Windows in v0.2.0", .{ self.fd, buffer.len });
+            return error.NotSupported;
+        } else {
+            return std.posix.read(self.fd, buffer);
+        }
+    }
+
+    /// Write to socket
+    pub fn write(self: Socket, data: []const u8) !void {
+        if (is_windows) {
+            std.log.warn("Socket.write(fd={}, data_len={}) not supported on Windows in v0.2.0", .{ self.fd, data.len });
+            return error.NotSupported;
+        } else {
+            const n = try std.posix.write(self.fd, data);
+            if (n < data.len) return error.WriteError;
+        }
+    }
+
+    /// Close socket
+    pub fn close(self: Socket) void {
+        if (is_windows) {
+            // v0.2.0: Not implemented
+            // v0.3.0: Will use closesocket() on Windows
+            std.log.warn("Socket.close(fd={}) not implemented on Windows in v0.2.0", .{self.fd});
+        } else {
+            std.posix.close(self.fd);
+        }
+    }
+};
+
+// ─────────────────────────── Async I/O Helpers ───────────────────────────
+
+/// Platform-specific async I/O capabilities
+pub const AsyncIo = struct {
+    /// Check if the platform supports true async I/O
+    ///
+    /// v0.2.0: Linux/macOS supported, Windows uses fallback
+    /// v0.3.0: Windows IOCP support planned
+    pub fn supportsAsync() bool {
+        return !is_windows; // Windows support planned for v0.3.0
+    }
+
+    /// Get the optimal async strategy for the platform
+    pub fn strategy() AsyncStrategy {
+        if (is_windows) {
+            // v0.2.0: Threaded fallback on Windows
+            // v0.3.0: Will use IOCP on Windows
+            return .threaded;
+        } else {
+            return .io_uring; // Linux prefers io_uring
+        }
+    }
+};
+
+pub const AsyncStrategy = enum {
+    io_uring, // Linux native
+    kqueue, // macOS/BSD
+    threaded, // Fallback using std.Thread
+    io_completion, // Windows IOCP (TODO)
+};
+
+// ─────────────────────────── Process Management ───────────────────────────
+
+/// Platform-specific process signal handling
+///
+/// v0.2.0: POSIX signals supported, Windows uses fallback
+/// v0.3.0: Windows GenerateConsoleCtrlEvent planned
+pub fn sendTermSignal(pid: i32) void {
+    if (is_windows) {
+        // v0.2.0: Windows signal handling not implemented
+        // Workaround: Use taskkill or terminate via other means
+        std.log.warn("sendTermSignal() not implemented on Windows in v0.2.0. " ++
+            "PID {} not signaled.", .{pid});
+        // v0.3.0: Will use GenerateConsoleCtrlEvent or TerminateProcess
+    } else {
+        // POSIX: SIGTERM
+        std.posix.kill(@intCast(pid), std.posix.SIG.TERM) catch |err| {
+            std.log.warn("Failed to send SIGTERM to PID {}: {}", .{ pid, err });
+        };
+    }
+}
+
+/// Get the platform-specific temporary directory
+pub fn tempDir(allocator: std.mem.Allocator) ![]u8 {
+    if (is_windows) {
+        const tmp = std.process.getEnvVarOwned(allocator, "TEMP") catch
+            std.process.getEnvVarOwned(allocator, "TMP") catch
+            return allocator.dupe(u8, "C:\\Temp");
+        return tmp;
+    } else {
+        const tmp = std.process.getEnvVarOwned(allocator, "TMPDIR") catch
+            std.process.getEnvVarOwned(allocator, "TMP") catch
+            return allocator.dupe(u8, "/tmp");
+        return tmp;
+    }
+}

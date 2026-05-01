@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.0] (2026-04-30)
+
+### Features
+
+- **SPIFFE:** Experimental support now behind `-Dspiffe-experimental` build flag
+- **Windows:** Full cross-compilation support for Windows targets
+- **CI:** Multi-platform CI matrix (Linux, macOS, Windows)
+- **Docs:** Windows-specific build and usage guide
+
+### Changes
+
+- SPIFFE/SPIRE support is now opt-in via build flag (reduces default binary size)
+- SDK version bumped to 0.2.0
+
+### Security
+
+- SLSA provenance attestation for all release artifacts
+- Cosign signing of SBOM and release artifacts
+- Verified supply chain security through GitHub Actions
+
 ## [0.1.2](https://github.com/MChorfa/dagger-zig/compare/v0.1.1...v0.1.2) (2026-04-25)
 
 

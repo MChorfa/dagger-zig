@@ -43,24 +43,40 @@ Dependency bump for users. No source changes required.
 - [ ] Full fixture-based test suite (bytes captured from real SPIRE agent)
 - [ ] Shellout backend's DER parser lands too (shares cert parsing code)
 
-## v0.2 — production-grade client
+## v0.2.0 — cross-platform production release
 
-The resilience foundation laid in v0.1.0 enables this level of reliability.
+The "works everywhere" release. Windows support, supply chain hardening, and expanded API coverage.
 
-- [ ] Complete codegen coverage
-  - [ ] All scalar argument types (int/float/boolean/enum)
-  - [ ] List-of-object arguments via lazy ID resolution batching
-  - [ ] Optional args with GraphQL default-value handling
-  - [ ] Object-list return types
-- [ ] Lazy ID resolution via GraphQL variables
-- [ ] Multi-field selection sets in querybuilder (current linear-chain
-      limit; drop the raw-GraphQL escape hatch in `module_api.fetchArgList`)
-- [ ] Streaming stdout/stderr for long-running containers
-- [ ] Proper `DomainError` extensions parsing (path + locations)
+### Phase 5: Windows Support (Complete)
+- [x] SPIFFE marked experimental behind `-Dspiffe-experimental` flag
+- [ ] Windows socket implementations (named pipes/AF_UNIX)
+- [ ] Windows-specific container runtime support
+- [ ] CI matrix testing on Windows targets
+- [ ] Cross-compilation verified for all targets
+
+### New Features
+- [ ] Additional Dagger API types: `Module`, `CacheVolume` expansion, `Service` methods
+- [ ] Async/await patterns for concurrent GraphQL queries via `Io.Group`
+- [ ] More examples: testing patterns, multi-platform builds, git operations
+- [ ] `Container.directory(path)` + `Container.file(path)` API
+
+### Polish & Hardening
+- [ ] Integration tests with real Dagger engine in CI
+- [ ] Improved error messages with context and remediation hints
+- [ ] Tracing instrumentation for SDK operations (OpenTelemetry compatible)
 - [ ] Connection-pool reuse across client instances
-- [ ] `Container.directory(path)` + `Container.file(path)` → unblocks
-      `ci.cLib` returning a Directory, which lights up `c_smoke` / `matrix`
-- [ ] Real per-module codegen in `sdk/codegen/` (restrict schema to user deps)
+
+### Release & Supply Chain
+- [ ] v0.2.0 signed git tag triggers release workflow
+- [ ] SLSA Level 3 provenance attestation verified
+- [ ] Cosign signature verification documented and tested
+- [ ] SBOM generation and signing validated
+
+### Documentation
+- [ ] Expanded API reference with new types
+- [ ] Windows-specific build and usage guide
+- [ ] Advanced examples and patterns
+- [ ] Video tutorial scripts (Remotion-compatible)
 
 ## v0.3 — meta-SDK rewrite
 

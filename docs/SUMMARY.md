@@ -1,50 +1,57 @@
 # Summary
 
-## Introduction
+## 🚀 Getting Started
 
 - [Overview](README.md)
 - [Getting Started](getting-started.md)
 - [Quick Examples](examples.md)
-- [Contributing](contributing.md)
+- [IDE Setup](ide-setup.md)
+- [Build Guide](build.md)
 
-## Core Concepts
+## 🏗️ Core Concepts
 
 - [Architecture](architecture.md)
 - [Architectural Map](ARCHITECTURAL_MAP.md)
-- [Resilience Patterns](resilience.md)
-- [Cache Fail-Safe](cache.md)
-- [Secret Management](secrets.md)
+- [Repository Layout](layout.md)
+- [Why Zig?](why-zig.md)
 
-## API Documentation
+## 🔧 API Reference
 
 - [Client API](api-reference.md)
+- [Module Authoring](module-authoring.md)
 - [Query Builder](query-builder.md)
 - [Error Handling](errors.md)
-- [C FFI](c-api.md)
-
-## Module Development
-
-- [Module Authoring](module-authoring.md)
 - [Type System](types.md)
 - [Comptime Dispatch](dispatch.md)
 
-## Enterprise & Operations
+## ⚡ Advanced Features (v0.2.0)
 
-- [Compliance](compliance.md) — SOC2, ISO27001, PCI DSS, NIST CSF
-- [Observability](observability.md) — OpenTelemetry, logging, metrics
-- [Incident Response](incident-response.md) — Runbooks and severity levels
-- [Local CI Testing](local-ci-testing.md) — Test workflows locally
+- [Async Patterns](async-patterns.md)
+- [Distributed Tracing](tracing.md)
+- [Windows Support](windows.md)
+- [Cache Volumes](cache.md)
+- [Secret Management](secrets.md)
 
-## Security
+## 🔒 Security & Identity
 
 - [SPIFFE Integration](spiffe.md)
 - [Workload Identity](workload-identity.md)
-- [Security Policy](../SECURITY.md) — Vulnerability reporting
+- [C FFI](c-api.md)
+- [Security Policy](../SECURITY.md)
 
-## Reference
+## 🏢 Enterprise & Operations
 
-- [Build Targets](build.md)
-- [Repository Layout](layout.md)
+- [Compliance](compliance.md)
+- [Observability](observability.md)
+- [Resilience Patterns](resilience.md)
+- [Incident Response](incident-response.md)
+- [Local CI Testing](local-ci-testing.md)
+
+## 📝 Contributing & Reference
+
+- [Contributing](contributing.md)
+- [Migration Guide](migration.md)
 - [Roadmap](roadmap.md)
+- [Release Checklist](RELEASE_CHECKLIST.md)
 - [Changelog](../CHANGELOG.md)
 - [License](../LICENSE)

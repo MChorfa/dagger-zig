@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@56afc609e74202658d3ffba0e8f6dda462b719fa # v2.0.2
+        uses: peaceiris/actions-mdbook@adeb05db28a71057629eb8744c4a33f2f5f5ca52 # v2.0.1
         with:
           mdbook-version: "latest"
 

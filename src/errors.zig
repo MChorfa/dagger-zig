@@ -25,6 +25,12 @@ pub const BuildError = error{
     SecretTooLong,
     /// Input exceeds maximum allowed size for scrubbing (10MB).
     InputTooLarge,
+    /// Async query group was already executed.
+    AlreadyExecuted,
+    /// Async query group is empty.
+    EmptyGroup,
+    /// Maximum retry attempts exceeded.
+    RetryExceeded,
 };
 
 pub const QueryError = error{
@@ -85,4 +91,23 @@ pub const DomainError = struct {
         if (self.locations) |l| allocator.free(l);
         if (self.extensions_json) |e| allocator.free(e);
     }
+};
+
+/// Platform-specific errors for cross-platform abstractions.
+pub const PlatformError = error{
+    OutOfMemory,
+    /// Socket connection failed (platform-specific reason).
+    ConnectionFailed,
+    /// Socket read operation failed.
+    ReadError,
+    /// Socket write operation failed.
+    WriteError,
+    /// Socket close operation failed.
+    CloseError,
+    /// Platform feature not supported on this OS.
+    NotSupported,
+    /// Windows-specific: Named pipe operation failed.
+    NamedPipeError,
+    /// Windows-specific: AF_UNIX not available (requires Windows 10 1803+).
+    AfUnixNotAvailable,
 };

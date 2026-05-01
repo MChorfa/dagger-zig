@@ -1,15 +1,39 @@
 # SPIFFE Integration
 
+> **⚠️ EXPERIMENTAL FEATURE**
+>
+> SPIFFE support is experimental and disabled by default. Enable with:
+> ```bash
+> zig build -Dspiffe-experimental
+> ```
+>
+> The API is unstable and may change in future releases. Not recommended for production use.
+
 Workload identity support via SPIFFE/SPIRE.
+
+## Enabling SPIFFE Support
+
+Build with the experimental flag:
+
+```bash
+# Standard build without SPIFFE
+zig build
+
+# Build with SPIFFE support
+zig build -Dspiffe-experimental
+
+# Run tests with SPIFFE
+zig build test -Dspiffe-experimental
+```
 
 ## Overview
 
 dagger-zig supports two backends:
 
-| Backend | Status | Description |
-|---------|--------|-------------|
-| `ShelloutSource` | v0.1.0 working | Spawns `spire-agent` subprocess |
-| `NativeWorkloadAPISource` | v0.1.1 | Pure Zig HTTP/2 + gRPC |
+| Backend                   | Status         | Description                     |
+| ------------------------- | -------------- | ------------------------------- |
+| `ShelloutSource`          | v0.1.0 working | Spawns `spire-agent` subprocess |
+| `NativeWorkloadAPISource` | v0.1.1         | Pure Zig HTTP/2 + gRPC          |
 
 Both implement the same `SvidSource` interface. Upgrade from shellout to native with zero source changes.
 
@@ -38,13 +62,13 @@ defer svid.deinit();
 
 Implements the SPIFFE Workload API subset:
 
-| RPC | Direction | v0.1.1 |
-|-----|-----------|--------|
-| FetchX509SVID | server-stream | Yes |
-| FetchX509Bundles | server-stream | Yes |
-| FetchJWTSVID | unary | Yes |
-| FetchJWTBundles | server-stream | No (v0.2) |
-| ValidateJWTSVID | unary | No (v0.2) |
+| RPC              | Direction     | v0.1.1    |
+| ---------------- | ------------- | --------- |
+| FetchX509SVID    | server-stream | Yes       |
+| FetchX509Bundles | server-stream | Yes       |
+| FetchJWTSVID     | unary         | Yes       |
+| FetchJWTBundles  | server-stream | No (v0.2) |
+| ValidateJWTSVID  | unary         | No (v0.2) |
 
 ### Protocol Stack
 

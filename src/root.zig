@@ -53,6 +53,9 @@
 
 const std = @import("std");
 
+// Feature flags from build options
+const spiffe_options = @import("spiffe_options");
+
 pub const errors = @import("errors.zig");
 pub const querybuilder = @import("querybuilder.zig");
 pub const core = struct {
@@ -68,19 +71,36 @@ pub const core = struct {
 /// TypeDef builder, server loop, and (de)serialization.
 pub const module = @import("module/mod.zig");
 
+/// Async patterns for concurrent Dagger operations.
+pub const async = @import("async.zig");
+
+/// OpenTelemetry-compatible tracing for SDK operations.
+pub const tracing = @import("tracing.zig");
+
 /// SPIFFE/SPIRE subsystem — Workload API client, SVID types, and helpers
 /// for authenticating to external services (Vault, registries, etc.) with
 /// short-lived workload identities. See `src/spiffe/mod.zig`.
 ///
+/// ⚠️ EXPERIMENTAL: Enable with `-Dspiffe-experimental` build flag.
+/// API is unstable and may change in future releases.
+///
 /// v0.1.0 ships with a working `ShelloutSource` backend. v0.1.1 ships
 /// with `NativeWorkloadAPISource` — pure-Zig gRPC, zero subprocess dep.
 /// Same interface either way.
-pub const spiffe = @import("spiffe/mod.zig");
+pub const spiffe = if (spiffe_options.spiffe_enabled)
+    @import("spiffe/mod.zig")
+else
+    struct {};
 
 /// Opt-in SPIFFE-to-Dagger glue (`spiffeRegistryAuth`, Vault cert-auth
 /// provider). Separate from `spiffe` to keep the SPIFFE client usable as
 /// a standalone library without pulling in the Dagger core dep graph.
-pub const spiffe_integration = @import("spiffe/integration.zig");
+///
+/// ⚠️ EXPERIMENTAL: Enable with `-Dspiffe-experimental` build flag.
+pub const spiffe_integration = if (spiffe_options.spiffe_enabled)
+    @import("spiffe/integration.zig")
+else
+    struct {};
 
 pub const Config = core.config.Config;
 pub const Logger = core.config.Logger;
@@ -191,5 +211,12 @@ pub fn connect(
 }
 
 test {
+    // Always test core SDK
     std.testing.refAllDecls(@This());
+
+    // Only test SPIFFE when experimental flag is enabled
+    if (spiffe_options.spiffe_enabled) {
+        std.testing.refAllDecls(@import("spiffe/mod.zig"));
+        std.testing.refAllDecls(@import("spiffe/integration.zig"));
+    }
 }

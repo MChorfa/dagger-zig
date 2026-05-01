@@ -22,12 +22,20 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    // ── feature flags ────────────────────────────────────────────────────
+    const spiffe_experimental = b.option(bool, "spiffe-experimental", "Enable experimental SPIFFE/SPIRE workload identity support (default: false)") orelse false;
+
+    // Create options module for feature flags
+    const spiffe_options = b.addOptions();
+    spiffe_options.addOption(bool, "spiffe_enabled", spiffe_experimental);
+
     // ── library module (the public import: `@import("dagger_sdk")`) ─────
     const dagger_mod = b.addModule("dagger_sdk", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
+    dagger_mod.addOptions("spiffe_options", spiffe_options);
 
     // ── unit tests ──────────────────────────────────────────────────────
     const unit_mod = b.createModule(.{
@@ -36,6 +44,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
+    unit_mod.addOptions("spiffe_options", spiffe_options);
     const unit_tests = b.addTest(.{ .root_module = unit_mod });
     const run_unit = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run offline unit tests");
