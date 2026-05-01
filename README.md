@@ -16,19 +16,19 @@
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 > **📚 Looking for Dagger?** Visit [dagger.io](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger)
+> **Status:** v0.2.0. POSIX-only synchronous client SDK with module authoring and tracing.  
+> **Security Hardened:** OpenSSF Scorecard, SLSA provenance, Sigstore signing
 
-> **Status:** v0.1.0. Compiled and tested with Zig 0.16.  
-> **Security Hardened:** OpenSSF Scorecard, SLSA provenance (in progress), Sigstore signing
+Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0.
 
-Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0
-so pipelines can use `std.Io.async` + `Io.Group` for genuinely parallel
-container operations — no manual threadpool, no event loop to pick.
+## What works in v0.2.0
 
-## What works in v0.1.0
-
-- **Client API.** `dagger.connect(gpa, io, .{})` → query containers,
-  directories, files, secrets, cache volumes. Chain `.from().withExec()
-  .stdout()` the way you would in any other SDK.
+- **Client API.** Synchronous Dagger API for Linux/macOS: containers, directories, files,
+  secrets, cache volumes, services, git repositories. Chain methods
+  the way you would in any other SDK.
+- **Distributed Tracing.** OpenTelemetry-compatible tracing via `dagger.tracing`.
+  Exports spans in a custom JSON shape compatible with OpenTelemetry tooling.
+  OTLP export to Jaeger/Zipkin collectors is deferred to v0.3.0.
 - **CLI session lifecycle.** Resolves via three-tier handshake: env vars
   from `dagger run --` → `_EXPERIMENTAL_DAGGER_CLI_BIN` path → `dagger`
   on `$PATH`. Never auto-downloads the CLI.
@@ -36,18 +36,22 @@ container operations — no manual threadpool, no event loop to pick.
   Dagger with `dagger.module.serve(init, MyModule{})`. Comptime
   reflection maps Zig types to Dagger `TypeDef` values automatically;
   unmappable signatures fail at `zig build`, not at engine-dispatch.
-- **C ABI.** `zig build c-lib` produces `libdagger.{a,so,dylib}` plus
-  headers. Call from C, Python (via cffi), or any language with FFI.
-- **SPIFFE/SPIRE workload identity.** `ShelloutSource` backend (via
-  `spire-agent api fetch`) is the working backend; `NativeWorkloadAPISource`
-  ships as a type-complete skeleton for v0.1.1 — user code written today
-  upgrades to v0.1.1 with a dependency bump, no source changes.
+- **SPIFFE/SPIRE workload identity (experimental).** Enable with
+  `-Dspiffe-experimental`. `ShelloutSource` backend (via `spire-agent api fetch`)
+  is the working backend; `NativeWorkloadAPISource` ships as a type-complete
+  skeleton for v0.3.0.
 - **Self-hosting CI.** This repo's own CI pipeline is in `ci/main.zig` —
   a Zig Dagger module that uses dagger-zig to build dagger-zig.
 
-## What's explicitly deferred to v0.1.1
+## What's explicitly deferred to v0.3.0
 
-- Native SPIFFE Workload API (pure Zig HTTP/2 + gRPC + protobuf). Wire spec locked at [`SPIFFE_IMPL.md`](SPIFFE_IMPL.md).
+- **Async patterns.** `dagger.async` (`QueryGroup`, `QueryBatch`, `withRetry`) — disabled in
+  v0.2.0 to prevent `error.NotImplemented` failures. Coming in v0.3.0.
+- **Windows support.** Socket operations return `error.NotSupported` on Windows in v0.2.0.
+  Full Windows support planned for v0.3.0.
+- **C ABI.** `zig build c-lib` is disabled in v0.2.0 (compilation issues with Zig 0.16).
+  Will be re-enabled in v0.3.0.
+- Native SPIFFE Workload API (pure Zig HTTP/2 + gRPC + protobuf).
 - Vault cert-auth for `spiffe_integration.spiffeRegistryAuth`. Shares TLS
   layer with native SPIFFE, so they land together.
 - Shellout X.509 PEM parser (currently the shellout backend runs
@@ -133,7 +137,7 @@ Your `dagger.json`:
 ```json
 {
   "name": "my-pipeline",
-  "sdk": "github.com/ckodex/dagger-zig/sdk@v0.1.0",
+  "sdk": "github.com/ckodex/dagger-zig/sdk@v0.2.0",
   "source": "."
 }
 ```
@@ -174,7 +178,13 @@ ffi = cffi.FFI()
 # See examples/c-client/hello.py for full bindings.
 ```
 
-## SPIFFE
+## SPIFFE (Experimental)
+
+SPIFFE support is experimental and disabled by default. Build with:
+
+```bash
+zig build -Dspiffe-experimental
+```
 
 ```zig
 const spiffe = dagger.spiffe;
@@ -205,6 +215,7 @@ const authed = try integ.spiffeRegistryAuth(ctr, &client, src, .{
 
 ```shell
 zig build                    build the library module
+zig build -Dspiffe-experimental   enable experimental SPIFFE support
 zig build test               offline unit tests (all subsystems)
 zig build test-module        offline module-runtime comptime E2E
 zig build test-integration   live-engine tests (run under `dagger run --`)
@@ -226,6 +237,9 @@ src/
 ├── module_api.zig      Engine APIs used only by the module runtime
 ├── errors.zig          Four error sets
 ├── c_api.zig           C FFI layer
+├── async.zig           Concurrent operations and QueryGroup
+├── tracing.zig         OpenTelemetry-compatible tracing
+├── platform.zig        Platform abstractions (sockets, async I/O)
 ├── core/               connect_params, config, graphql_client, cli_session
 ├── module/             Module authoring (typedef, dispatch, serde, server)
 └── spiffe/             SPIFFE ID parsing, SVID types, Workload API client
@@ -234,7 +248,7 @@ ci/                     Self-hosting CI module (Zig Dagger module)
 sdk/                    Module SDK interface (Go shim — the bootstrap layer)
 examples/               first-pipeline, build-app, parallel, c-client
 tests/                  integration (live engine) + module_e2e (offline)
-docs/                   ARCHITECTURE, ROADMAP, SPIFFE_IMPL
+docs/                   Comprehensive documentation (see docs/README.md)
 ```
 
 ## Design choices and why
@@ -301,14 +315,19 @@ See [`docs/local-ci-testing.md`](docs/local-ci-testing.md) for detailed setup.
 
 ## Documentation
 
-| Document                                       | Purpose                                     |
-| ---------------------------------------------- | ------------------------------------------- |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md)           | Design rationale and internal mechanics     |
-| [`ARCHITECTURAL_MAP.md`](ARCHITECTURAL_MAP.md) | Visual architecture overview with diagrams  |
-| [`ROADMAP.md`](ROADMAP.md)                     | Version planning and feature timeline       |
-| [`SPIFFE_IMPL.md`](SPIFFE_IMPL.md)             | SPIFFE Workload API implementation spec     |
-| [`SECURITY.md`](SECURITY.md)                   | Security policy and vulnerability reporting |
-| [`docs/compliance.md`](docs/compliance.md)     | SOC2/ISO27001 compliance mappings           |
+All documentation is in [`docs/`](docs/).
+
+| Document                                             | Purpose                                     |
+| ---------------------------------------------------- | ------------------------------------------- |
+| [`docs/README.md`](docs/README.md)                   | Documentation index and quick reference     |
+| [`docs/getting-started.md`](docs/getting-started.md) | Your first dagger-zig project               |
+| [`docs/async-patterns.md`](docs/async-patterns.md)   | Concurrent operations guide (v0.3.0)        |
+| [`docs/tracing.md`](docs/tracing.md)                 | Distributed tracing guide                   |
+| [`docs/architecture.md`](docs/architecture.md)       | Design rationale and internal mechanics     |
+| [`docs/roadmap.md`](docs/roadmap.md)                 | Version planning and feature timeline       |
+| [`docs/spiffe.md`](docs/spiffe.md)                   | SPIFFE workload identity (experimental)     |
+| [`SECURITY.md`](SECURITY.md)                         | Security policy and vulnerability reporting |
+| [`docs/compliance.md`](docs/compliance.md)           | SOC2/ISO27001 compliance mappings           |
 
 ## CI Setup Required
 
@@ -322,7 +341,8 @@ The workflows will run but some jobs may skip if secrets are missing.
 
 ## Dagger Integration
 
-This SDK is a **Community SDK** for [Dagger](https://dagger.io). It follows the official Dagger SDK patterns and integrates with the Dagger Engine.
+This SDK is a **Community SDK** for [Dagger](https://dagger.io). It follows the official Dagger SDK patterns
+and integrates with the Dagger Engine.
 
 ### Dagger Resources
 

@@ -53,6 +53,9 @@
 
 const std = @import("std");
 
+// Feature flags from build options
+const spiffe_options = @import("spiffe_options");
+
 pub const errors = @import("errors.zig");
 pub const querybuilder = @import("querybuilder.zig");
 pub const core = struct {
@@ -68,19 +71,38 @@ pub const core = struct {
 /// TypeDef builder, server loop, and (de)serialization.
 pub const module = @import("module/mod.zig");
 
+/// Async patterns for concurrent Dagger operations.
+/// ⚠️ NOTE: v0.2.0 does not include async support. Coming in v0.3.0.
+/// The async module is temporarily disabled to prevent runtime NotImplemented errors.
+// pub const async = @import("async.zig");
+
+/// OpenTelemetry-compatible tracing for SDK operations.
+pub const tracing = @import("tracing.zig");
+
 /// SPIFFE/SPIRE subsystem — Workload API client, SVID types, and helpers
 /// for authenticating to external services (Vault, registries, etc.) with
 /// short-lived workload identities. See `src/spiffe/mod.zig`.
 ///
+/// ⚠️ EXPERIMENTAL: Enable with `-Dspiffe-experimental` build flag.
+/// API is unstable and may change in future releases.
+///
 /// v0.1.0 ships with a working `ShelloutSource` backend. v0.1.1 ships
 /// with `NativeWorkloadAPISource` — pure-Zig gRPC, zero subprocess dep.
 /// Same interface either way.
-pub const spiffe = @import("spiffe/mod.zig");
+pub const spiffe = if (spiffe_options.spiffe_enabled)
+    @import("spiffe/mod.zig")
+else
+    struct {};
 
 /// Opt-in SPIFFE-to-Dagger glue (`spiffeRegistryAuth`, Vault cert-auth
 /// provider). Separate from `spiffe` to keep the SPIFFE client usable as
 /// a standalone library without pulling in the Dagger core dep graph.
-pub const spiffe_integration = @import("spiffe/integration.zig");
+///
+/// ⚠️ EXPERIMENTAL: Enable with `-Dspiffe-experimental` build flag.
+pub const spiffe_integration = if (spiffe_options.spiffe_enabled)
+    @import("spiffe/integration.zig")
+else
+    struct {};
 
 pub const Config = core.config.Config;
 pub const Logger = core.config.Logger;
@@ -161,8 +183,11 @@ pub const Client = struct {
 
     /// Reset the internal arena, reclaiming memory while retaining the buffer capacity.
     /// Call this periodically for long-running clients to prevent unbounded memory growth.
-    /// Only safe when no queries are in progress.
-    pub fn resetArena(self: *Client) void {
+    /// Returns error.QueryInProgress if a query is currently active.
+    pub fn resetArena(self: *Client) error{QueryInProgress}!void {
+        if (self.gql.query_in_progress) {
+            return error.QueryInProgress;
+        }
         _ = self.arena.reset(.retain_capacity);
     }
 };
@@ -191,5 +216,12 @@ pub fn connect(
 }
 
 test {
+    // Always test core SDK
     std.testing.refAllDecls(@This());
+
+    // Only test SPIFFE when experimental flag is enabled
+    if (spiffe_options.spiffe_enabled) {
+        std.testing.refAllDecls(@import("spiffe/mod.zig"));
+        std.testing.refAllDecls(@import("spiffe/integration.zig"));
+    }
 }

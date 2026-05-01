@@ -45,13 +45,13 @@ The SDK automatically traces:
 
 Standard attributes added to all spans:
 
-| Attribute | Description | Example |
-|-----------|-------------|---------|
-| `dagger.operation` | Operation type | `container.from` |
-| `dagger.image` | Image reference | `alpine:latest` |
-| `dagger.platform` | Target platform | `linux/amd64` |
-| `dagger.cache_hit` | Cache status | `true` |
-| `dagger.duration_ms` | Operation duration | `150` |
+| Attribute            | Description        | Example          |
+| -------------------- | ------------------ | ---------------- |
+| `dagger.operation`   | Operation type     | `container.from` |
+| `dagger.image`       | Image reference    | `alpine:latest`  |
+| `dagger.platform`    | Target platform    | `linux/amd64`    |
+| `dagger.cache_hit`   | Cache status       | `true`           |
+| `dagger.duration_ms` | Operation duration | `150`            |
 
 ### Custom Spans
 
@@ -69,13 +69,13 @@ try span.addEvent("milestone-reached", .{
 
 ### Log Levels
 
-| Level | Use Case |
-|-------|----------|
+| Level   | Use Case                        |
+| ------- | ------------------------------- |
 | `error` | Failures requiring intervention |
-| `warn` | Degraded conditions, retries |
-| `info` | Significant state changes |
-| `debug` | Detailed operation flow |
-| `trace` | Function entry/exit |
+| `warn`  | Degraded conditions, retries    |
+| `info`  | Significant state changes       |
+| `debug` | Detailed operation flow         |
+| `trace` | Function entry/exit             |
 
 ### Configuration
 
@@ -119,13 +119,13 @@ try child.warn("retrying operation", .{ .attempt = 3, .max_attempts = 5 });
 
 ### Built-in Metrics
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `dagger.operations.total` | Counter | Total operations executed |
-| `dagger.operations.duration` | Histogram | Operation latency |
-| `dagger.cache.hits` | Counter | Cache hit count |
-| `dagger.cache.misses` | Counter | Cache miss count |
-| `dagger.secrets.accessed` | Counter | Secret access count (no values) |
+| Metric                       | Type      | Description                     |
+| ---------------------------- | --------- | ------------------------------- |
+| `dagger.operations.total`    | Counter   | Total operations executed       |
+| `dagger.operations.duration` | Histogram | Operation latency               |
+| `dagger.cache.hits`          | Counter   | Cache hit count                 |
+| `dagger.cache.misses`        | Counter   | Cache miss count                |
+| `dagger.secrets.accessed`    | Counter   | Secret access count (no values) |
 
 ### Custom Metrics
 
@@ -207,13 +207,13 @@ const sampler = try dagger.telemetry.Sampler.init(.{
 
 ### Recommended Alerts
 
-| Alert | Threshold | Action |
-|-------|-----------|--------|
-| High error rate | > 5% in 5m | Page on-call |
-| Slow operations | p99 > 30s | Notify team |
-| Cache miss spike | > 50% change | Investigate |
-| Engine unreachable | Any failure | Page immediately |
-| Secret access anomaly | > 100/min | Security review |
+| Alert                 | Threshold    | Action           |
+| --------------------- | ------------ | ---------------- |
+| High error rate       | > 5% in 5m   | Page on-call     |
+| Slow operations       | p99 > 30s    | Notify team      |
+| Cache miss spike      | > 50% change | Investigate      |
+| Engine unreachable    | Any failure  | Page immediately |
+| Secret access anomaly | > 100/min    | Security review  |
 
 ### Prometheus Recording Rules
 
@@ -259,17 +259,17 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Missing spans | Check `OTEL_TRACES_EXPORTER` env var |
-| High cardinality | Review custom attributes |
-| Trace gaps | Enable `OTEL_PROPAGATORS=tracecontext,baggage` |
-| Performance impact | Use sampling for high-volume operations |
+| Issue              | Solution                                       |
+| ------------------ | ---------------------------------------------- |
+| Missing spans      | Check `OTEL_TRACES_EXPORTER` env var           |
+| High cardinality   | Review custom attributes                       |
+| Trace gaps         | Enable `OTEL_PROPAGATORS=tracecontext,baggage` |
+| Performance impact | Use sampling for high-volume operations        |
 
 ## Compliance
 
-| Framework | Control | Implementation |
-|-----------|---------|----------------|
-| SOC 2 CC7.2 | System monitoring | OpenTelemetry traces, logs |
-| ISO 27001 A.12.4 | Logging | Structured JSON logs with tamper-proof transport |
-| PCI DSS 10.2 | Audit trail | All operations traced with user context |
+| Framework        | Control           | Implementation                                   |
+| ---------------- | ----------------- | ------------------------------------------------ |
+| SOC 2 CC7.2      | System monitoring | OpenTelemetry traces, logs                       |
+| ISO 27001 A.12.4 | Logging           | Structured JSON logs with tamper-proof transport |
+| PCI DSS 10.2     | Audit trail       | All operations traced with user context          |

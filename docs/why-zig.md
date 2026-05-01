@@ -4,31 +4,31 @@ Performance comparison and rationale for choosing Zig over Go or Python SDKs.
 
 ## Binary Size Comparison
 
-| SDK | Hello World Binary | Runtime Dependencies | Install Size |
-|-----|-------------------|---------------------|--------------|
-| **dagger-zig** | 1.2 MB | None | 1.2 MB |
-| dagger-go | 12-15 MB | None | 12-15 MB |
-| dagger-python | N/A | Python 3.8+, 50+ packages | 150+ MB |
+| SDK            | Hello World Binary | Runtime Dependencies      | Install Size |
+| -------------- | ------------------ | ------------------------- | ------------ |
+| **dagger-zig** | 1.2 MB             | None                      | 1.2 MB       |
+| dagger-go      | 12-15 MB           | None                      | 12-15 MB     |
+| dagger-python  | N/A                | Python 3.8+, 50+ packages | 150+ MB      |
 
 **Winner: Zig (10× smaller than Go, 100× smaller than Python)**
 
 ## Startup Time
 
-| Operation | Zig | Go | Python |
-|-----------|-----|-----|---------|
-| Cold start | 5 ms | 25 ms | 200+ ms |
+| Operation         | Zig   | Go    | Python  |
+| ----------------- | ----- | ----- | ------- |
+| Cold start        | 5 ms  | 25 ms | 200+ ms |
 | Connect to engine | 10 ms | 30 ms | 250+ ms |
-| First query | 15 ms | 40 ms | 300+ ms |
+| First query       | 15 ms | 40 ms | 300+ ms |
 
 **Winner: Zig (4× faster than Go, 20× faster than Python)**
 
 ## Memory Usage
 
-| Scenario | Zig | Go | Python |
-|----------|-----|-----|---------|
-| Idle connection | 2 MB | 15 MB | 45 MB |
-| Single container op | 8 MB | 35 MB | 120 MB |
-| 100 parallel ops | 45 MB | 180 MB | 600+ MB |
+| Scenario            | Zig   | Go     | Python  |
+| ------------------- | ----- | ------ | ------- |
+| Idle connection     | 2 MB  | 15 MB  | 45 MB   |
+| Single container op | 8 MB  | 35 MB  | 120 MB  |
+| 100 parallel ops    | 45 MB | 180 MB | 600+ MB |
 
 **Winner: Zig (4× more efficient than Go, 13× more than Python)**
 
@@ -36,11 +36,11 @@ Performance comparison and rationale for choosing Zig over Go or Python SDKs.
 
 Running 1000 container queries:
 
-| Metric | Zig | Go | Python |
-|--------|-----|-----|---------|
-| CPU time | 0.8s | 2.5s | 8.5s |
-| Allocations | 5000 | 50000 | 500000+ |
-| Peak threads | 2 | 8 | 32+ |
+| Metric       | Zig  | Go    | Python  |
+| ------------ | ---- | ----- | ------- |
+| CPU time     | 0.8s | 2.5s  | 8.5s    |
+| Allocations  | 5000 | 50000 | 500000+ |
+| Peak threads | 2    | 8     | 32+     |
 
 **Winner: Zig (3× faster than Go, 10× faster than Python)**
 
@@ -98,30 +98,30 @@ await asyncio.gather(
 
 CI pipeline running 50 container operations:
 
-| SDK | Total Time | Memory Peak |
-|-----|-----------|-------------|
-| Zig | 12s | 25 MB |
-| Go | 28s | 85 MB |
-| Python | 65s | 280 MB |
+| SDK    | Total Time | Memory Peak |
+| ------ | ---------- | ----------- |
+| Zig    | 12s        | 25 MB       |
+| Go     | 28s        | 85 MB       |
+| Python | 65s        | 280 MB      |
 
 **Zig advantage: 2× faster than Go, 5× faster than Python**
 
 ## When to Choose Each SDK
 
-### Choose dagger-zig when:
+### Choose dagger-zig when
 - Performance is critical
 - Binary size matters (embedded, edge)
 - You want zero dependencies
 - Memory efficiency is important
 - You prefer compile-time safety
 
-### Choose dagger-go when:
+### Choose dagger-go when
 - Team already knows Go
 - Ecosystem maturity is priority
 - You need maximum compatibility
 - Team prefers garbage collection
 
-### Choose dagger-python when:
+### Choose dagger-python when
 - Team already knows Python
 - Rapid prototyping
 - Data science integration
@@ -169,12 +169,12 @@ zig build run-benchmark
 
 ## Migration ROI
 
-| Factor | Impact |
-|--------|--------|
-| CI time reduction | 40-60% faster builds |
-| Memory usage | 4× lower on runners |
-| Binary size | 10× smaller artifacts |
-| Startup time | Sub-10ms vs 100ms+ |
+| Factor            | Impact                |
+| ----------------- | --------------------- |
+| CI time reduction | 40-60% faster builds  |
+| Memory usage      | 4× lower on runners   |
+| Binary size       | 10× smaller artifacts |
+| Startup time      | Sub-10ms vs 100ms+    |
 
 **Typical payback period: 2-4 weeks** for teams running CI/CD heavily.
 

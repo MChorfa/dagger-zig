@@ -1,6 +1,6 @@
 # dagger-zig — Architecture
 
-This document explains *why* the SDK is shaped the way it is. For the *what*,
+This document explains _why_ the SDK is shaped the way it is. For the _what_,
 see the inline doc comments in each source file.
 
 ## The four codegen types
@@ -8,12 +8,12 @@ see the inline doc comments in each source file.
 Per the upstream `dagger-codegen` skill, "codegen" means four different things
 in Dagger. dagger-zig handles them as follows:
 
-| Type | What it produces | dagger-zig status |
-|------|------------------|--------------------|
-| 1. In-module bindings | `internal/dagger/dagger.gen.*` for a module to call `dag.*` | **v0.1: stub** — re-exports `dagger_sdk`. Real codegen in v0.1.1 once per-module schema restriction lands. |
-| 2. Runtime dispatch | `invoke()` that routes incoming calls to user fns | **v0.1: done via comptime.** `dispatch.build(M)` returns a comptime table; specialized invoker shims per method. Offline E2E verified. |
-| 3. SDK library | The shipped `dagger` package itself | **v0.1: hand-written in `gen_sample.zig`, with a codegen emitter for later** |
-| 4. Generated clients | Standalone `Connect()` + `Close()` + types for regular programs | **v0.1: partial** — `connect()` + `close()` work, types are hand-written |
+| Type                  | What it produces                                                | dagger-zig status                                                                                                                      |
+| --------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. In-module bindings | `internal/dagger/dagger.gen.*` for a module to call `dag.*`     | **v0.1: stub** — re-exports `dagger_sdk`. Real codegen in v0.1.1 once per-module schema restriction lands.                             |
+| 2. Runtime dispatch   | `invoke()` that routes incoming calls to user fns               | **v0.1: done via comptime.** `dispatch.build(M)` returns a comptime table; specialized invoker shims per method. Offline E2E verified. |
+| 3. SDK library        | The shipped `dagger` package itself                             | **v0.1: hand-written in `gen_sample.zig`, with a codegen emitter for later**                                                           |
+| 4. Generated clients  | Standalone `Connect()` + `Close()` + types for regular programs | **v0.1: partial** — `connect()` + `close()` work, types are hand-written                                                               |
 
 The Type 2 decision was **comptime registration** — no macros, no source
 parsing. The user writes a plain struct:
@@ -108,10 +108,12 @@ in `build()`. We serialize eagerly in `.arg()` / `.argStr()` and store the
 resulting string literal.
 
 Pros:
+
 - Simpler types — `Arg { name, value_literal }` is all we need.
 - No generic serialization infrastructure.
 
 Cons:
+
 - An arg is materialized even if the chain is never built (rare in practice).
 - Lazy args (for IDs that require awaiting) need a separate `LazyArg` union
   member — we have this in `ArgValue`.
@@ -123,17 +125,17 @@ require type erasure that's annoying without `Arc<dyn Any>`.
 
 Who owns what:
 
-| Memory | Owner | Freed on |
-|--------|-------|----------|
-| `Selection` nodes | `client.arena` | `client.close()` |
-| Selection-internal strings (names, aliases, arg names, arg literals) | `client.arena` | `client.close()` |
-| Query result bodies (from `gql.query()`) | Caller (returned to user) | Caller's allocator |
-| `ContainerID`/`DirectoryID`/etc. | Caller | `.deinit(allocator)` |
-| HTTP auth header, endpoint URL | `GraphQLClient` | `gql.deinit()` |
-| `DomainError` | `GraphQLClient.last_error` | Overwritten on next query or `gql.deinit()` |
+| Memory                                                               | Owner                      | Freed on                                    |
+| -------------------------------------------------------------------- | -------------------------- | ------------------------------------------- |
+| `Selection` nodes                                                    | `client.arena`             | `client.close()`                            |
+| Selection-internal strings (names, aliases, arg names, arg literals) | `client.arena`             | `client.close()`                            |
+| Query result bodies (from `gql.query()`)                             | Caller (returned to user)  | Caller's allocator                          |
+| `ContainerID`/`DirectoryID`/etc.                                     | Caller                     | `.deinit(allocator)`                        |
+| HTTP auth header, endpoint URL                                       | `GraphQLClient`            | `gql.deinit()`                              |
+| `DomainError`                                                        | `GraphQLClient.last_error` | Overwritten on next query or `gql.deinit()` |
 
-Rule of thumb: if it crossed the GraphQL boundary *in* (an arg), the arena
-owns it. If it crossed *out* (a scalar result), the user owns it and must
+Rule of thumb: if it crossed the GraphQL boundary _in_ (an arg), the arena
+owns it. If it crossed _out_ (a scalar result), the user owns it and must
 free.
 
 ## Error model
@@ -162,14 +164,14 @@ matching on `error.TransportFailed` shouldn't also need to handle
 
 ## Comparison to Rust SDK
 
-| Area | Rust SDK | dagger-zig |
-|------|----------|------------|
-| Concurrency | async/Tokio | sync |
-| Selection sharing | `Arc<Selection>` | arena-scoped |
-| Arg storage | `HashMap<String, LazyResolve>` | immutable `[]Arg` |
-| Binary size (stripped release) | ~4 MB | ~500 KB (target) |
-| Dependencies | 80+ transitive | 0 |
-| Module runtime | yes | **no (v0.2)** |
+| Area                           | Rust SDK                       | dagger-zig        |
+| ------------------------------ | ------------------------------ | ----------------- |
+| Concurrency                    | async/Tokio                    | sync              |
+| Selection sharing              | `Arc<Selection>`               | arena-scoped      |
+| Arg storage                    | `HashMap<String, LazyResolve>` | immutable `[]Arg` |
+| Binary size (stripped release) | ~4 MB                          | ~500 KB (target)  |
+| Dependencies                   | 80+ transitive                 | 0                 |
+| Module runtime                 | yes                            | **no (v0.2)**     |
 
 The binary size gap is where Zig pays off for Dagger specifically: the
 module runtime container is pulled for every `dagger call`. Smaller base

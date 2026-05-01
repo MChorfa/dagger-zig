@@ -109,9 +109,10 @@ extern "C"
     /**
      * Reset the internal arena, reclaiming memory while retaining buffer capacity.
      * Call periodically for long-running clients to prevent unbounded memory growth.
-     * Only safe when no queries are in progress.
+     * Returns DAGGER_OK (0) on success, or DAGGER_ERR_INTERNAL if a query is in progress.
+     * Check dagger_last_error() for details on failure.
      */
-    void dagger_client_reset_arena(DaggerClient *client);
+    int dagger_client_reset_arena(DaggerClient *client);
 
     /* ── root queries ─────────────────────────────────────────────────────── */
 

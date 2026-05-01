@@ -175,9 +175,15 @@ export fn dagger_client_close(client: ?*ClientHandle) void {
     }
 }
 
-export fn dagger_client_reset_arena(client: ?*ClientHandle) void {
+export fn dagger_client_reset_arena(client: ?*ClientHandle) c_int {
     clearLastError();
-    if (client) |c| c.inner.resetArena();
+    if (client) |c| {
+        c.inner.resetArena() catch |err| {
+            setLastError("{s}", .{@errorName(err)});
+            return DAGGER_ERR_INTERNAL;
+        };
+    }
+    return DAGGER_OK;
 }
 
 export fn dagger_client_dag(client: ?*ClientHandle) ?*QueryHandle {

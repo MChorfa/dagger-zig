@@ -59,11 +59,11 @@ dagger.zig/
 
 ## Key Files for Contributors
 
-| File | Purpose |
-|------|---------|
-| `src/root.zig` | Public API surface |
+| File                      | Purpose                        |
+| ------------------------- | ------------------------------ |
+| `src/root.zig`            | Public API surface             |
 | `src/core/resilience.zig` | Production resilience patterns |
-| `src/core/cache_safe.zig` | Cache fail-safe |
-| `src/core/secrets.zig` | Security architecture |
-| `ci/main.zig` | Self-hosting proof |
-| `src/c_api.zig` | FFI safety |
+| `src/core/cache_safe.zig` | Cache fail-safe                |
+| `src/core/secrets.zig`    | Security architecture          |
+| `ci/main.zig`             | Self-hosting proof             |
+| `src/c_api.zig`           | FFI safety                     |

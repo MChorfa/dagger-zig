@@ -10,10 +10,7 @@ Add to `.vscode/extensions.json`:
 
 ```json
 {
-  "recommendations": [
-    "ziglang.vscode-zig",
-    "tiehuis.zig"
-  ]
+  "recommendations": ["ziglang.vscode-zig", "tiehuis.zig"]
 }
 ```
 
@@ -41,6 +38,7 @@ Create `.vscode/settings.json`:
 ### ZLS (Zig Language Server)
 
 1. Build ZLS:
+
 ```bash
 cd /tmp
 git clone https://github.com/zigtools/zls
@@ -50,7 +48,8 @@ zig build -Doptimize=ReleaseSafe
 cp zig-out/bin/zls ~/bin/
 ```
 
-2. Configure ZLS:
+1. Configure ZLS:
+
 ```bash
 # Creates ~/.config/zls.json
 zls --config
@@ -173,6 +172,7 @@ pub fn main() !void {
 ```
 
 You should see:
+
 - ✅ Syntax highlighting
 - ✅ Auto-completion (type `std.` and see suggestions)
 - ✅ Go to definition (Ctrl+Click on `debug`)

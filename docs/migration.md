@@ -4,17 +4,18 @@ Guide for developers coming from Go or Python SDKs.
 
 ## Quick Comparison
 
-| Feature | Go SDK | Python SDK | Zig SDK |
-|---------|--------|------------|---------|
-| **Async** | `ctx` + channels | `async`/`await` | `std.Io.async` |
-| **Memory** | GC | GC | Manual + arenas |
-| **Error handling** | `if err != nil` | Exceptions | `try`/`catch` |
-| **Type safety** | Runtime | Runtime | Compile-time |
-| **Binary size** | ~10MB | ~50MB+ | ~1MB |
+| Feature            | Go SDK           | Python SDK      | Zig SDK         |
+| ------------------ | ---------------- | --------------- | --------------- |
+| **Async**          | `ctx` + channels | `async`/`await` | `std.Io.async`  |
+| **Memory**         | GC               | GC              | Manual + arenas |
+| **Error handling** | `if err != nil`  | Exceptions      | `try`/`catch`   |
+| **Type safety**    | Runtime          | Runtime         | Compile-time    |
+| **Binary size**    | ~10MB            | ~50MB+          | ~1MB            |
 
 ## Container Operations
 
 ### Go SDK
+
 ```go
 out, err := client.Container().
     From("alpine").
@@ -23,6 +24,7 @@ out, err := client.Container().
 ```
 
 ### Python SDK
+
 ```python
 out = await (
     client.container()
@@ -33,6 +35,7 @@ out = await (
 ```
 
 ### Zig SDK
+
 ```zig
 const out = try client.dag()
     .container()
@@ -43,6 +46,7 @@ defer gpa.free(out);
 ```
 
 **Key differences:**
+
 - `&.` instead of `[]string{}` or list
 - `.dag()` required to get root Query
 - `defer gpa.free(out)` for cleanup
@@ -50,6 +54,7 @@ defer gpa.free(out);
 ## Directory Operations
 
 ### Go SDK
+
 ```go
 dir := client.Host().Directory(".")
 ctr := client.Container().
@@ -58,6 +63,7 @@ ctr := client.Container().
 ```
 
 ### Python SDK
+
 ```python
 dir = client.host().directory(".")
 ctr = (client.container()
@@ -66,6 +72,7 @@ ctr = (client.container()
 ```
 
 ### Zig SDK
+
 ```zig
 const dir = try client.dag()
     .host()
@@ -77,12 +84,14 @@ const ctr = try client.dag()
 ```
 
 **Key differences:**
+
 - `dag()` instead of direct client access
 - No method chaining with dots in Zig (each call returns new value)
 
 ## Secrets
 
 ### Go SDK
+
 ```go
 secret := client.SetSecret("api-key", os.Getenv("API_KEY"))
 ctr := client.Container().
@@ -91,6 +100,7 @@ ctr := client.Container().
 ```
 
 ### Python SDK
+
 ```python
 secret = client.set_secret("api-key", os.environ["API_KEY"])
 ctr = (client.container()
@@ -99,6 +109,7 @@ ctr = (client.container()
 ```
 
 ### Zig SDK
+
 ```zig
 const secret = try client.dag()
     .setSecret("api-key", api_key);
@@ -109,12 +120,14 @@ const ctr = try client.dag()
 ```
 
 **Key differences:**
+
 - Secrets mounted as files in Zig (more secure)
 - No `withSecretVariable` equivalent (use file mounting)
 
 ## Error Handling
 
 ### Go SDK
+
 ```go
 out, err := ctr.Stdout(ctx)
 if err != nil {
@@ -124,6 +137,7 @@ fmt.Println(out)
 ```
 
 ### Python SDK
+
 ```python
 try:
     out = await ctr.stdout()
@@ -133,6 +147,7 @@ except dagger.DaggerError as e:
 ```
 
 ### Zig SDK
+
 ```zig
 const out = ctr.stdout() catch |err| {
     std.log.err("Failed: {}", .{err});
@@ -142,6 +157,7 @@ std.debug.print("{s}\n", .{out});
 ```
 
 **Key differences:**
+
 - `try` is explicit error propagation
 - `catch` blocks for handling
 - No exceptions in Zig
@@ -149,9 +165,11 @@ std.debug.print("{s}\n", .{out});
 ## Memory Management
 
 ### Go/Python
+
 Automatic garbage collection - no cleanup needed.
 
 ### Zig
+
 ```zig
 const gpa = init.gpa;
 
@@ -172,6 +190,7 @@ const arena = arena_state.allocator();
 ## Module Authoring
 
 ### Go SDK
+
 ```go
 type MyModule struct {}
 
@@ -181,6 +200,7 @@ func (m *MyModule) Build(ctx context.Context, source *dagger.Directory) (*dagger
 ```
 
 ### Python SDK
+
 ```python
 @dagger.object_type
 class MyModule:
@@ -190,6 +210,7 @@ class MyModule:
 ```
 
 ### Zig SDK
+
 ```zig
 const MyModule = struct {
     pub fn build(
@@ -211,6 +232,7 @@ pub fn main(init: std.process.Init) !void {
 ```
 
 **Key differences:**
+
 - Zig modules are structs with methods
 - First param is `self`, second is `ctx`
 - `main` calls `serve()` to start module runtime
@@ -220,12 +242,14 @@ pub fn main(init: std.process.Init) !void {
 ### Building and Publishing
 
 **Go:**
+
 ```go
 ctr := client.Container().From("golang").WithExec([]string{"go", "build"})
 _, err := ctr.Publish(ctx, "myimage:latest")
 ```
 
 **Zig:**
+
 ```zig
 const ctr = try client.dag()
     .container()
@@ -238,12 +262,14 @@ defer gpa.free(digest);
 ### Running Tests
 
 **Go:**
+
 ```go
 ctr := client.Container().From("golang").WithExec([]string{"go", "test"})
 out, _ := ctr.Stdout(ctx)
 ```
 
 **Zig:**
+
 ```zig
 const out = try client.dag()
     .container()
