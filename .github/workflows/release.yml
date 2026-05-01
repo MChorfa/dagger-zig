@@ -104,7 +104,7 @@ jobs:
           cd dist && sha256sum dagger-zig-${{ matrix.target }}.tar.gz > dagger-zig-${{ matrix.target }}.tar.gz.sha256
 
       - name: upload artifact
-        uses: actions/upload-artifact@4cec6d1c0373796067e7a92d81eb8e3c1015c31c # v4.6.1
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: build-${{ matrix.target }}
           path: dist/
