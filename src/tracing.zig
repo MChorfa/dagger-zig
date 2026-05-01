@@ -93,19 +93,20 @@ pub const Span = struct {
 
     /// Set a string attribute. Copies the key; overwrites any existing value.
     pub fn setAttribute(self: *Span, key: []const u8, value: anytype) !void {
+        // Dupe the key before touching the map so cleanup is straightforward.
+        const owned_key = try self.allocator.dupe(u8, key);
+        errdefer self.allocator.free(owned_key);
         const v = try AttributeValue.from(self.allocator, value);
+        // v is not yet owned by anyone; free it if put() fails.
         errdefer v.deinit(self.allocator);
 
-        // Remove and clean up any existing entry for this key.
+        // Remove and clean up any existing entry for this key before inserting.
         if (self.attributes.fetchRemove(key)) |old| {
             self.allocator.free(old.key);
             old.value.deinit(self.allocator);
         }
 
-        // Dupe the key so the map owns the string storage.
-        const owned_key = try self.allocator.dupe(u8, key);
-        errdefer self.allocator.free(owned_key);
-
+        // put() succeeds: map owns owned_key and v; all errdefers disarmed.
         try self.attributes.put(owned_key, v);
     }
 
@@ -293,11 +294,10 @@ pub const Tracer = struct {
             try writer.print("    \"name\": \"{s}\",\n", .{span.name});
             try writer.print("    \"traceId\": \"{}\",\n", .{span.trace_id});
             try writer.print("    \"spanId\": \"{}\",\n", .{span.span_id});
+            try writer.print("    \"startTime\": {d},\n", .{span.start_time});
             if (span.end_time) |end| {
-                try writer.print("    \"startTime\": {d},\n", .{span.start_time});
                 try writer.print("    \"endTime\": {d}\n", .{end});
             } else {
-                try writer.print("    \"startTime\": {d},\n", .{span.start_time});
                 try writer.writeAll("    \"endTime\": null\n");
             }
             try writer.writeAll("  }");
