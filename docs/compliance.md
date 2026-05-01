@@ -8,53 +8,53 @@ The dagger-zig SDK maintains compliance with major security and privacy framewor
 
 ### SOC 2 Type II
 
-| Trust Service Criteria | Control | Implementation | Evidence |
-|------------------------|---------|----------------|----------|
-| **CC6.1** - Logical access security | Role-based access control | GitHub branch protection, CODEOWNERS | `.github/CODEOWNERS` |
-| **CC6.2** - Prior to access | Authentication | MFA required for all maintainers | GitHub org policy |
-| **CC6.6** - Security infrastructure | Secure software development | SLSA Level 4, Sigstore signing | `slsa-verifier` outputs |
-| **CC7.1** - Security detection | Monitoring and alerting | OpenTelemetry, security scanning | `.github/workflows/security.yml` |
-| **CC7.2** - Incident response | Incident detection and response | Incident response runbook | `docs/incident-response.md` |
-| **CC8.1** - Change management | Change authorization | Required PR reviews, CI checks | GitHub branch protection |
+| Trust Service Criteria              | Control                         | Implementation                       | Evidence                         |
+| ----------------------------------- | ------------------------------- | ------------------------------------ | -------------------------------- |
+| **CC6.1** - Logical access security | Role-based access control       | GitHub branch protection, CODEOWNERS | `.github/CODEOWNERS`             |
+| **CC6.2** - Prior to access         | Authentication                  | MFA required for all maintainers     | GitHub org policy                |
+| **CC6.6** - Security infrastructure | Secure software development     | SLSA Level 4, Sigstore signing       | `slsa-verifier` outputs          |
+| **CC7.1** - Security detection      | Monitoring and alerting         | OpenTelemetry, security scanning     | `.github/workflows/security.yml` |
+| **CC7.2** - Incident response       | Incident detection and response | Incident response runbook            | `docs/incident-response.md`      |
+| **CC8.1** - Change management       | Change authorization            | Required PR reviews, CI checks       | GitHub branch protection         |
 
 ### ISO 27001:2022
 
-| Control | Description | Implementation |
-|---------|-------------|----------------|
-| **A.5.1** - Information security policies | Security policy framework | `SECURITY.md`, `CODE_OF_CONDUCT.md` |
-| **A.8.1** - User endpoint devices | Secure development environments | Dev container security |
-| **A.8.7** - Protection against malware | Malware protection | Trivy container scanning |
-| **A.8.8** - Management of technical vulnerabilities | Vulnerability management | Dependabot, Trivy, Semgrep |
-| **A.8.25** - Secure development life cycle | Secure SDLC | `SECURITY.md`, SAST/DAST integration |
-| **A.8.29** - Security testing in development | Security testing | `schema/conformance.zig`, security tests |
-| **A.8.30** - Outsourced development | Third-party security | SLSA provenance, SBOM generation |
+| Control                                             | Description                     | Implementation                           |
+| --------------------------------------------------- | ------------------------------- | ---------------------------------------- |
+| **A.5.1** - Information security policies           | Security policy framework       | `SECURITY.md`, `CODE_OF_CONDUCT.md`      |
+| **A.8.1** - User endpoint devices                   | Secure development environments | Dev container security                   |
+| **A.8.7** - Protection against malware              | Malware protection              | Trivy container scanning                 |
+| **A.8.8** - Management of technical vulnerabilities | Vulnerability management        | Dependabot, Trivy, Semgrep               |
+| **A.8.25** - Secure development life cycle          | Secure SDLC                     | `SECURITY.md`, SAST/DAST integration     |
+| **A.8.29** - Security testing in development        | Security testing                | `schema/conformance.zig`, security tests |
+| **A.8.30** - Outsourced development                 | Third-party security            | SLSA provenance, SBOM generation         |
 
 ### PCI DSS 4.0
 
-| Requirement | Control | Implementation |
-|-------------|---------|----------------|
-| **3.6.1** - Cryptographic key protection | Key management | Sigstore keyless signing eliminates long-term keys |
-| **6.2** - Software security patches | Patch management | Dependabot automated updates |
-| **6.4.3** - Software security patches | SAST/DAST | Semgrep, CodeQL, Trivy integration |
-| **10.2** - Audit trail coverage | Audit logging | OpenTelemetry tracing, structured logs |
-| **10.5.4** - Audit logs synchronized | Time synchronization | NTP in all CI runners |
-| **10.7** - Retain audit trail history | Log retention | 90-day artifact retention, 1-year audit logs |
+| Requirement                              | Control              | Implementation                                     |
+| ---------------------------------------- | -------------------- | -------------------------------------------------- |
+| **3.6.1** - Cryptographic key protection | Key management       | Sigstore keyless signing eliminates long-term keys |
+| **6.2** - Software security patches      | Patch management     | Dependabot automated updates                       |
+| **6.4.3** - Software security patches    | SAST/DAST            | Semgrep, CodeQL, Trivy integration                 |
+| **10.2** - Audit trail coverage          | Audit logging        | OpenTelemetry tracing, structured logs             |
+| **10.5.4** - Audit logs synchronized     | Time synchronization | NTP in all CI runners                              |
+| **10.7** - Retain audit trail history    | Log retention        | 90-day artifact retention, 1-year audit logs       |
 
 ### NIST Cybersecurity Framework 2.0
 
-| Function | Category | Subcategory | Implementation |
-|----------|----------|-------------|----------------|
-| **GOVERN** | Risk assessment | GV.RR-01 | Security policy framework |
-| | Supply chain | GV.SC-05 | SLSA L4, SBOM generation |
-| **IDENTIFY** | Asset management | ID.AM-01 | Software inventory via SBOM |
-| | Risk assessment | ID.RA-01 | Vulnerability scanning |
-| **PROTECT** | Data security | PR.DS-10 | Secret management via Dagger secrets |
-| | Secure development | PR.AT-01 | Secure coding training |
-| | Platform security | PR.PS-02 | Hermetic builds, reproducibility |
-| **DETECT** | Monitoring | DE.CM-01 | OpenTelemetry, security scanning |
-| | Anomalies | DE.AE-01 | Alerting on security events |
-| **RESPOND** | Incident response | RS.AN-01 | Incident response runbook |
-| **RECOVER** | Recovery | RC.RP-01 | Rollback procedures |
+| Function     | Category           | Subcategory | Implementation                       |
+| ------------ | ------------------ | ----------- | ------------------------------------ |
+| **GOVERN**   | Risk assessment    | GV.RR-01    | Security policy framework            |
+|              | Supply chain       | GV.SC-05    | SLSA L4, SBOM generation             |
+| **IDENTIFY** | Asset management   | ID.AM-01    | Software inventory via SBOM          |
+|              | Risk assessment    | ID.RA-01    | Vulnerability scanning               |
+| **PROTECT**  | Data security      | PR.DS-10    | Secret management via Dagger secrets |
+|              | Secure development | PR.AT-01    | Secure coding training               |
+|              | Platform security  | PR.PS-02    | Hermetic builds, reproducibility     |
+| **DETECT**   | Monitoring         | DE.CM-01    | OpenTelemetry, security scanning     |
+|              | Anomalies          | DE.AE-01    | Alerting on security events          |
+| **RESPOND**  | Incident response  | RS.AN-01    | Incident response runbook            |
+| **RECOVER**  | Recovery           | RC.RP-01    | Rollback procedures                  |
 
 ## Evidence Collection
 
@@ -96,14 +96,14 @@ cosign verify-blob \
 
 ### Evidence Retention
 
-| Evidence Type | Retention Period | Storage |
-|---------------|------------------|---------|
-| Build logs | 90 days | GitHub Actions |
-| Artifacts | 90 days | GitHub Packages |
-| SBOM | 1 year | OCI registry |
-| Provenance | 1 year | OCI registry + Sigstore Rekor |
-| Security scans | 1 year | GitHub Security tab |
-| Audit logs | 1 year | Cloud logging |
+| Evidence Type  | Retention Period | Storage                       |
+| -------------- | ---------------- | ----------------------------- |
+| Build logs     | 90 days          | GitHub Actions                |
+| Artifacts      | 90 days          | GitHub Packages               |
+| SBOM           | 1 year           | OCI registry                  |
+| Provenance     | 1 year           | OCI registry + Sigstore Rekor |
+| Security scans | 1 year           | GitHub Security tab           |
+| Audit logs     | 1 year           | Cloud logging                 |
 
 ### Audit Query Examples
 
@@ -126,13 +126,13 @@ gh security-alert view --repo mchorfa/dagger-zig v0.1.0
 
 ### Access Control Matrix
 
-| Resource | Role | Permission | Evidence |
-|----------|------|------------|----------|
-| `main` branch | Maintainers | Push | CODEOWNERS |
-| `main` branch | Contributors | PR only | Branch protection |
-| Releases | Release manager | Create | GitHub releases |
-| Secrets | Security team | Admin | GitHub secret audit log |
-| Infrastructure | Platform team | Admin | Terraform state |
+| Resource       | Role            | Permission | Evidence                |
+| -------------- | --------------- | ---------- | ----------------------- |
+| `main` branch  | Maintainers     | Push       | CODEOWNERS              |
+| `main` branch  | Contributors    | PR only    | Branch protection       |
+| Releases       | Release manager | Create     | GitHub releases         |
+| Secrets        | Security team   | Admin      | GitHub secret audit log |
+| Infrastructure | Platform team   | Admin      | Terraform state         |
 
 ### Change Control
 
@@ -158,7 +158,7 @@ on:
   release:
     types: [published]
   schedule:
-    - cron: '0 0 1 * *'  # Monthly
+    - cron: "0 0 1 * *" # Monthly
 
 jobs:
   evidence:
@@ -191,18 +191,18 @@ jobs:
 - **Current**: Level 3 (in-progress)
 - **Target**: Level 4
 
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| Source - Version controlled | ✅ | Git |
-| Source - Verified history | ✅ | Signed commits required |
-| Source - Retained indefinitely | ✅ | GitHub repository |
-| Build - Scripted build | ✅ | `build.zig`, Dagger pipelines |
-| Build - Reproducible | 🔄 | In progress |
-| Provenance - Available | ✅ | SLSA workflow |
-| Provenance - Authenticated | ✅ | Sigstore signing |
-| Provenance - Service generated | ✅ | GitHub Actions |
-| Common - Superusers | ✅ | Branch protection |
-| Common - Build as code | ✅ | `ci/` directory |
+| Requirement                    | Status | Evidence                      |
+| ------------------------------ | ------ | ----------------------------- |
+| Source - Version controlled    | ✅     | Git                           |
+| Source - Verified history      | ✅     | Signed commits required       |
+| Source - Retained indefinitely | ✅     | GitHub repository             |
+| Build - Scripted build         | ✅     | `build.zig`, Dagger pipelines |
+| Build - Reproducible           | 🔄     | In progress                   |
+| Provenance - Available         | ✅     | SLSA workflow                 |
+| Provenance - Authenticated     | ✅     | Sigstore signing              |
+| Provenance - Service generated | ✅     | GitHub Actions                |
+| Common - Superusers            | ✅     | Branch protection             |
+| Common - Build as code         | ✅     | `ci/` directory               |
 
 ### Sigstore Integration
 
@@ -220,13 +220,13 @@ rekor-cli get --log-index <index> --format json | jq .
 
 ## Compliance Roadmap
 
-| Milestone | Target Date | Deliverable |
-|-----------|-------------|-------------|
-| SLSA L3 | 2024-06 | SLSA workflow, provenance verification |
-| SLSA L4 | 2024-09 | Reproducible builds, hermetic toolchain |
-| SOC 2 readiness | 2024-12 | Evidence collection, auditor walkthrough |
-| ISO 27001 mapping | 2024-09 | Complete control mapping |
-| PCI DSS alignment | 2024-12 | For payment-adjacent use cases |
+| Milestone         | Target Date | Deliverable                              |
+| ----------------- | ----------- | ---------------------------------------- |
+| SLSA L3           | 2024-06     | SLSA workflow, provenance verification   |
+| SLSA L4           | 2024-09     | Reproducible builds, hermetic toolchain  |
+| SOC 2 readiness   | 2024-12     | Evidence collection, auditor walkthrough |
+| ISO 27001 mapping | 2024-09     | Complete control mapping                 |
+| PCI DSS alignment | 2024-12     | For payment-adjacent use cases           |
 
 ## Audit Contact
 

@@ -2,12 +2,12 @@
 
 ## Severity Levels
 
-| Level | Criteria | Response Time | Notification |
-|-------|----------|---------------|--------------|
-| **P0 (Critical)** | Security breach, data loss, complete outage | 15 min | Page on-call + Slack #incidents |
-| **P1 (High)** | Major feature degraded, potential security issue | 1 hour | Slack #incidents + email |
-| **P2 (Medium)** | Partial degradation, minor security concern | 4 hours | Slack #incidents |
-| **P3 (Low)** | Cosmetic issues, documentation gaps | 24 hours | GitHub issue |
+| Level             | Criteria                                         | Response Time | Notification                    |
+| ----------------- | ------------------------------------------------ | ------------- | ------------------------------- |
+| **P0 (Critical)** | Security breach, data loss, complete outage      | 15 min        | Page on-call + Slack #incidents |
+| **P1 (High)**     | Major feature degraded, potential security issue | 1 hour        | Slack #incidents + email        |
+| **P2 (Medium)**   | Partial degradation, minor security concern      | 4 hours       | Slack #incidents                |
+| **P3 (Low)**      | Cosmetic issues, documentation gaps              | 24 hours      | GitHub issue                    |
 
 ## Incident Commander
 
@@ -28,13 +28,14 @@ First responder becomes Incident Commander (IC) and:
 **Symptoms**: Unauthorized access detected, secret exposed, unexpected privilege escalation
 
 1. **Immediate (0-15 min)**
+
    ```bash
    # 1. Isolate affected systems
    dagger call -m ci disable-module --name=<affected-module>
-   
+
    # 2. Rotate exposed secrets
    gh secret set API_KEY --body="$(openssl rand -hex 32)"
-   
+
    # 3. Revoke signing keys if compromised
    cosign clean --force <key-id>
    ```
@@ -59,31 +60,34 @@ First responder becomes Incident Commander (IC) and:
 **Symptoms**: CI failing, builds not producing artifacts, SLSA violations
 
 1. **Immediate**
+
    ```bash
    # Check Dagger engine status
    dagger call -m ci health-check
-   
+
    # Verify SLSA provenance
    slsa-verifier verify-artifact --provenance-path ...
    ```
 
 2. **Common Causes**
-   | Error | Solution |
-   |-------|----------|
-   | `timeout` | Increase `DAGGER_CLOUD_TIMEOUT` |
-   | `permission denied` | Check `DAGGER_CLOUD_TOKEN` |
-   | `provenance invalid` | Re-run SLSA workflow |
-   | `signature failed` | Check Sigstore availability |
+
+   | Error                | Solution                        |
+   | -------------------- | ------------------------------- |
+   | `timeout`            | Increase `DAGGER_CLOUD_TIMEOUT` |
+   | `permission denied`  | Check `DAGGER_CLOUD_TOKEN`      |
+   | `provenance invalid` | Re-run SLSA workflow            |
+   | `signature failed`   | Check Sigstore availability     |
 
 ### P2: Performance Degradation
 
 **Symptoms**: Slow operations, high latency, cache misses
 
 1. **Diagnosis**
+
    ```bash
    # Check cache hit rate
    dagger call -m ci metrics --metric=cache_hit_rate
-   
+
    # Review traces in Jaeger
    open http://jaeger.localhost:16686
    ```
@@ -108,11 +112,11 @@ First responder becomes Incident Commander (IC) and:
 ```
 :rotating_light: **INCIDENT DECLARED** :rotating_light:
 
-**Severity**: P{0-3}  
-**System**: {dagger-zig/sdk/ci}  
-**Impact**: {description}  
-**Started**: {timestamp}  
-**Channel**: #inc-{date}-{brief}  
+**Severity**: P{0-3}
+**System**: {dagger-zig/sdk/ci}
+**Impact**: {description}
+**Started**: {timestamp}
+**Channel**: #inc-{date}-{brief}
 **IC**: @{handler}
 
 **Current Status**: {investigating/identified/mitigating/resolved}
@@ -121,22 +125,22 @@ First responder becomes Incident Commander (IC) and:
 ### External (Status Page)
 
 ```
-**Status**: Degraded Performance  
-**Component**: Dagger Zig SDK  
-**Duration**: 45 minutes  
-**Impact**: Schema validation delays  
+**Status**: Degraded Performance
+**Component**: Dagger Zig SDK
+**Duration**: 45 minutes
+**Impact**: Schema validation delays
 **Resolution**: Cache layer restored, monitoring improvements deployed
 ```
 
 ## Tooling
 
-| Tool | Purpose | Command |
-|------|---------|---------|
-| PagerDuty | On-call paging | `pd incident:create --title="..."` |
-| Slack | Communication | `/incident declare` |
-| Dagger | Diagnostics | `dagger call -m ci incident-diagnose` |
-| Sigstore | Signature verification | `cosign verify ...` |
-| SLSA | Provenance verification | `slsa-verifier verify-artifact ...` |
+| Tool      | Purpose                 | Command                               |
+| --------- | ----------------------- | ------------------------------------- |
+| PagerDuty | On-call paging          | `pd incident:create --title="..."`    |
+| Slack     | Communication           | `/incident declare`                   |
+| Dagger    | Diagnostics             | `dagger call -m ci incident-diagnose` |
+| Sigstore  | Signature verification  | `cosign verify ...`                   |
+| SLSA      | Provenance verification | `slsa-verifier verify-artifact ...`   |
 
 ## Recovery Procedures
 
@@ -172,6 +176,7 @@ gh run download --repo=mchorfa/dagger-zig <run-id>
 # INCIDENT-XXX: [Brief Title]
 
 ## Metadata
+
 - Date: YYYY-MM-DD
 - Duration: XX minutes
 - Severity: P{0-3}
@@ -179,9 +184,11 @@ gh run download --repo=mchorfa/dagger-zig <run-id>
 - Participants: @names
 
 ## Summary
+
 One paragraph describing what happened and impact.
 
 ## Timeline
+
 - 09:00 UTC - Issue detected via alert
 - 09:15 UTC - IC paged, incident declared
 - 09:30 UTC - Root cause identified
@@ -190,23 +197,28 @@ One paragraph describing what happened and impact.
 - 11:00 UTC - Incident resolved
 
 ## Root Cause
+
 Detailed explanation of why the incident occurred.
 
 ## Impact
+
 - Users affected: XX%
 - Data lost: none/YY records
 - Services degraded: list
 
 ## Lessons Learned
-1. 
-2. 
+
+1.
+2.
 
 ## Action Items
-| ID | Task | Owner | Due |
-|----|------|-------|-----|
-| 1 | | | |
+
+| ID  | Task | Owner | Due |
+| --- | ---- | ----- | --- |
+| 1   |      |       |     |
 
 ## Follow-Up
+
 - [ ] Action items completed
 - [ ] Monitoring improvements deployed
 - [ ] Runbook updated
@@ -215,14 +227,14 @@ Detailed explanation of why the incident occurred.
 
 ## Contact Information
 
-| Role | Primary | Backup |
-|------|---------|--------|
-| Security Lead | security@ckodex.io | pagerduty escalation |
-| Engineering Lead | mchorfa@ckodex.io | pagerduty escalation |
-| On-Call Engineer | PagerDuty rotation | secondary rotation |
+| Role             | Primary            | Backup               |
+| ---------------- | ------------------ | -------------------- |
+| Security Lead    | security@ckodex.io | pagerduty escalation |
+| Engineering Lead | mchorfa@ckodex.io  | pagerduty escalation |
+| On-Call Engineer | PagerDuty rotation | secondary rotation   |
 
 ## Revision History
 
-| Date | Author | Changes |
-|------|--------|---------|
+| Date       | Author  | Changes         |
+| ---------- | ------- | --------------- |
 | 2024-06-15 | mchorfa | Initial version |

@@ -26,7 +26,7 @@
 
 ## ⚡ Advanced Features (v0.2.0)
 
-- [Async Patterns](async-patterns.md)
+- [Async Patterns](async-patterns.md) (deferred to v0.3.0)
 - [Distributed Tracing](tracing.md)
 - [Windows Support](windows.md)
 - [Cache Volumes](cache.md)
@@ -34,7 +34,7 @@
 
 ## 🔒 Security & Identity
 
-- [SPIFFE Integration](spiffe.md)
+- [SPIFFE Integration](spiffe.md) (experimental, behind flag)
 - [Workload Identity](workload-identity.md)
 - [C FFI](c-api.md)
 - [Security Policy](../SECURITY.md)
@@ -51,7 +51,6 @@
 
 - [Contributing](contributing.md)
 - [Migration Guide](migration.md)
-- [Roadmap](roadmap.md)
 - [Release Checklist](RELEASE_CHECKLIST.md)
 - [Changelog](../CHANGELOG.md)
 - [License](../LICENSE)

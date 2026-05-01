@@ -117,32 +117,36 @@ pub fn build(b: *std.Build) void {
     addExample(b, dagger_mod, target, optimize, "service-containers", "examples/service-containers/main.zig");
 
     // ── C shared + static libraries ─────────────────────────────────────
-    const c_api_mod = b.createModule(.{
-        .root_source_file = b.path("src/c_api.zig"),
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-
-    const c_lib_shared = b.addLibrary(.{
-        .name = "dagger",
-        .root_module = c_api_mod,
-        .linkage = .dynamic,
-    });
-    c_lib_shared.installHeader(b.path("include/dagger.h"), "dagger.h");
-    b.installArtifact(c_lib_shared);
-
-    const c_lib_static = b.addLibrary(.{
-        .name = "dagger",
-        .root_module = c_api_mod,
-        .linkage = .static,
-    });
-    b.installArtifact(c_lib_static);
-
-    const c_lib_step = b.step("c-lib", "Build libdagger (shared + static) and install headers");
-    c_lib_step.dependOn(&c_lib_shared.step);
-    c_lib_step.dependOn(&c_lib_static.step);
-    c_lib_step.dependOn(b.getInstallStep());
+    // NOTE: C API is experimental and disabled for v0.2.0 release.
+    // The C example doesn't compile with Zig 0.16 and the API needs more work.
+    // Re-enable in v0.3.0 when C API is fully functional.
+    //
+    // const c_api_mod = b.createModule(.{
+    //     .root_source_file = b.path("src/c_api.zig"),
+    //     .target = target,
+    //     .optimize = optimize,
+    //     .link_libc = true,
+    // });
+    //
+    // const c_lib_shared = b.addLibrary(.{
+    //     .name = "dagger",
+    //     .root_module = c_api_mod,
+    //     .linkage = .dynamic,
+    // });
+    // c_lib_shared.installHeader(b.path("include/dagger.h"), "dagger.h");
+    // b.installArtifact(c_lib_shared);
+    //
+    // const c_lib_static = b.addLibrary(.{
+    //     .name = "dagger",
+    //     .root_module = c_api_mod,
+    //     .linkage = .static,
+    // });
+    // b.installArtifact(c_lib_static);
+    //
+    // const c_lib_step = b.step("c-lib", "Build libdagger (shared + static) and install headers");
+    // c_lib_step.dependOn(&c_lib_shared.step);
+    // c_lib_step.dependOn(&c_lib_static.step);
+    // c_lib_step.dependOn(b.getInstallStep());
 
     // ── C example ───────────────────────────────────────────────────────
     // TODO: C example disabled - Zig 0.16 API changes for C source files need investigation

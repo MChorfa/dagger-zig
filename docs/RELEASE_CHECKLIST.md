@@ -56,16 +56,19 @@ Create CHANGELOG.md entry for v0.2.0:
 ## [0.2.0] - YYYY-MM-DD
 
 ### Added
+
 - Windows support (cross-compilation and native builds)
 - SPIFFE experimental feature flag (`-Dspiffe-experimental`)
 - Cross-platform CI matrix (Linux, macOS, Windows)
 - Documentation for Windows builds
 
 ### Changed
+
 - SPIFFE/SPIRE support now requires explicit opt-in via build flag
 - SDK version bumped to 0.2.0
 
 ### Security
+
 - Supply chain: SLSA provenance attestation
 - Supply chain: Cosign signing of SBOM and artifacts
 ```
@@ -146,7 +149,7 @@ git tag --delete v0.2.0
 # Build verification
 zig build -Doptimize=ReleaseSafe
 
-# Test verification  
+# Test verification
 zig build test
 zig build test-module
 

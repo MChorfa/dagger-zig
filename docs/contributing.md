@@ -72,9 +72,9 @@ This project uses the [Git Flow](https://nvie.com/posts/a-successful-git-branchi
 
 - **main** — Production-ready code only
 - **develop** — Integration branch for features
-- **feature/*** — New features (branch from develop)
-- **release/*** — Release preparation (branch from develop)
-- **hotfix/*** — Emergency fixes (branch from main)
+- **feature/\*** — New features (branch from develop)
+- **release/\*** — Release preparation (branch from develop)
+- **hotfix/\*** — Emergency fixes (branch from main)
 
 ### Quick Commands
 
@@ -203,6 +203,7 @@ When contributing, consider:
 ## CI/CD
 
 The project uses:
+
 - **Self-hosting CI**: `ci/main.zig` — Zig Dagger module that builds dagger-zig
 - **GitHub Actions**: For public CI and security scanning
 - **Local testing**: `act` for pre-push validation

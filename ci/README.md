@@ -6,15 +6,15 @@ Dagger-based CI/CD with SLSA L3 compliance and SSDLC security practices.
 
 The CI pipeline follows a 7-phase security-hardened build process:
 
-| Phase | Name | Purpose | Output |
-|-------|------|---------|--------|
-| 1 | Code Quality | Validate Zig formatting | stdout |
-| 2 | Functional Verification | Run test suite | stdout |
-| 3 | Security Analysis | Vulnerability and secret scanning | vulnerability.sarif, secrets.sarif |
-| 4 | SLSA L3 Build | Hermetic, reproducible compilation | Container with binaries |
-| 5 | Container Security | Scan built artifacts | container-vuln.sarif |
-| 6 | Supply Chain Attestation | Generate SBOM and provenance | provenance.json, sbom.*.json |
-| 7 | Artifact Collection | Aggregate all outputs | Directory with all artifacts |
+| Phase | Name                     | Purpose                            | Output                             |
+| ----- | ------------------------ | ---------------------------------- | ---------------------------------- |
+| 1     | Code Quality             | Validate Zig formatting            | stdout                             |
+| 2     | Functional Verification  | Run test suite                     | stdout                             |
+| 3     | Security Analysis        | Vulnerability and secret scanning  | vulnerability.sarif, secrets.sarif |
+| 4     | SLSA L3 Build            | Hermetic, reproducible compilation | Container with binaries            |
+| 5     | Container Security       | Scan built artifacts               | container-vuln.sarif               |
+| 6     | Supply Chain Attestation | Generate SBOM and provenance       | provenance.json, sbom.\*.json      |
+| 7     | Artifact Collection      | Aggregate all outputs              | Directory with all artifacts       |
 
 ## Usage
 

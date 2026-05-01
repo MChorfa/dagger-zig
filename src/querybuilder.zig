@@ -32,6 +32,17 @@
 const std = @import("std");
 const errors = @import("errors.zig");
 
+// ─────────────────────────── Safety Limits ───────────────────────────
+
+/// Maximum depth of selection chain to prevent stack overflow.
+const MAX_SELECTION_DEPTH = 100;
+
+/// Maximum number of arguments per selection.
+const MAX_ARGS_PER_SELECTION = 50;
+
+/// Maximum serialized argument size in bytes.
+const MAX_ARG_SIZE_BYTES = 1024 * 1024; // 1MB
+
 /// A lazy argument resolver. Used for values that depend on an awaited ID
 /// (e.g. when you pass `Directory` as an arg, it must be resolved to its
 /// opaque `DirectoryId` first, which may require a round-trip to the engine).
@@ -81,6 +92,17 @@ pub const Selection = struct {
         .prev = null,
     };
 
+    /// Calculate the depth of this selection chain.
+    fn depth(self: *const Selection) usize {
+        var d: usize = 0;
+        var current: ?*const Selection = self;
+        while (current) |c| {
+            d += 1;
+            current = c.prev;
+        }
+        return d;
+    }
+
     /// Select a field by name. Returns a pointer to a new Selection allocated
     /// in `arena`. Caller guarantees `arena` outlives all derived Selections.
     pub fn select(
@@ -88,6 +110,11 @@ pub const Selection = struct {
         arena: std.mem.Allocator,
         name: []const u8,
     ) !*Selection {
+        // Safety check: prevent excessive chain depth
+        if (self.depth() >= MAX_SELECTION_DEPTH) {
+            return error.SelectionTooDeep;
+        }
+
         const node = try arena.create(Selection);
         node.* = .{
             .name = try arena.dupe(u8, name),
@@ -125,6 +152,11 @@ pub const Selection = struct {
         name: []const u8,
         value: ArgValue,
     ) !*Selection {
+        // Safety check: prevent too many arguments
+        if (self.args.len >= MAX_ARGS_PER_SELECTION) {
+            return error.TooManyArguments;
+        }
+
         const node = try arena.create(Selection);
         const new_args = try arena.alloc(Arg, self.args.len + 1);
         @memcpy(new_args[0..self.args.len], self.args);

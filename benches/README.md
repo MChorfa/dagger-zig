@@ -25,12 +25,12 @@ Results are tracked in `gh-pages` branch for trend analysis.
 
 ## Benchmark Categories
 
-| Category | File | Description |
-|----------|------|-------------|
-| Container Ops | `container_ops.zig` | Image pulls, file operations, exec latency |
-| Module Dispatch | `module_dispatch.zig` | Comptime reflection, function routing |
-| Serialization | `serialization.zig` | GraphQL query building, JSON parsing |
-| Memory | `memory.zig` | Allocator performance, heap usage |
+| Category        | File                  | Description                                |
+| --------------- | --------------------- | ------------------------------------------ |
+| Container Ops   | `container_ops.zig`   | Image pulls, file operations, exec latency |
+| Module Dispatch | `module_dispatch.zig` | Comptime reflection, function routing      |
+| Serialization   | `serialization.zig`   | GraphQL query building, JSON parsing       |
+| Memory          | `memory.zig`          | Allocator performance, heap usage          |
 
 ## Metrics
 
@@ -46,13 +46,13 @@ All benchmarks report:
 
 ### Target Performance (v0.1.0)
 
-| Operation | Target Latency | Notes |
-|-----------|----------------|-------|
-| Container.from() | < 500ms | Image already cached |
-| File.contents() | < 50ms | Small files (< 1MB) |
-| Directory.entries() | < 100ms | Standard directories |
-| Container.exec() | < 200ms | Simple commands |
-| Module dispatch | < 1μs | Comptime overhead |
+| Operation           | Target Latency | Notes                |
+| ------------------- | -------------- | -------------------- |
+| Container.from()    | < 500ms        | Image already cached |
+| File.contents()     | < 50ms         | Small files (< 1MB)  |
+| Directory.entries() | < 100ms        | Standard directories |
+| Container.exec()    | < 200ms        | Simple commands      |
+| Module dispatch     | < 1μs          | Comptime overhead    |
 
 ### Regression Detection
 
@@ -91,14 +91,14 @@ const dagger = @import("dagger_sdk");
 fn myBenchmark(allocator: std.mem.Allocator, ctx: *dagger.Context) !BenchResult {
     var samples = try allocator.alloc(u64, 100);
     defer allocator.free(samples);
-    
+
     for (0..100) |i| {
         const start = std.time.nanoTimestamp();
         // ... benchmark code ...
         const end = std.time.nanoTimestamp();
         samples[i] = @intCast(end - start);
     }
-    
+
     return BenchResult.fromSamples("my.benchmark", samples);
 }
 ```
