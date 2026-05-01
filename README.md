@@ -16,25 +16,19 @@
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 > **📚 Looking for Dagger?** Visit [dagger.io](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger)
-> **Status:** v0.2.0. Multi-platform support, async patterns, tracing.  
+> **Status:** v0.2.0. POSIX-only synchronous client SDK with module authoring and tracing.  
 > **Security Hardened:** OpenSSF Scorecard, SLSA provenance, Sigstore signing
 
-Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0
-so pipelines can use `std.Io.async` + `Io.Group` for genuinely parallel
-container operations — no manual threadpool, no event loop to pick.
+Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0.
 
 ## What works in v0.2.0
 
-- **Client API.** Full Dagger API coverage: containers, directories, files,
-  secrets, cache volumes, modules, services, git repositories. Chain methods
+- **Client API.** Synchronous Dagger API for Linux/macOS: containers, directories, files,
+  secrets, cache volumes, services, git repositories. Chain methods
   the way you would in any other SDK.
-- **Async Patterns.** `dagger.async` module provides `QueryGroup` for concurrent
-  operations, `QueryBatch` for batched GraphQL, and `withRetry` for resilient
-  operations. Build parallel pipelines with ease.
 - **Distributed Tracing.** OpenTelemetry-compatible tracing via `dagger.tracing`.
-  Export spans in OTLP format to Jaeger, Zipkin, or any OTel collector.
-- **Windows Support.** Native Windows builds and cross-compilation. Socket
-  abstractions for Unix domain sockets with graceful Windows fallback.
+  Exports spans in a custom JSON shape compatible with OpenTelemetry tooling.
+  OTLP export to Jaeger/Zipkin collectors is deferred to v0.3.0.
 - **CLI session lifecycle.** Resolves via three-tier handshake: env vars
   from `dagger run --` → `_EXPERIMENTAL_DAGGER_CLI_BIN` path → `dagger`
   on `$PATH`. Never auto-downloads the CLI.
@@ -42,8 +36,6 @@ container operations — no manual threadpool, no event loop to pick.
   Dagger with `dagger.module.serve(init, MyModule{})`. Comptime
   reflection maps Zig types to Dagger `TypeDef` values automatically;
   unmappable signatures fail at `zig build`, not at engine-dispatch.
-- **C ABI.** `zig build c-lib` produces `libdagger.{a,so,dylib}` plus
-  headers. Call from C, Python (via cffi), or any language with FFI.
 - **SPIFFE/SPIRE workload identity (experimental).** Enable with
   `-Dspiffe-experimental`. `ShelloutSource` backend (via `spire-agent api fetch`)
   is the working backend; `NativeWorkloadAPISource` ships as a type-complete
@@ -53,7 +45,13 @@ container operations — no manual threadpool, no event loop to pick.
 
 ## What's explicitly deferred to v0.3.0
 
-- Native SPIFFE Workload API (pure Zig HTTP/2 + gRPC + protobuf). Wire spec locked at [`SPIFFE_IMPL.md`](SPIFFE_IMPL.md).
+- **Async patterns.** `dagger.async` (`QueryGroup`, `QueryBatch`, `withRetry`) — disabled in
+  v0.2.0 to prevent `error.NotImplemented` failures. Coming in v0.3.0.
+- **Windows support.** Socket operations return `error.NotSupported` on Windows in v0.2.0.
+  Full Windows support planned for v0.3.0.
+- **C ABI.** `zig build c-lib` is disabled in v0.2.0 (compilation issues with Zig 0.16).
+  Will be re-enabled in v0.3.0.
+- Native SPIFFE Workload API (pure Zig HTTP/2 + gRPC + protobuf).
 - Vault cert-auth for `spiffe_integration.spiffeRegistryAuth`. Shares TLS
   layer with native SPIFFE, so they land together.
 - Shellout X.509 PEM parser (currently the shellout backend runs
@@ -323,12 +321,11 @@ All documentation is in [`docs/`](docs/).
 | ---------------------------------------------------- | ------------------------------------------- |
 | [`docs/README.md`](docs/README.md)                   | Documentation index and quick reference     |
 | [`docs/getting-started.md`](docs/getting-started.md) | Your first dagger-zig project               |
-| [`docs/async-patterns.md`](docs/async-patterns.md)   | Concurrent operations guide                 |
+| [`docs/async-patterns.md`](docs/async-patterns.md)   | Concurrent operations guide (v0.3.0)        |
 | [`docs/tracing.md`](docs/tracing.md)                 | Distributed tracing guide                   |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md)                 | Design rationale and internal mechanics     |
-| [`ARCHITECTURAL_MAP.md`](ARCHITECTURAL_MAP.md)       | Visual architecture overview with diagrams  |
-| [`ROADMAP.md`](ROADMAP.md)                           | Version planning and feature timeline       |
-| [`SPIFFE_IMPL.md`](SPIFFE_IMPL.md)                   | SPIFFE Workload API implementation spec     |
+| [`docs/architecture.md`](docs/architecture.md)       | Design rationale and internal mechanics     |
+| [`docs/roadmap.md`](docs/roadmap.md)                 | Version planning and feature timeline       |
+| [`docs/spiffe.md`](docs/spiffe.md)                   | SPIFFE workload identity (experimental)     |
 | [`SECURITY.md`](SECURITY.md)                         | Security policy and vulnerability reporting |
 | [`docs/compliance.md`](docs/compliance.md)           | SOC2/ISO27001 compliance mappings           |
 

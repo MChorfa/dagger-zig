@@ -147,6 +147,8 @@ pub const Socket = struct {
     fd: i32, // Unix: file descriptor, Windows: SOCKET (cast)
 
     /// Socket operation errors.
+    /// Note: public methods return inferred error sets (POSIX errors plus
+    /// error.NotSupported). This type alias is kept for documentation purposes.
     pub const Error = @import("errors.zig").PlatformError;
 
     /// Connect to a Unix domain socket (POSIX) or named pipe (Windows)
@@ -240,8 +242,11 @@ pub const AsyncIo = struct {
             // v0.2.0: Threaded fallback on Windows
             // v0.3.0: Will use IOCP on Windows
             return .threaded;
+        } else if (@import("builtin").os.tag == .linux) {
+            return .io_uring;
         } else {
-            return .io_uring; // Linux prefers io_uring
+            // macOS, BSD, and other POSIX platforms use kqueue
+            return .kqueue;
         }
     }
 };

@@ -41,6 +41,10 @@ pub const GraphQLClient = struct {
     /// Most recent domain error, if any. Owned by the client; reset per query.
     last_error: ?errs.DomainError = null,
 
+    /// True while a query is executing. Used by Client.resetArena() to guard
+    /// against use-after-free if the arena is reset during an active query.
+    query_in_progress: bool = false,
+
     /// Resilience configuration for retries and circuit breaker.
     retry_policy: resilience.RetryPolicy,
     circuit_breaker: ?resilience.CircuitBreaker = null,
@@ -101,6 +105,9 @@ pub const GraphQLClient = struct {
             e.deinit(self.allocator);
             self.last_error = null;
         }
+
+        self.query_in_progress = true;
+        defer self.query_in_progress = false;
 
         // Build request body once
         const body = buildRequestBody(self.allocator, query_str) catch return error.OutOfMemory;

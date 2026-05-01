@@ -146,15 +146,8 @@ fn tracedBuild(client: dagger.Client, image: []const u8) !dagger.Container {
 
 ## Configuration
 
-```zig
-// Configure sampling (example)
-const tracer = trace.Tracer.init(allocator, .{
-    .sampler = .{
-        .type = .probability,
-        .rate = 0.1, // Sample 10% of traces
-    },
-});
-```
+> **Note:** Advanced sampler configuration (`Tracer.init(allocator, .{ .sampler = ... })`) is
+> planned for v0.3.0. In v0.2.0 all spans are sampled.
 
 ## Best Practices
 
@@ -166,22 +159,22 @@ const tracer = trace.Tracer.init(allocator, .{
 
 ## Trace Context Propagation
 
-Pass trace context between services:
+> **Note:** `TraceId.parse()`, `SpanId.parse()`, and `.toString()` helpers are planned for
+> v0.3.0. In v0.2.0, pass `TraceId`/`SpanId` values directly in `SpanOptions`.
+
+Pass trace context between services using the existing `SpanOptions`:
 
 ```zig
-// Extract from incoming request
-const trace_id = trace.TraceId.parse(headers.get("trace-id"));
-const parent_id = trace.SpanId.parse(headers.get("parent-id"));
-
-// Create span with parent
+// Create a child span with a known parent
 var span = try trace.Span.init(allocator, "handler", .{
-    .trace_id = trace_id,
-    .parent_id = parent_id,
+    .trace_id = parent_trace_id, // TraceId value from parent
+    .parent_id = parent_span_id, // SpanId value from parent
 });
 
-// Inject into outgoing requests
-headers.put("trace-id", span.trace_id.toString());
-headers.put("parent-id", span.span_id.toString());
+// Export span context as hex strings using the format function
+var buf: [32]u8 = undefined;
+var fbs = std.io.fixedBufferStream(&buf);
+try fbs.writer().print("{}", .{span.trace_id}); // hex-encoded trace ID
 ```
 
 ## API Reference

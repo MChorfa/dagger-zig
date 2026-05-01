@@ -43,13 +43,13 @@ pub const Span = struct {
         error_,
     };
 
-    var span_counter: u64 = 0;
+    var span_counter: std.atomic.Value(u64) = .init(0);
 
     /// Initialize a new span.
     pub fn init(allocator: std.mem.Allocator, name: []const u8, opts: SpanOptions) !Span {
-        span_counter += 1;
+        const count = span_counter.fetchAdd(1, .monotonic) + 1;
         // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
-        const now = @as(i64, @intCast(span_counter));
+        const now = @as(i64, @intCast(count));
         return .{
             .name = name,
             .trace_id = opts.trace_id orelse TraceId.generate(),
@@ -66,6 +66,13 @@ pub const Span = struct {
 
     /// Clean up span resources.
     pub fn deinit(self: *Span) void {
+        // Free each attribute value (string values are heap-allocated)
+        var it = self.attributes.iterator();
+        while (it.next()) |entry| {
+            // Free the duped key
+            self.allocator.free(entry.key_ptr.*);
+            entry.value_ptr.deinit(self.allocator);
+        }
         self.attributes.deinit();
         self.events.deinit(self.allocator);
     }
@@ -73,9 +80,9 @@ pub const Span = struct {
     /// End the span.
     pub fn end(self: *Span) void {
         if (self.end_time == null) {
-            span_counter += 1;
+            const count = span_counter.fetchAdd(1, .monotonic) + 1;
             // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
-            self.end_time = @as(i64, @intCast(span_counter));
+            self.end_time = @as(i64, @intCast(count));
         }
     }
 
@@ -84,20 +91,32 @@ pub const Span = struct {
         self.status = status;
     }
 
-    /// Set a string attribute.
+    /// Set a string attribute. Copies the key; overwrites any existing value.
     pub fn setAttribute(self: *Span, key: []const u8, value: anytype) !void {
         const v = try AttributeValue.from(self.allocator, value);
-        try self.attributes.put(key, v);
+        errdefer v.deinit(self.allocator);
+
+        // Remove and clean up any existing entry for this key.
+        if (self.attributes.fetchRemove(key)) |old| {
+            self.allocator.free(old.key);
+            old.value.deinit(self.allocator);
+        }
+
+        // Dupe the key so the map owns the string storage.
+        const owned_key = try self.allocator.dupe(u8, key);
+        errdefer self.allocator.free(owned_key);
+
+        try self.attributes.put(owned_key, v);
     }
 
     /// Add an event to the span.
     pub fn addEvent(self: *Span, name: []const u8, attrs: anytype) !void {
         _ = attrs;
-        span_counter += 1;
+        const count = span_counter.fetchAdd(1, .monotonic) + 1;
         // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
         const event = SpanEvent{
             .name = name,
-            .timestamp = @as(i64, @intCast(span_counter)),
+            .timestamp = @as(i64, @intCast(count)),
             .attributes = null, // TODO: Parse attrs
         };
         try self.events.append(self.allocator, event);
@@ -124,7 +143,7 @@ pub const SpanEvent = struct {
 
 // ─────────────────────────── IDs ───────────────────────────
 
-var trace_id_counter: u64 = 0;
+var trace_id_counter: std.atomic.Value(u64) = .init(0);
 
 /// 16-byte trace ID.
 pub const TraceId = struct {
@@ -132,9 +151,8 @@ pub const TraceId = struct {
 
     pub fn generate() TraceId {
         var bytes: [16]u8 = undefined;
-        trace_id_counter += 1;
+        const counter = trace_id_counter.fetchAdd(1, .monotonic) + 1;
         // TODO: Use proper CSPRNG when available
-        const counter = trace_id_counter;
         @memcpy(bytes[0..8], std.mem.asBytes(&counter));
         @memcpy(bytes[8..16], std.mem.asBytes(&counter));
         return .{ .bytes = bytes };
@@ -154,7 +172,7 @@ pub const TraceId = struct {
     }
 };
 
-var span_id_counter: u64 = 0;
+var span_id_counter: std.atomic.Value(u64) = .init(0);
 
 /// 8-byte span ID.
 pub const SpanId = struct {
@@ -162,9 +180,8 @@ pub const SpanId = struct {
 
     pub fn generate() SpanId {
         var bytes: [8]u8 = undefined;
-        span_id_counter += 1;
+        const counter = span_id_counter.fetchAdd(1, .monotonic) + 1;
         // TODO: Use proper CSPRNG when available
-        const counter = span_id_counter;
         @memcpy(bytes[0..8], std.mem.asBytes(&counter));
         return .{ .bytes = bytes };
     }
@@ -254,11 +271,12 @@ pub const Tracer = struct {
         return span_ptr;
     }
 
-    /// End the current span.
+    /// End the current span. No-op if no span is active.
     pub fn endSpan(self: *Tracer) void {
+        const current = self.current_span orelse return;
         // Find current span and end it
         for (self.spans.items) |*span| {
-            if (span.span_id.eql(self.current_span.?)) {
+            if (span.span_id.eql(current)) {
                 span.end();
                 self.current_span = span.parent_id;
                 return;
@@ -275,9 +293,12 @@ pub const Tracer = struct {
             try writer.print("    \"name\": \"{s}\",\n", .{span.name});
             try writer.print("    \"traceId\": \"{}\",\n", .{span.trace_id});
             try writer.print("    \"spanId\": \"{}\",\n", .{span.span_id});
-            try writer.print("    \"startTime\": {d},\n", .{span.start_time});
             if (span.end_time) |end| {
+                try writer.print("    \"startTime\": {d},\n", .{span.start_time});
                 try writer.print("    \"endTime\": {d}\n", .{end});
+            } else {
+                try writer.print("    \"startTime\": {d},\n", .{span.start_time});
+                try writer.writeAll("    \"endTime\": null\n");
             }
             try writer.writeAll("  }");
         }
@@ -309,13 +330,16 @@ pub fn trace(comptime name: []const u8, comptime func: anytype) @TypeOf(func) {
     return struct {
         pub fn traced(args: anytype) !@typeInfo(@TypeOf(func)).Fn.return_type.? {
             const tracer = getTracer();
-            var span: ?*Span = null;
+            var span_started = false;
             if (tracer) |t| {
-                span = try t.startSpan(name);
+                if (t.startSpan(name)) |_| {
+                    span_started = true;
+                } else |_| {}
             }
             defer {
-                if (span) |s| s.end();
-                if (tracer) |t| t.endSpan();
+                if (span_started) {
+                    if (tracer) |t| t.endSpan();
+                }
             }
 
             return @call(.auto, func, args);

@@ -1,6 +1,8 @@
 # Windows Support
 
-> **Status:** v0.2.0 — Experimental but functional. Report issues on GitHub.
+> **Status:** v0.2.0 — Deferred to v0.3.0. Windows socket operations currently return
+> `error.NotSupported`. Windows is excluded from the v0.2.0 CI build matrix.
+> Full Windows support (AF_UNIX / named pipes) is planned for v0.3.0.
 
 dagger-zig supports Windows as a build target and development platform. This guide covers Windows-specific considerations.
 

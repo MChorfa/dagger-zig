@@ -1,5 +1,13 @@
 # Async Patterns
 
+> ⚠️ **v0.2.0 Status: Deferred to v0.3.0**
+>
+> The `dagger.async` module (`QueryGroup`, `QueryBatch`, `withRetry`) is **not available in
+> v0.2.0**. It has been temporarily disabled to prevent `error.NotImplemented` failures at
+> runtime. Full async support will ship in v0.3.0.
+>
+> The examples below document the planned API for reference.
+
 Concurrent operations for Dagger pipelines using the `dagger.async` module.
 
 ## Overview

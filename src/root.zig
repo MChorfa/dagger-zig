@@ -157,22 +157,15 @@ pub const Client = struct {
     session: ?core.cli_session.SessionProc,
     gql: core.graphql_client.GraphQLClient,
     arena: std.heap.ArenaAllocator,
-    query_in_progress: bool,
 
     /// Get the root `Query` for building pipelines.
     pub fn dag(self: *Client) Query {
-        self.query_in_progress = true;
         return .{
             .allocator = self.allocator,
             .arena = self.arena.allocator(),
             .selection = &querybuilder.Selection.root,
             .gql = &self.gql,
         };
-    }
-
-    /// Mark query as complete. Called automatically by terminal operations.
-    pub fn queryComplete(self: *Client) void {
-        self.query_in_progress = false;
     }
 
     /// Tear down the session. Idempotent.
@@ -192,7 +185,7 @@ pub const Client = struct {
     /// Call this periodically for long-running clients to prevent unbounded memory growth.
     /// Returns error.QueryInProgress if a query is currently active.
     pub fn resetArena(self: *Client) error{QueryInProgress}!void {
-        if (self.query_in_progress) {
+        if (self.gql.query_in_progress) {
             return error.QueryInProgress;
         }
         _ = self.arena.reset(.retain_capacity);
@@ -219,7 +212,6 @@ pub fn connect(
         .session = start.session,
         .gql = gql,
         .arena = std.heap.ArenaAllocator.init(allocator),
-        .query_in_progress = false,
     };
 }
 

@@ -414,31 +414,6 @@ pub const CacheVolume = struct {
         const raw = try executeScalarString(self.allocator, s, self.gql);
         return .{ .value = raw };
     }
-
-    /// Set a value in the cache.
-    pub fn set(self: CacheVolume, key: []const u8, value: []const u8) !void {
-        const s1 = try self.selection.select(self.arena, "set");
-        const s2 = try s1.argStr(self.arena, "key", key);
-        const s3 = try s2.argStr(self.arena, "value", value);
-        _ = try executeScalarString(self.allocator, s3, self.gql);
-    }
-
-    /// Get a value from the cache.
-    pub fn get(self: CacheVolume, key: []const u8) !?[]u8 {
-        const s1 = try self.selection.select(self.arena, "get");
-        const s2 = try s1.argStr(self.arena, "key", key);
-        return executeScalarString(self.allocator, s2, self.gql) catch |err| switch (err) {
-            error.InvalidEnvelope => return null,
-            else => return err,
-        };
-    }
-
-    /// Delete a key from the cache.
-    pub fn delete(self: CacheVolume, key: []const u8) !void {
-        const s1 = try self.selection.select(self.arena, "delete");
-        const s2 = try s1.argStr(self.arena, "key", key);
-        _ = try executeScalarString(self.allocator, s2, self.gql);
-    }
 };
 
 // ─────────────────────────── Secret ─────────────────────────────────────────
@@ -784,86 +759,6 @@ pub const Socket = struct {
 pub const SocketID = struct {
     value: []const u8,
     pub fn deinit(self: *SocketID, allocator: std.mem.Allocator) void {
-        allocator.free(self.value);
-    }
-};
-
-// ─────────────────────────── Module ─────────────────────────────────────────
-
-/// Module authoring API for creating Dagger modules in Zig.
-pub const Module = struct {
-    allocator: std.mem.Allocator,
-    arena: std.mem.Allocator,
-    selection: *const Selection,
-    gql: *GraphQLClient,
-
-    /// Set the source directory for the module.
-    pub fn withSource(self: Module, source: Directory) !Module {
-        const s1 = try self.selection.select(self.arena, "withSource");
-        var source_id = try source.id();
-        defer source_id.deinit(self.allocator);
-        const id_lit = try qb.serializeString(self.arena, source_id.value);
-        const s2 = try s1.arg(self.arena, "source", .{ .eager = id_lit });
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
-    }
-
-    /// Set the SDK for the module (e.g., "go", "python", "zig").
-    pub fn withSDK(self: Module, sdk: []const u8) !Module {
-        const s1 = try self.selection.select(self.arena, "withSDK");
-        const s2 = try s1.argStr(self.arena, "sdk", sdk);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
-    }
-
-    /// Set the module name.
-    pub fn withName(self: Module, name: []const u8) !Module {
-        const s1 = try self.selection.select(self.arena, "withName");
-        const s2 = try s1.argStr(self.arena, "name", name);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
-    }
-
-    /// Serve the module (for testing).
-    pub fn serve(self: Module) !void {
-        const s = try self.selection.select(self.arena, "serve");
-        _ = try executeScalarString(self.allocator, s, self.gql);
-    }
-
-    /// Get the module ID.
-    pub fn id(self: Module) !ModuleID {
-        const s = try self.selection.select(self.arena, "id");
-        const raw = try executeScalarString(self.allocator, s, self.gql);
-        return .{ .value = raw };
-    }
-
-    /// Get the module's generated code.
-    pub fn generatedCode(self: Module) !Directory {
-        const s = try self.selection.select(self.arena, "generatedCode");
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s,
-            .gql = self.gql,
-        };
-    }
-};
-
-pub const ModuleID = struct {
-    value: []const u8,
-    pub fn deinit(self: *ModuleID, allocator: std.mem.Allocator) void {
         allocator.free(self.value);
     }
 };

@@ -10,7 +10,6 @@ Complete all items before tagging v0.2.0.
 - [ ] Tests pass without SPIFFE: `zig build test`
 - [ ] Tests pass with SPIFFE: `zig build test -Dspiffe-experimental`
 - [ ] Module E2E tests pass: `zig build test-module`
-- [ ] C library builds: `zig build c-lib`
 - [ ] All examples build: `zig build run-first-pipeline` (and others)
 
 ### Cross-Platform
@@ -30,7 +29,6 @@ Complete all items before tagging v0.2.0.
 ### Documentation
 
 - [ ] README.md reflects v0.2.0 features
-- [ ] ROADMAP.md shows v0.2.0 items as complete
 - [ ] CHANGELOG.md has v0.2.0 entry
 - [ ] docs/spiffe.md has experimental warning
 - [ ] docs/windows.md exists and is accurate
