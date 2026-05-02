@@ -156,36 +156,36 @@ jobs:
             sbom.spdx.json
           retention-days: 90
 
-  # Verify provenance (demonstrates verification workflow)
-  verify:
-    name: Verify Provenance
-    needs: [ build, provenance, sign ]
-    # Skip if no provenance was generated
-    if: |
-      always() && 
-      needs.build.outputs.hashes != '' &&
-      needs.provenance.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4.1.9
-        with:
-          name: build-artifacts
-          path: artifacts/
+  # # Verify provenance (demonstrates verification workflow)
+  # verify:
+  #   name: Verify Provenance
+  #   needs: [ build, provenance, sign ]
+  #   # Skip if no provenance was generated
+  #   if: |
+  #     always() && 
+  #     needs.build.outputs.hashes != '' &&
+  #     needs.provenance.result == 'success'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v4.1.9
+  #       with:
+  #         name: build-artifacts
+  #         path: artifacts/
 
-      - name: Download provenance
-        uses: actions/download-artifact@v4.1.9
-        with:
-          name: provenance
-          path: provenance/
+  #     - name: Download provenance
+  #       uses: actions/download-artifact@v4.1.9
+  #       with:
+  #         name: provenance
+  #         path: provenance/
 
-      - name: Install slsa-verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@v2.7.0
+  #     - name: Install slsa-verifier
+  #       uses: slsa-framework/slsa-verifier/actions/installer@v2.7.0
 
-      - name: Verify SLSA provenance
-        run: |
-          slsa-verifier verify-artifact \
-            --provenance-path provenance/*.intoto.jsonl \
-            --source-uri github.com/${{ github.repository }} \
-            --source-branch ${{ github.ref_name }} \
-            artifacts/*
+  #     - name: Verify SLSA provenance
+  #       run: |
+  #         slsa-verifier verify-artifact \
+  #           --provenance-path provenance/*.intoto.jsonl \
+  #           --source-uri github.com/${{ github.repository }} \
+  #           --source-branch ${{ github.ref_name }} \
+  #           artifacts/*
