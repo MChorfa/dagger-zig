@@ -28,18 +28,30 @@ jobs:
           version: 0.16.0
 
       - name: Build SDK
+        run: zig build -Doptimize=ReleaseSafe
+
+      - name: Collect artifacts
+        id: collect
         run: |
-          zig build -Doptimize=ReleaseSafe
           mkdir -p artifacts
-          cp zig-out/lib/* artifacts/ || true
-          cp zig-out/bin/* artifacts/ || true
+          # Copy any built artifacts (lib, bin, or none for pure library)
+          cp zig-out/lib/* artifacts/ 2>/dev/null || true
+          cp zig-out/bin/* artifacts/ 2>/dev/null || true
+          # List what we found
+          ls -la artifacts/
 
       - name: Generate hashes
         id: hash
+        if: steps.collect.outputs.has_artifacts != 'false'
         run: |
           cd artifacts
-          sha256sum * > ../hashes.txt
-          echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
+          if [ -z "$(ls -A)" ]; then
+            echo "No artifacts to hash - this is a library SDK with no binaries"
+            echo "hashes=" >> $GITHUB_OUTPUT
+          else
+            sha256sum * > ../hashes.txt
+            echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4.6.1
@@ -52,9 +64,11 @@ jobs:
   provenance:
     name: Generate SLSA Provenance
     needs: [ build ]
-    # Skip on forks and PRs (OIDC requires main repo)
-    if: github.repository == 'MChorfa/dagger-zig' && github.event_name !=
-      'pull_request'
+    # Skip on forks and PRs (OIDC requires main repo), and if no artifacts
+    if: |
+      github.repository == 'MChorfa/dagger-zig' && 
+      github.event_name != 'pull_request' &&
+      needs.build.outputs.hashes != ''
     permissions:
       actions: read
       id-token: write
@@ -69,8 +83,10 @@ jobs:
   sign:
     name: Sign with Sigstore
     needs: [ build, provenance ]
-    if: github.repository == 'MChorfa/dagger-zig' && github.event_name !=
-      'pull_request'
+    if: |
+      github.repository == 'MChorfa/dagger-zig' && 
+      github.event_name != 'pull_request' &&
+      needs.build.outputs.hashes != ''
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Required for Sigstore OIDC
@@ -144,6 +160,11 @@ jobs:
   verify:
     name: Verify Provenance
     needs: [ build, provenance, sign ]
+    # Skip if no provenance was generated
+    if: |
+      always() && 
+      needs.build.outputs.hashes != '' &&
+      needs.provenance.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
