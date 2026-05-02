@@ -73,7 +73,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       provenance-name: "dagger-zig.intoto.jsonl"
@@ -93,13 +93,13 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@v4.1.9
         with:
           name: build-artifacts
           path: artifacts/
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@v3.8.2
 
       - name: Sign artifacts with Sigstore
         run: |
@@ -168,19 +168,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@v4.1.9
         with:
           name: build-artifacts
           path: artifacts/
 
       - name: Download provenance
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@v4.1.9
         with:
           name: provenance
           path: provenance/
 
       - name: Install slsa-verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@6657aada084353c65e5dde35394b1a010289fab0 # v2.7.0
+        uses: slsa-framework/slsa-verifier/actions/installer@v2.7.0
 
       - name: Verify SLSA provenance
         run: |
