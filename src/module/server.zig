@@ -97,8 +97,8 @@ fn runIntrospection(
 ) !void {
     // Assemble the GraphQL mutation that builds the ModuleSource and
     // attaches one Function per table entry.
-    var buf: std.ArrayList(u8) = .empty;
-    defer buf.deinit(ctx.arena);
+    var buf = std.ArrayList(u8).init(ctx.arena);
+    defer buf.deinit();
 
     try buf.appendSlice(ctx.arena, "query{moduleSource(refString:\".\")");
     for (table) |entry| {
@@ -236,10 +236,10 @@ fn runDispatch(
     // Build a Zig-stdlib writer we can pass into the shim for the return.
     // We use an ArrayList-backed writer; the final bytes become the JSON we
     // pass to returnValue().
-    var buf: std.ArrayList(u8) = .empty;
-    defer buf.deinit(ctx.arena);
+    var buf = std.ArrayList(u8).init(ctx.arena);
+    defer buf.deinit();
 
-    var aw: std.Io.Writer.Allocating = .fromArrayList(ctx.arena, &buf);
+    var aw = std.Io.Writer.Allocating.fromArrayList(ctx.arena, &buf);
     entry.invoke(module_instance, ctx, args_json, &aw.writer) catch |e| {
         // Translate Zig errors into a GraphQL error by rerouting through
         // returnValue with a structured error payload. v0.1 keeps this
@@ -271,13 +271,13 @@ fn assembleArgsJson(
         a.free(args);
     }
 
-    var buf: std.ArrayList(u8) = .empty;
-    errdefer buf.deinit(a);
+    var buf = std.ArrayList(u8).init(a);
+    errdefer buf.deinit();
 
     try buf.append(a, '{');
     for (args, 0..) |arg, i| {
         if (i > 0) try buf.append(a, ',');
-        var name_aw: std.Io.Writer.Allocating = .fromArrayList(a, &buf);
+        var name_aw = std.Io.Writer.Allocating.fromArrayList(a, &buf);
         try std.json.Stringify.value(arg.name, .{}, &name_aw.writer);
         buf = name_aw.toArrayList();
         try buf.append(a, ':');
