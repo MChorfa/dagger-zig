@@ -193,7 +193,7 @@ pub const Container = struct {
         // arg. In the Rust SDK this is done lazily; we resolve eagerly here
         // since we're synchronous. That means `withDirectory` triggers a
         // round-trip — which matches engine semantics.
-        const dir_id = try dir.id();
+        var dir_id = try dir.id();
         defer dir_id.deinit(self.allocator);
         const id_lit = try qb.serializeString(self.arena, dir_id.value);
         const s1 = try self.selection.select(self.arena, "withDirectory");

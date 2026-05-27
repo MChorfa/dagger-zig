@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] (2026-05-27)
+
+### Bug Fixes
+
+- **compatibility:** Fix type mismatch in SDK bootstrap layer - `dag.GeneratedCode()` now expects `*dagger.Directory` instead of `*dagger.Changeset` for Dagger CLI versions > v0.12.5
+- **sdk/main.go:** Updated Codegen function to pass Directory directly to GeneratedCode constructor
+
 ## [0.2.0](https://github.com/MChorfa/dagger-zig/compare/v0.1.2...v0.2.0) (2026-05-02)
 
 
@@ -16,8 +23,6 @@
 * **review:** address parallel_validation feedback in tracing.zig ([ca19188](https://github.com/MChorfa/dagger-zig/commit/ca1918888a9223c4f2ca7b6fc5174733f104fd9e))
 * **slsa:** update Zig version from 0.13.0 to 0.16.0 ([2851002](https://github.com/MChorfa/dagger-zig/commit/285100224984920e3265cc7a25d68d10888b3360))
 * **v0.2.0:** address critical release blockers ([868b5dd](https://github.com/MChorfa/dagger-zig/commit/868b5dd6e0ab889a61f4748113dd09f1d65dd8bc))
-
-## [0.2.0] (2026-04-30)
 
 ### Features
 

@@ -72,9 +72,9 @@ pub fn serve(init: std.process.Init, module_instance: anytype) ServeError!void {
     defer gpa.free(fn_name);
 
     if (fn_name.len == 0) {
-        return runIntrospection(M, &ctx, &call, &table);
+        return runIntrospection(M, &ctx, &call, table);
     } else {
-        return runDispatch(M, &module_instance, &ctx, &call, fn_name, &table);
+        return runDispatch(M, &module_instance, &ctx, &call, fn_name, table);
     }
 }
 
@@ -97,7 +97,7 @@ fn runIntrospection(
 ) !void {
     // Assemble the GraphQL mutation that builds the ModuleSource and
     // attaches one Function per table entry.
-    var buf: std.ArrayList(u8) = .{};
+    var buf: std.ArrayList(u8) = .empty;
     defer buf.deinit(ctx.arena);
 
     try buf.appendSlice(ctx.arena, "query{moduleSource(refString:\".\")");
@@ -236,11 +236,11 @@ fn runDispatch(
     // Build a Zig-stdlib writer we can pass into the shim for the return.
     // We use an ArrayList-backed writer; the final bytes become the JSON we
     // pass to returnValue().
-    var buf: std.ArrayList(u8) = .{};
+    var buf: std.ArrayList(u8) = .empty;
     defer buf.deinit(ctx.arena);
 
-    var w: std.Io.Writer = buf.writer(ctx.arena);
-    entry.invoke(module_instance, ctx, args_json, &w) catch |e| {
+    var aw: std.Io.Writer.Allocating = .fromArrayList(ctx.arena, &buf);
+    entry.invoke(module_instance, ctx, args_json, &aw.writer) catch |e| {
         // Translate Zig errors into a GraphQL error by rerouting through
         // returnValue with a structured error payload. v0.1 keeps this
         // simple: send the error name as a string so `dagger call` shows
@@ -253,6 +253,7 @@ fn runDispatch(
         try call.returnValue(err_json);
         return e;
     };
+    buf = aw.toArrayList();
 
     try call.returnValue(buf.items);
 }
@@ -270,14 +271,15 @@ fn assembleArgsJson(
         a.free(args);
     }
 
-    var buf: std.ArrayList(u8) = .{};
+    var buf: std.ArrayList(u8) = .empty;
     errdefer buf.deinit(a);
 
     try buf.append(a, '{');
     for (args, 0..) |arg, i| {
         if (i > 0) try buf.append(a, ',');
-        var name_w: std.Io.Writer = buf.writer(a);
-        try std.json.Stringify.value(arg.name, .{}, &name_w);
+        var name_aw: std.Io.Writer.Allocating = .fromArrayList(a, &buf);
+        try std.json.Stringify.value(arg.name, .{}, &name_aw.writer);
+        buf = name_aw.toArrayList();
         try buf.append(a, ':');
         // arg.value_json is already a JSON literal; copy verbatim.
         try buf.appendSlice(a, arg.value_json);
@@ -307,7 +309,7 @@ test "comptime: module with no eligible methods fails to compile" {
 
 test "emitTypeDefBuilder emits expected fragments" {
     const a = testing.allocator;
-    var buf: std.ArrayList(u8) = .{};
+    var buf: std.ArrayList(u8) = .empty;
     defer buf.deinit(a);
 
     try emitTypeDefBuilder(&buf, a, .{ .kind = .string });
@@ -344,7 +346,7 @@ test "emitTypeDefBuilder emits expected fragments" {
 
 test "emitFunctionBuilder emits function + withArg chain" {
     const a = testing.allocator;
-    var buf: std.ArrayList(u8) = .{};
+    var buf: std.ArrayList(u8) = .empty;
     defer buf.deinit(a);
 
     const str_def: td_mod.TypeDef = .{ .kind = .string };
