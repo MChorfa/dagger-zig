@@ -14,7 +14,7 @@
 Instead, report security vulnerabilities via:
 
 1. **GitHub Security Advisories**: [Report privately](https://github.com/mchorfa/dagger-zig/security/advisories/new)
-2. **Email**: security@ckodex.io (GPG key below)
+2. **Email**: security@MChorfa.io (GPG key below)
 
 We will acknowledge receipt within 24 hours and provide a timeline for resolution within 72 hours.
 
@@ -60,15 +60,15 @@ We will acknowledge receipt within 24 hours and provide a timeline for resolutio
 
 ### Threats
 
-| Threat | Mitigation | Status |
-|--------|------------|--------|
-| Compromised build environment | Hermetic builds, SLSA L4 | ✅ |
-| Malicious dependency | SBOM scanning, lock files | ✅ |
-| Secret leakage | GitLeaks, secret scanning | ✅ |
-| Replay attacks | Signed timestamps, nonces | ✅ |
-| Supply chain tampering | Sigstore signatures, transparency log | ✅ |
-| Privilege escalation | mTLS, workload identity | 🔄 |
-| Side-channel attacks | Constant-time crypto (planned) | ⏳ |
+| Threat                        | Mitigation                            | Status |
+| ----------------------------- | ------------------------------------- | ------ |
+| Compromised build environment | Hermetic builds, SLSA L4              | ✅      |
+| Malicious dependency          | SBOM scanning, lock files             | ✅      |
+| Secret leakage                | GitLeaks, secret scanning             | ✅      |
+| Replay attacks                | Signed timestamps, nonces             | ✅      |
+| Supply chain tampering        | Sigstore signatures, transparency log | ✅      |
+| Privilege escalation          | mTLS, workload identity               | 🔄      |
+| Side-channel attacks          | Constant-time crypto (planned)        | ⏳      |
 
 ## Security Best Practices
 
@@ -99,14 +99,14 @@ const verified = try dagger.verifyProvenance(.{
 
 ## Compliance
 
-| Framework | Controls | Evidence |
-|-----------|----------|----------|
-| SOC 2 CC6.1 | Logical access controls | RBAC, mTLS |
-| SOC 2 CC6.6 | Security infrastructure | SLSA L4, Sigstore |
-| SOC 2 CC7.1 | Security detection | SAST, DAST, monitoring |
-| SOC 2 CC7.2 | Incident response | Security advisories |
-| ISO 27001 A.12.1 | Operational security | Hermetic builds |
-| ISO 27001 A.14.2 | System security testing | Conformance tests |
+| Framework        | Controls                | Evidence               |
+| ---------------- | ----------------------- | ---------------------- |
+| SOC 2 CC6.1      | Logical access controls | RBAC, mTLS             |
+| SOC 2 CC6.6      | Security infrastructure | SLSA L4, Sigstore      |
+| SOC 2 CC7.1      | Security detection      | SAST, DAST, monitoring |
+| SOC 2 CC7.2      | Incident response       | Security advisories    |
+| ISO 27001 A.12.1 | Operational security    | Hermetic builds        |
+| ISO 27001 A.14.2 | System security testing | Conformance tests      |
 
 ## Security Hardening Checklist
 

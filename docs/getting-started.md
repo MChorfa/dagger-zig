@@ -10,7 +10,7 @@ Add dagger-zig to your `build.zig.zon`:
   "version": "0.1.0",
   "dependencies": {
     "dagger_sdk": {
-      "url": "https://github.com/ckodex/dagger-zig/archive/refs/tags/v0.1.0.tar.gz",
+      "url": "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.1.0.tar.gz",
       "hash": "..."
     }
   }

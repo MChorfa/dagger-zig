@@ -6,7 +6,7 @@
 
 - **compatibility:** Fix type mismatch in SDK bootstrap layer - `dag.GeneratedCode()` now expects `*dagger.Directory` instead of `*dagger.Changeset` for Dagger CLI versions > v0.12.5
 - **sdk/main.go:** Updated Codegen function to pass Directory directly to GeneratedCode constructor
-- **repository:** Fix all repository references from ckodex/dagger-zig to MChorfa/dagger-zig
+- **repository:** Fix all repository references from MChorfa/dagger-zig to MChorfa/dagger-zig
 - **docs:** Fix Font Awesome icon and action version in documentation workflow
 - **zig:** Update server.zig for Zig 0.16 ArrayList and Writer compatibility
 

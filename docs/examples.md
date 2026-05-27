@@ -79,7 +79,7 @@ ffi = cffi.FFI()
 const spiffe = dagger.spiffe;
 
 var shell = try spiffe.ShelloutSource.init(gpa, io, .{
-    .expected_trust_domain = "ckodex.internal",
+    .expected_trust_domain = "MChorfa.internal",
 }, null);
 defer shell.deinit();
 

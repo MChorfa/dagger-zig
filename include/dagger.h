@@ -42,7 +42,7 @@
  *
  * # License
  *
- *   Apache-2.0. Copyright 2026 Ckodex Labs / MNChorfa.
+ *   Apache-2.0. Copyright 2026 MChorfa Labs / MNChorfa.
  */
 
 #ifndef DAGGER_H

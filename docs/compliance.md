@@ -193,16 +193,16 @@ jobs:
 
 | Requirement                    | Status | Evidence                      |
 | ------------------------------ | ------ | ----------------------------- |
-| Source - Version controlled    | ✅     | Git                           |
-| Source - Verified history      | ✅     | Signed commits required       |
-| Source - Retained indefinitely | ✅     | GitHub repository             |
-| Build - Scripted build         | ✅     | `build.zig`, Dagger pipelines |
-| Build - Reproducible           | 🔄     | In progress                   |
-| Provenance - Available         | ✅     | SLSA workflow                 |
-| Provenance - Authenticated     | ✅     | Sigstore signing              |
-| Provenance - Service generated | ✅     | GitHub Actions                |
-| Common - Superusers            | ✅     | Branch protection             |
-| Common - Build as code         | ✅     | `ci/` directory               |
+| Source - Version controlled    | ✅      | Git                           |
+| Source - Verified history      | ✅      | Signed commits required       |
+| Source - Retained indefinitely | ✅      | GitHub repository             |
+| Build - Scripted build         | ✅      | `build.zig`, Dagger pipelines |
+| Build - Reproducible           | 🔄      | In progress                   |
+| Provenance - Available         | ✅      | SLSA workflow                 |
+| Provenance - Authenticated     | ✅      | Sigstore signing              |
+| Provenance - Service generated | ✅      | GitHub Actions                |
+| Common - Superusers            | ✅      | Branch protection             |
+| Common - Build as code         | ✅      | `ci/` directory               |
 
 ### Sigstore Integration
 
@@ -232,6 +232,6 @@ rekor-cli get --log-index <index> --format json | jq .
 
 For compliance inquiries:
 
-- **Security Team**: security@ckodex.io
-- **Compliance Officer**: compliance@ckodex.io
-- **Evidence Portal**: https://compliance.ckodex.io/dagger-zig
+- **Security Team**: security@MChorfa.io
+- **Compliance Officer**: compliance@MChorfa.io
+- **Evidence Portal**: https://compliance.MChorfa.io/dagger-zig
