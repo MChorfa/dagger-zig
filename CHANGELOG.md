@@ -9,27 +9,22 @@
 
 ## [0.2.0](https://github.com/MChorfa/dagger-zig/compare/v0.1.2...v0.2.0) (2026-05-02)
 
-
 ### Features
 
-* Address all SDK gaps - Phase 1 & 2 ([a7d2879](https://github.com/MChorfa/dagger-zig/commit/a7d28795b4c9fbffcf9491142cc0a1054a6b713e))
-
-
-### Bug Fixes
-
-* **examples:** resolve error union chaining and add missing API methods ([ea6a75f](https://github.com/MChorfa/dagger-zig/commit/ea6a75f2f35f89228ef43b99887c4e4530d0c011))
-* **release:** address v0.2.0 critical blockers ([0b4170b](https://github.com/MChorfa/dagger-zig/commit/0b4170b293a26e884ca81ff5c978e0b976f6a8a5))
-* **review:** address all PR review comments ([f33e1c8](https://github.com/MChorfa/dagger-zig/commit/f33e1c8d6ab3827d648000eafa8f5d4c71369d9d))
-* **review:** address parallel_validation feedback in tracing.zig ([ca19188](https://github.com/MChorfa/dagger-zig/commit/ca1918888a9223c4f2ca7b6fc5174733f104fd9e))
-* **slsa:** update Zig version from 0.13.0 to 0.16.0 ([2851002](https://github.com/MChorfa/dagger-zig/commit/285100224984920e3265cc7a25d68d10888b3360))
-* **v0.2.0:** address critical release blockers ([868b5dd](https://github.com/MChorfa/dagger-zig/commit/868b5dd6e0ab889a61f4748113dd09f1d65dd8bc))
-
-### Features
-
+- Address all SDK gaps - Phase 1 & 2 ([a7d2879](https://github.com/MChorfa/dagger-zig/commit/a7d28795b4c9fbffcf9491142cc0a1054a6b713e))
 - **SPIFFE:** Experimental support now behind `-Dspiffe-experimental` build flag
 - **Windows:** Full cross-compilation support for Windows targets
 - **CI:** Multi-platform CI matrix (Linux, macOS, Windows)
 - **Docs:** Windows-specific build and usage guide
+
+### Bug Fixes
+
+- **examples:** resolve error union chaining and add missing API methods ([ea6a75f](https://github.com/MChorfa/dagger-zig/commit/ea6a75f2f35f89228ef43b99887c4e4530d0c011))
+- **release:** address v0.2.0 critical blockers ([0b4170b](https://github.com/MChorfa/dagger-zig/commit/0b4170b293a26e884ca81ff5c978e0b976f6a8a5))
+- **review:** address all PR review comments ([f33e1c8](https://github.com/MChorfa/dagger-zig/commit/f33e1c8d6ab3827d648000eafa8f5d4c71369d9d))
+- **review:** address parallel_validation feedback in tracing.zig ([ca19188](https://github.com/MChorfa/dagger-zig/commit/ca1918888a9223c4f2ca7b6fc5174733f104fd9e))
+- **slsa:** update Zig version from 0.13.0 to 0.16.0 ([2851002](https://github.com/MChorfa/dagger-zig/commit/285100224984920e3265cc7a25d68d10888b3360))
+- **v0.2.0:** address critical release blockers ([868b5dd](https://github.com/MChorfa/dagger-zig/commit/868b5dd6e0ab889a61f4748113dd09f1d65dd8bc))
 
 ### Changes
 
