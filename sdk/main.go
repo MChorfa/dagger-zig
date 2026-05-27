@@ -6,7 +6,7 @@
 //
 //	{
 //	  "name": "my-pipeline",
-//	  "sdk": "github.com/ckodex/dagger-zig/sdk@v0.1.0",
+//	  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.1.0",
 //	  "source": "."
 //	}
 //
@@ -42,6 +42,8 @@ import (
 	"fmt"
 
 	"dagger/dagger-zig-sdk/internal/dagger"
+
+	"dagger.io/dagger/dag"
 )
 
 // The Zig toolchain image we use for every module build. Pinned — bumping
@@ -82,7 +84,7 @@ func (m *DaggerZigSdk) ModuleRuntime(
 	// Pull in our SDK library (dagger-zig itself) so the user's module can
 	// `@import("dagger_sdk")`. In v0.1 we carry the SDK alongside this
 	// Go module; in v0.2 the engine fetches it from our OCI registry.
-	sdkSrc := dag.Git("https://github.com/ckodex/dagger-zig").
+	sdkSrc := dag.Git("https://github.com/MChorfa/dagger-zig").
 		Branch("v0.1.0").
 		Tree()
 
