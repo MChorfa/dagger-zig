@@ -13,7 +13,6 @@ create-missing = false
 
 [output.html]
 git-repository-url = "https://github.com/MChorfa/dagger-zig"
-git-repository-icon = "fab fa-github"
 edit-url-template = "https://github.com/MChorfa/dagger-zig/edit/main/docs/{path}"
 no-section-label = true
 
