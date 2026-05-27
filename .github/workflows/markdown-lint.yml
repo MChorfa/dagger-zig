@@ -62,7 +62,7 @@ jobs:
           mdbook build
 
       - name: Upload site artifact
-        uses: actions/upload-pages-artifact@56afc605a39d3e95f44e8b3e3e61495df772cc13 # v3.0.1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_site
 
