@@ -2,14 +2,14 @@ name: Documentation CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - "**.md"
       - ".markdownlint.yaml"
       - "docs/**"
       - ".github/workflows/markdown-lint.yml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "**.md"
       - ".markdownlint.yaml"
@@ -52,9 +52,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@144b6cdb55d82da2c81b68aee317bb9bc837ada7 # v2.0.1
+        uses: peaceiris/actions-mdbook@v2
         with:
-          mdbook-version: "latest"
+          mdbook-version: "0.4.40"
 
       - name: Build docs
         run: |
@@ -62,14 +62,14 @@ jobs:
           mdbook build
 
       - name: Upload site artifact
-        uses: actions/upload-pages-artifact@56afc605a39d3e95f44e8b3e3e61495df772cc13 # v3.0.1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_site
 
   # Deploy to GitHub Pages (only on main)
   deploy:
     name: Deploy to GitHub Pages
-    needs: [ lint, build-docs ]
+    needs: [lint, build-docs]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:

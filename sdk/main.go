@@ -145,9 +145,8 @@ pub usingnamespace @import("dagger_sdk");
 	withGen := userDir.
 		WithNewFile("internal/dagger/dagger.gen.zig", skeleton)
 
-	// Changeset is diff between original and patched.
-	changeset := withGen.Changes(userDir)
-	return dag.GeneratedCode(changeset).
+	// GeneratedCode expects a Directory, not a Changeset (API changed after CLI v0.12.5)
+	return dag.GeneratedCode(withGen).
 		WithVCSGeneratedPaths([]string{"internal/dagger/dagger.gen.zig"}).
 		WithVCSIgnoredPaths([]string{"zig-cache", "zig-out", ".zig-cache"}), nil
 }
