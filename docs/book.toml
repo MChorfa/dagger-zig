@@ -1,6 +1,6 @@
 [book]
 title = "dagger-zig Documentation"
-authors = ["CKODEX Contributors"]
+authors = ["MChorfa Contributors"]
 description = "A native Zig SDK for the Dagger programmable CI/CD engine"
 language = "en"
 src = "."

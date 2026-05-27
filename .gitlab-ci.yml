@@ -71,7 +71,7 @@ provenance:
         "predicateType": "https://slsa.dev/provenance/v0.2",
         "predicate": {
           "builder": {"id": "https://gitlab.com/$CI_PROJECT_PATH"},
-          "buildType": "https://gitlab.com/ckodex/dagger-zig/build/v1",
+          "buildType": "https://gitlab.com/MChorfa/dagger-zig/build/v1",
           "invocation": {
             "configSource": {
               "uri": "git+$CI_REPOSITORY_URL",
@@ -164,14 +164,14 @@ release:
     - apk add --no-cache github-cli tar
   script:
     - tar -czf dagger-zig-${CI_COMMIT_TAG}.tar.gz zig-out/lib/ include/
-    - gh release create ${CI_COMMIT_TAG} 
-        dagger-zig-${CI_COMMIT_TAG}.tar.gz 
-        provenance.json 
-        provenance.json.sig 
-        sbom.cdx.json 
-        sbom.cdx.json.sig
-        --title "dagger-zig ${CI_COMMIT_TAG}"
-        --notes "SLSA L3 compliant release"
+    - gh release create ${CI_COMMIT_TAG}
+      dagger-zig-${CI_COMMIT_TAG}.tar.gz
+      provenance.json
+      provenance.json.sig
+      sbom.cdx.json
+      sbom.cdx.json.sig
+      --title "dagger-zig ${CI_COMMIT_TAG}"
+      --notes "SLSA L3 compliant release"
   rules:
     - if: $CI_COMMIT_TAG
   needs:

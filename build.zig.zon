@@ -12,7 +12,7 @@
     .minimum_zig_version = "0.16.0",
 
     // No external dependencies. This is intentional: the SDK links only against
-    // Zig's stdlib so it can be vendored into air-gapped Ckodex environments
+    // Zig's stdlib so it can be vendored into air-gapped MChorfa environments
     // (see CortAIx §3.1) without a dependency audit.
     .dependencies = .{},
 

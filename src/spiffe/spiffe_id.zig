@@ -142,9 +142,9 @@ test "parse valid trust-domain-only id" {
 }
 
 test "parse id with multi-segment path" {
-    var id = try SpiffeID.parse(testing.allocator, "spiffe://ckodex.internal/cortaix/tenant/acme/module/ci");
+    var id = try SpiffeID.parse(testing.allocator, "spiffe://MChorfa.internal/cortaix/tenant/acme/module/ci");
     defer id.deinit(testing.allocator);
-    try testing.expectEqualStrings("ckodex.internal", id.trustDomain());
+    try testing.expectEqualStrings("MChorfa.internal", id.trustDomain());
     try testing.expectEqualStrings("cortaix/tenant/acme/module/ci", id.path());
 }
 

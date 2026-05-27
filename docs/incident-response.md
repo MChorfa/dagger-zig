@@ -227,11 +227,11 @@ Detailed explanation of why the incident occurred.
 
 ## Contact Information
 
-| Role             | Primary            | Backup               |
-| ---------------- | ------------------ | -------------------- |
-| Security Lead    | security@ckodex.io | pagerduty escalation |
-| Engineering Lead | mchorfa@ckodex.io  | pagerduty escalation |
-| On-Call Engineer | PagerDuty rotation | secondary rotation   |
+| Role             | Primary             | Backup               |
+| ---------------- | ------------------- | -------------------- |
+| Security Lead    | security@MChorfa.io | pagerduty escalation |
+| Engineering Lead | mchorfa@MChorfa.io  | pagerduty escalation |
+| On-Call Engineer | PagerDuty rotation  | secondary rotation   |
 
 ## Revision History
 

@@ -33,7 +33,7 @@ pub const ProvenanceGenerator = struct {
             "\"buildType\":\"https://dagger.io/build/v1\"," ++
             "\"invocation\":{{" ++
             "\"configSource\":{{" ++
-            "\"uri\":\"https://gitlab.com/ckodex/dagger-zig\"," ++
+            "\"uri\":\"https://gitlab.com/MChorfa/dagger-zig\"," ++
             "\"digest\":{{\"sha1\":\"{s}\"}}," ++
             "\"entryPoint\":\"{s}\"}}}}," ++
             "\"metadata\":{{" ++

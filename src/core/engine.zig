@@ -7,7 +7,7 @@
 //!   2. Dev override: `_EXPERIMENTAL_DAGGER_CLI_BIN` points at a local CLI.
 //!   3. Installed CLI: whatever `dagger` resolves to on PATH.
 //!
-//! v0.1 does NOT download the CLI. Users in Ckodex/CortAIx environments
+//! v0.1 does NOT download the CLI. Users in MChorfa/CortAIx environments
 //! pre-install it via the base runner image — download-on-first-run is
 //! an anti-pattern there and adds a TLS + signature-verification surface
 //! we don't need.

@@ -69,7 +69,7 @@ Three strategies, tried in order:
 
 The Rust SDK has a 4th strategy: download the CLI from `dl.dagger.io`. We
 don't. Rationale documented in the README — supply-chain-purity trumps
-convenience in Ckodex/CortAIx's target deployments.
+convenience in MChorfa/CortAIx's target deployments.
 
 ## The query builder
 

@@ -137,7 +137,7 @@ Your `dagger.json`:
 ```json
 {
   "name": "my-pipeline",
-  "sdk": "github.com/ckodex/dagger-zig/sdk@v0.2.0",
+  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.2.0",
   "source": "."
 }
 ```
@@ -190,7 +190,7 @@ zig build -Dspiffe-experimental
 const spiffe = dagger.spiffe;
 
 var shell = try spiffe.ShelloutSource.init(gpa, io, .{
-    .expected_trust_domain = "ckodex.internal",  // hard-fail if agent lies
+    .expected_trust_domain = "MChorfa.internal",  // hard-fail if agent lies
 }, null);
 defer shell.deinit();
 
