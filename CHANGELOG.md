@@ -1,6 +1,16 @@
 # Changelog
 
-## [0.3.0](https://github.com/MChorfa/dagger-zig/compare/v0.2.0...v0.3.0) (2026-05-27)
+## [0.2.1] (2026-05-27)
+
+### Bug Fixes
+
+- **compatibility:** Fix type mismatch in SDK bootstrap layer - `dag.GeneratedCode()` now expects `*dagger.Directory` instead of `*dagger.Changeset` for Dagger CLI versions > v0.12.5
+- **sdk/main.go:** Updated Codegen function to pass Directory directly to GeneratedCode constructor
+- **repository:** Fix all repository references from ckodex/dagger-zig to MChorfa/dagger-zig
+- **docs:** Fix Font Awesome icon and action version in documentation workflow
+- **zig:** Update server.zig for Zig 0.16 ArrayList and Writer compatibility
+
+## [0.2.0](https://github.com/MChorfa/dagger-zig/compare/v0.1.2...v0.2.0) (2026-05-02)
 
 
 ### Features
@@ -47,6 +57,7 @@
 * **workflows:** use native Zig instead of Dagger ([a4c026f](https://github.com/MChorfa/dagger-zig/commit/a4c026f8ec94bffa058ab81148f53400721f31b8))
 * **workflows:** use Zig 0.17.0 (0.16.1 doesn't exist) ([b67c5f7](https://github.com/MChorfa/dagger-zig/commit/b67c5f76011cd415103faaf64e1a1bba47945d2b))
 
+<<<<<<< HEAD
 ## [0.2.1] (2026-05-27)
 
 ### Bug Fixes
@@ -56,6 +67,8 @@
 
 ## [0.2.0](https://github.com/MChorfa/dagger-zig/compare/v0.1.2...v0.2.0) (2026-05-02)
 
+=======
+>>>>>>> 97b5d92 (fix: type mismatch in GeneratedCode constructor for CLI > v0.12.5)
 ### Features
 
 - Address all SDK gaps - Phase 1 & 2 ([a7d2879](https://github.com/MChorfa/dagger-zig/commit/a7d28795b4c9fbffcf9491142cc0a1054a6b713e))
