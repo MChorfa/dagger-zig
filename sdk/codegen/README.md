@@ -6,16 +6,25 @@ their Zig module.
 
 ## Current state (v0.1)
 
-Minimal. The `Codegen` function in `sdk/main.go` writes a one-line stub:
+Minimal. The `Codegen` function in `sdk/main.go` writes a Zig 0.16-safe
+re-export shim:
 
 ```zig
-pub usingnamespace @import("dagger_sdk");
+const sdk = @import("dagger_sdk");
+
+pub const module = sdk.module;
+pub const Container = sdk.Container;
+pub const Directory = sdk.Directory;
+pub const connect = sdk.connect;
 ```
 
 That's enough because dagger-zig's generated API surface is currently
 hand-written in `src/gen_sample.zig`. When users author a module, their
 `build.zig.zon` pulls in dagger-zig as a dep, and `@import("dagger_sdk")`
 gives them the whole client. No per-user-module code generation yet.
+
+We use explicit aliases instead of `usingnamespace` because Zig 0.16 removed
+that syntax.
 
 ## v0.1.1 plan
 

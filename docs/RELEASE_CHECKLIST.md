@@ -1,6 +1,6 @@
-# v0.2.0 Release Checklist
+# v0.2.1 Release Checklist
 
-Complete all items before tagging v0.2.0.
+Complete all items before tagging v0.2.1.
 
 ## Pre-Release Verification
 
@@ -12,24 +12,23 @@ Complete all items before tagging v0.2.0.
 - [ ] Module E2E tests pass: `zig build test-module`
 - [ ] All examples build: `zig build run-first-pipeline` (and others)
 
-### Cross-Platform
+### Supported Platforms
 
 - [ ] Linux x86_64 build: `zig build -Dtarget=x86_64-linux-gnu`
 - [ ] Linux aarch64 build: `zig build -Dtarget=aarch64-linux-gnu`
 - [ ] macOS x86_64 build: `zig build -Dtarget=x86_64-macos-none`
 - [ ] macOS aarch64 build: `zig build -Dtarget=aarch64-macos-none`
-- [ ] Windows build: `zig build -Dtarget=x86_64-windows-gnu`
 
 ### Version Alignment
 
-- [ ] `build.zig.zon` version is `0.2.0`
-- [ ] `src/core/version.zig` sdk_version is `0.2.0`
+- [ ] `build.zig.zon` version is `0.2.1`
+- [ ] `src/core/version.zig` sdk_version is `0.2.1`
 - [ ] `src/core/version.zig` VERSION_MINOR is `2`
 
 ### Documentation
 
-- [ ] README.md reflects v0.2.0 features
-- [ ] CHANGELOG.md has v0.2.0 entry
+- [ ] README.md reflects v0.2.1 features
+- [ ] CHANGELOG.md has v0.2.1 entry
 - [ ] docs/spiffe.md has experimental warning
 - [ ] docs/windows.md exists and is accurate
 
@@ -48,22 +47,20 @@ zig build test-module
 
 ### 2. Update Changelog
 
-Create CHANGELOG.md entry for v0.2.0:
+Create CHANGELOG.md entry for v0.2.1:
 
 ```markdown
-## [0.2.0] - YYYY-MM-DD
+## [0.2.1] - YYYY-MM-DD
 
 ### Added
 
-- Windows support (cross-compilation and native builds)
-- SPIFFE experimental feature flag (`-Dspiffe-experimental`)
-- Cross-platform CI matrix (Linux, macOS, Windows)
-- Documentation for Windows builds
+- Patch release validation for the POSIX Zig 0.16 SDK
+- Documentation alignment for the current release scope
 
 ### Changed
 
-- SPIFFE/SPIRE support now requires explicit opt-in via build flag
-- SDK version bumped to 0.2.0
+- SDK version bumped to 0.2.1
+- Release checklist and README aligned to the current supported feature set
 
 ### Security
 
@@ -75,10 +72,10 @@ Create CHANGELOG.md entry for v0.2.0:
 
 ```bash
 # Create annotated and signed tag
-git tag -s v0.2.0 -m "Release v0.2.0 - Cross-platform production release"
+git tag -s v0.2.1 -m "Release v0.2.1 - POSIX production release"
 
 # Push tag (triggers release workflow)
-git push origin v0.2.0
+git push origin v0.2.1
 ```
 
 ### 4. Verify GitHub Release
@@ -97,13 +94,13 @@ git push origin v0.2.0
 
 ```bash
 # Download attestation from GitHub release
-gh release download v0.2.0 -p '*.intoto.jsonl'
+gh release download v0.2.1 -p '*.intoto.jsonl'
 
 # Verify using slsa-verifier (install from https://github.com/slsa-framework/slsa-verifier)
 slsa-verifier verify-artifact \
   --provenance-path dagger-zig-x86_64-linux-gnu.intoto.jsonl \
   --source-uri github.com/MChorfa/dagger-zig \
-  --source-tag v0.2.0 \
+  --source-tag v0.2.1 \
   dagger-zig-x86_64-linux-gnu.tar.gz
 ```
 
@@ -111,8 +108,8 @@ slsa-verifier verify-artifact \
 
 ```bash
 # Download signature and certificate from release
-gh release download v0.2.0 -p 'sbom.spdx.json.sig'
-gh release download v0.2.0 -p 'sbom.spdx.json.cert'
+gh release download v0.2.1 -p 'sbom.spdx.json.sig'
+gh release download v0.2.1 -p 'sbom.spdx.json.cert'
 
 # Verify with cosign
 cosign verify-blob \
@@ -125,7 +122,7 @@ cosign verify-blob \
 
 ### 7. Post-Release
 
-- [ ] Close v0.2.0 milestone on GitHub
+- [ ] Close v0.2.1 milestone on GitHub
 - [ ] Announce on relevant channels
 - [ ] Update documentation site (if separate)
 
@@ -135,10 +132,10 @@ If critical issues are found:
 
 ```bash
 # Delete tag locally and remotely (use with caution)
-git push --delete origin v0.2.0
-git tag --delete v0.2.0
+git push --delete origin v0.2.1
+git tag --delete v0.2.1
 
-# Create v0.2.1 hotfix following same checklist
+# Create v0.2.2 hotfix following same checklist
 ```
 
 ## Verification Commands Summary

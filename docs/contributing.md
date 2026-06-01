@@ -215,10 +215,10 @@ All documentation is linted and rendered automatically via Dagger:
 
 ```shell
 # Lint markdown files (Dagger-native)
-dagger call -m ci lint-docs --source=. export --path ./reports
+dagger call lint-docs --arg-0=. export --path ./reports
 
 # Build documentation site locally
-dagger call -m ci build-docs --source=. export --path ./_site
+dagger call build-docs --arg-0=. export --path ./_site
 
 # Serve docs locally (after building)
 cd _site && python3 -m http.server 8000

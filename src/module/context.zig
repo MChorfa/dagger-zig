@@ -48,6 +48,28 @@ pub const Context = struct {
         return self.client.dag();
     }
 
+    /// Per-dispatch allocator for temporary results.
+    pub fn allocator(self: *Context) std.mem.Allocator {
+        return self.arena;
+    }
+
+    /// Convenience helper mirroring the documented module authoring API.
+    pub fn container(self: *Context) !dagger.Container {
+        return self.dag().container();
+    }
+
+    /// Convenience helper mirroring the documented module authoring API.
+    pub fn directory(self: *Context) !dagger.Directory {
+        return self.dag().directory();
+    }
+
+    /// Group subsequent operations under a logical pipeline label.
+    /// The current SDK has no engine-side pipeline primitive yet, so this is a no-op.
+    pub fn pipeline(self: *Context, name: []const u8) !*Context {
+        _ = name;
+        return self;
+    }
+
     /// Fetch the current workload X509-SVID, if SPIFFE is configured.
     /// Returns `error.NotInitialized` if SPIFFE wasn't set up at serveModule time.
     pub fn svid(self: *Context) !spiffe_mod.X509SVID {

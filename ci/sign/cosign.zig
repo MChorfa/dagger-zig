@@ -14,12 +14,11 @@ pub const CosignSigner = struct {
         private_key: dagger.Secret,
     ) !dagger.File {
         _ = self;
-        const signer = try ctx
-            .container()
-            .from("gcr.io/projectsigstore/cosign:v2.2.0")
-            .withFile("/input", blob)
-            .withSecretVariable("COSIGN_PRIVATE_KEY", private_key)
-            .withExec(&.{
+        var signer = try ctx.container();
+        signer = try signer.from("gcr.io/projectsigstore/cosign:v2.2.0");
+        signer = try signer.withFile("/input", blob);
+        signer = try signer.withSecretVariable("COSIGN_PRIVATE_KEY", private_key);
+        signer = try signer.withExec(&.{
             "cosign",             "sign-blob",
             "--key",              "env://COSIGN_PRIVATE_KEY",
             "--output-signature", "/output.sig",
@@ -55,13 +54,12 @@ pub const CosignSigner = struct {
         public_key: dagger.Secret,
     ) !dagger.File {
         _ = self;
-        const verifier = try ctx
-            .container()
-            .from("gcr.io/projectsigstore/cosign:v2.2.0")
-            .withFile("/input", blob)
-            .withFile("/input.sig", signature)
-            .withSecretVariable("COSIGN_PUBLIC_KEY", public_key)
-            .withExec(&.{
+        var verifier = try ctx.container();
+        verifier = try verifier.from("gcr.io/projectsigstore/cosign:v2.2.0");
+        verifier = try verifier.withFile("/input", blob);
+        verifier = try verifier.withFile("/input.sig", signature);
+        verifier = try verifier.withSecretVariable("COSIGN_PUBLIC_KEY", public_key);
+        verifier = try verifier.withExec(&.{
             "cosign",      "verify-blob",
             "--key",       "env://COSIGN_PUBLIC_KEY",
             "--signature", "/input.sig",
@@ -69,7 +67,8 @@ pub const CosignSigner = struct {
         });
 
         const output = try verifier.stdout();
-        return try ctx.directory().withNewFile("verify-output.txt", output);
+        var dir = try ctx.directory();
+        return try dir.withNewFile("verify-output.txt", output);
     }
 
     pub fn verifyContainer(
@@ -79,18 +78,18 @@ pub const CosignSigner = struct {
         public_key: dagger.Secret,
     ) !dagger.File {
         _ = self;
-        const verifier = try ctx
-            .container()
-            .from("gcr.io/projectsigstore/cosign:v2.2.0")
-            .withSecretVariable("COSIGN_PUBLIC_KEY", public_key)
-            .withExec(&.{
+        var verifier = try ctx.container();
+        verifier = try verifier.from("gcr.io/projectsigstore/cosign:v2.2.0");
+        verifier = try verifier.withSecretVariable("COSIGN_PUBLIC_KEY", public_key);
+        verifier = try verifier.withExec(&.{
             "cosign",  "verify",
             "--key",   "env://COSIGN_PUBLIC_KEY",
             image_ref,
         });
 
         const output = try verifier.stdout();
-        return try ctx.directory().withNewFile("container-verify.txt", output);
+        var dir = try ctx.directory();
+        return try dir.withNewFile("container-verify.txt", output);
     }
 
     pub fn generateKeyPair(
@@ -98,10 +97,9 @@ pub const CosignSigner = struct {
         ctx: *dagger.Context,
     ) !dagger.Directory {
         _ = self;
-        const generator = try ctx
-            .container()
-            .from("gcr.io/projectsigstore/cosign:v2.2.0")
-            .withExec(&.{
+        var generator = try ctx.container();
+        generator = try generator.from("gcr.io/projectsigstore/cosign:v2.2.0");
+        generator = try generator.withExec(&.{
             "cosign",              "generate-key-pair",
             "--output-key-prefix", "cosign",
         });

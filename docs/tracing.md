@@ -15,24 +15,24 @@ const trace = dagger.tracing;
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
-    
+
     // Initialize global tracer
     try trace.initGlobalTracer(allocator);
-    
+
     // Create a span for your operation
     var span = try trace.Span.init(allocator, "build-pipeline", .{});
     defer span.deinit();
-    
+
     // Set attributes
     try span.setAttribute("project", "my-app");
     try span.setAttribute("version", "1.0.0");
-    
+
     // Execute operations
     const result = try buildContainer(client);
-    
+
     // Add events
     try span.addEvent("container-built", .{});
-    
+
     // Set status
     span.setStatus(.ok);
     span.end();
@@ -98,6 +98,7 @@ try tracer.exportJson(stdout);
 ```
 
 Example output:
+
 ```json
 [
   {
@@ -126,20 +127,20 @@ Example output:
 ```zig
 fn tracedBuild(client: dagger.Client, image: []const u8) !dagger.Container {
     const allocator = std.heap.page_allocator;
-    
+
     var span = try trace.Span.init(allocator, "container-build", .{});
     defer span.deinit();
-    
+
     try span.setAttribute("image", image);
-    
+
     const ctr = try client.dag()
         .container()
         .from(image)
         .withExec(&.{"echo", "building..."});
-    
+
     try span.addEvent("container-created", .{});
     span.end();
-    
+
     return ctr;
 }
 ```

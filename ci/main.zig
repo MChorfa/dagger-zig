@@ -6,7 +6,7 @@ const ProvenanceGenerator = @import("attest/provenance.zig").ProvenanceGenerator
 const SbomGenerator = @import("attest/sbom.zig").SbomGenerator;
 const VulnerabilityScanner = @import("scan/vulnerability.zig").VulnerabilityScanner;
 const CosignSigner = @import("sign/cosign.zig").CosignSigner;
-const SchemaValidator = @import("../schema/main.zig").SchemaValidator;
+const SchemaValidator = @import("dagger_schema").SchemaValidator;
 const MarkdownLinter = @import("markdown.zig").MarkdownLinter;
 
 pub const CiPipeline = struct {
@@ -16,16 +16,17 @@ pub const CiPipeline = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
-        const runner = try ctx.pipeline("code-quality-lint")
-            .container()
-            .from("alpine:latest")
-            .withExec(&.{ "apk", "add", "--no-cache", "zig" })
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withExec(&.{ "zig", "fmt", "--check", "src/" });
+        const pipeline_ctx = try ctx.pipeline("code-quality-lint");
+        var runner = try pipeline_ctx.container();
+        runner = try runner.from("alpine:latest");
+        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
+        runner = try runner.withDirectory("/src", source);
+        runner = try runner.withWorkdir("/src");
+        runner = try runner.withExec(&.{ "zig", "fmt", "--check", "src/" });
 
         const output = try runner.stdout();
-        return try ctx.directory().withNewFile("lint-output.txt", output);
+        var dir = try ctx.directory();
+        return try dir.withNewFile("lint-output.txt", output);
     }
 
     /// Lint markdown documentation
@@ -48,14 +49,13 @@ pub const CiPipeline = struct {
         _ = self;
 
         // Build docs using mdBook or similar static site generator
-        const ctr = try ctx.container()
-            .from("rust:slim")
-            .withExec(&.{ "cargo", "install", "mdbook" })
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            // Initialize mdBook if not exists, then build
-            .withExec(&.{ "sh", "-c", "if [ ! -f docs/book.toml ]; then mdbook init docs --title 'dagger-zig Documentation'; fi" })
-            .withExec(&.{ "mdbook", "build", "docs", "--dest-dir", "_site" });
+        var ctr = try ctx.container();
+        ctr = try ctr.from("rust:slim");
+        ctr = try ctr.withExec(&.{ "cargo", "install", "mdbook" });
+        ctr = try ctr.withDirectory("/src", source);
+        ctr = try ctr.withWorkdir("/src");
+        ctr = try ctr.withExec(&.{ "sh", "-c", "if [ ! -f docs/book.toml ]; then mdbook init docs --title 'dagger-zig Documentation'; fi" });
+        ctr = try ctr.withExec(&.{ "mdbook", "build", "docs", "--dest-dir", "_site" });
 
         return ctr.directory("/src/_site");
     }
@@ -107,16 +107,17 @@ pub const CiPipeline = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
-        const runner = try ctx.pipeline("functional-verification-tests")
-            .container()
-            .from("alpine:latest")
-            .withExec(&.{ "apk", "add", "--no-cache", "zig" })
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withExec(&.{ "zig", "build", "test" });
+        const pipeline_ctx = try ctx.pipeline("functional-verification-tests");
+        var runner = try pipeline_ctx.container();
+        runner = try runner.from("alpine:latest");
+        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
+        runner = try runner.withDirectory("/src", source);
+        runner = try runner.withWorkdir("/src");
+        runner = try runner.withExec(&.{ "zig", "build", "test" });
 
         const output = try runner.stdout();
-        return try ctx.directory().withNewFile("test-output.txt", output);
+        var dir = try ctx.directory();
+        return try dir.withNewFile("test-output.txt", output);
     }
 
     pub fn securityScan(

@@ -16,12 +16,12 @@
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 > **📚 Looking for Dagger?** Visit [dagger.io](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger)
-> **Status:** v0.2.0. POSIX-only synchronous client SDK with module authoring and tracing.  
+> **Status:** v0.2.1. POSIX-only synchronous client SDK with module authoring and tracing.  
 > **Security Hardened:** OpenSSF Scorecard, SLSA provenance, Sigstore signing
 
 Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0.
 
-## What works in v0.2.0
+## What works in v0.2.1
 
 - **Client API.** Synchronous Dagger API for Linux/macOS: containers, directories, files,
   secrets, cache volumes, services, git repositories. Chain methods
@@ -46,10 +46,10 @@ Zero external dependencies. Zig stdlib only. Authored against Zig 0.16.0.
 ## What's explicitly deferred to v0.3.0
 
 - **Async patterns.** `dagger.async` (`QueryGroup`, `QueryBatch`, `withRetry`) — disabled in
-  v0.2.0 to prevent `error.NotImplemented` failures. Coming in v0.3.0.
-- **Windows support.** Socket operations return `error.NotSupported` on Windows in v0.2.0.
+  v0.2.1 to prevent `error.NotImplemented` failures. Coming in v0.3.0.
+- **Windows support.** Socket operations return `error.NotSupported` on Windows in v0.2.1.
   Full Windows support planned for v0.3.0.
-- **C ABI.** `zig build c-lib` is disabled in v0.2.0 (compilation issues with Zig 0.16).
+- **C ABI.** `zig build c-lib` is disabled in v0.2.1 (compilation issues with Zig 0.16).
   Will be re-enabled in v0.3.0.
 - Native SPIFFE Workload API (pure Zig HTTP/2 + gRPC + protobuf).
 - Vault cert-auth for `spiffe_integration.spiffeRegistryAuth`. Shares TLS
@@ -137,7 +137,7 @@ Your `dagger.json`:
 ```json
 {
   "name": "my-pipeline",
-  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.2.0",
+  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.2.1",
   "source": "."
 }
 ```

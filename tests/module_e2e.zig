@@ -98,7 +98,7 @@ test "invoker runs a method and writes the return to the buffer" {
     // Build a Context manually. Client and arena are what the serde layer
     // touches; we can skip the real client because `echo` only uses
     // ctx.arena for its dupe.
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -120,20 +120,21 @@ test "invoker runs a method and writes the return to the buffer" {
     const module: ExampleModule = .{ .tenant = "test" };
 
     // Build a writer for the return value.
-    var out: std.ArrayList(u8) = .{};
+    var out: std.ArrayList(u8) = .empty;
     defer out.deinit(std.testing.allocator);
-    var w: std.Io.Writer = out.writer(std.testing.allocator);
+    var aw: std.Io.Writer.Allocating = .fromArrayList(std.testing.allocator, &out);
 
     // Engine would pass this after stitching inputArgs into an object.
     const args_json = "{\"arg0\":\"hello from test\"}";
 
-    try echo_entry.invoke(&module, &ctx, args_json, &w);
+    try echo_entry.invoke(&module, &ctx, args_json, &aw.writer);
+    out = aw.toArrayList();
 
     try std.testing.expectEqualStrings("\"hello from test\"", out.items);
 }
 
 test "invoker runs a numeric add" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
     defer io_impl.deinit();
     const io = io_impl.io();
     var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);
@@ -152,18 +153,19 @@ test "invoker runs a numeric add" {
     } else unreachable;
 
     const module: ExampleModule = .{};
-    var out: std.ArrayList(u8) = .{};
+    var out: std.ArrayList(u8) = .empty;
     defer out.deinit(std.testing.allocator);
-    var w: std.Io.Writer = out.writer(std.testing.allocator);
+    var aw: std.Io.Writer.Allocating = .fromArrayList(std.testing.allocator, &out);
 
     const args_json = "{\"arg0\":40,\"arg1\":2}";
-    try add_entry.invoke(&module, &ctx, args_json, &w);
+    try add_entry.invoke(&module, &ctx, args_json, &aw.writer);
+    out = aw.toArrayList();
 
     try std.testing.expectEqualStrings("42", out.items);
 }
 
 test "invoker handles struct arg with defaults" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
     defer io_impl.deinit();
     const io = io_impl.io();
     var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);
@@ -182,21 +184,23 @@ test "invoker handles struct arg with defaults" {
     } else unreachable;
 
     const module: ExampleModule = .{};
-    var out: std.ArrayList(u8) = .{};
+    var out: std.ArrayList(u8) = .empty;
     defer out.deinit(std.testing.allocator);
-    var w: std.Io.Writer = out.writer(std.testing.allocator);
+    var aw: std.Io.Writer.Allocating = .fromArrayList(std.testing.allocator, &out);
 
     // Omit `race` and `parallelism`; defaults should kick in.
     const args_json = "{\"arg0\":{\"target\":\"linux\"}}";
-    try conf_entry.invoke(&module, &ctx, args_json, &w);
+    try conf_entry.invoke(&module, &ctx, args_json, &aw.writer);
+    out = aw.toArrayList();
 
     // configure returns opts.race, which defaults to false.
     try std.testing.expectEqualStrings("false", out.items);
 
     // Now with race explicitly set.
     out.clearRetainingCapacity();
-    var w2: std.Io.Writer = out.writer(std.testing.allocator);
+    var aw2: std.Io.Writer.Allocating = .fromArrayList(std.testing.allocator, &out);
     const args_json2 = "{\"arg0\":{\"target\":\"linux\",\"race\":true}}";
-    try conf_entry.invoke(&module, &ctx, args_json2, &w2);
+    try conf_entry.invoke(&module, &ctx, args_json2, &aw2.writer);
+    out = aw2.toArrayList();
     try std.testing.expectEqualStrings("true", out.items);
 }

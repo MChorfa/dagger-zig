@@ -25,7 +25,7 @@ zig run schema/validate_main.zig
 # Schema validation only
 zig run schema/validate_main.zig --schema-only
 
-# Conformance tests only  
+# Conformance tests only
 zig run schema/validate_main.zig --conformance-only
 
 # Specific category
@@ -106,10 +106,10 @@ Add to your CI pipeline:
 ```yaml
 - name: Schema Validation
   run: zig run schema/validate_main.zig
-  
+
 - name: Core Types Conformance
   run: zig run schema/validate_main.zig --category=core_types
-  
+
 - name: Container API Conformance
   run: zig run schema/validate_main.zig --category=container_api
 ```

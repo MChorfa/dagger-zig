@@ -21,50 +21,46 @@ permissions:
   contents: read
 
 jobs:
-  # Markdown linting with markdownlint-cli
+  # Documentation linting via the root Dagger module
   lint:
     name: Lint Markdown
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+      - name: Run docs checks with the root Dagger module
+        uses: dagger/dagger-for-github@456fc3af63a2ba6f9789af9c55045b459115541b # v8.3.0
         with:
-          node-version: "20"
+          version: "v0.21.0"
+          verb: call
+          module: .
+          args: lint-docs --arg-0=. export --path ./reports
 
-      - name: Install markdownlint-cli
-        run: npm install -g markdownlint-cli
+      - name: Upload docs check reports
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: docs-check-reports
+          path: reports/
 
-      - name: Lint markdown files
-        run: markdownlint "**/*.md" --config .markdownlint.yaml || true
-
-      - name: Check formatting with prettier
-        run: |
-          npm install -g prettier
-          prettier --check "**/*.md" || true
-
-  # Build documentation site with mdBook
+  # Documentation site build via the root Dagger module
   build-docs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v2
+      - name: Build docs with the root Dagger module
+        uses: dagger/dagger-for-github@456fc3af63a2ba6f9789af9c55045b459115541b # v8.3.0
         with:
-          mdbook-version: "0.4.40"
-
-      - name: Build docs
-        run: |
-          cd docs
-          mdbook build
+          version: "v0.21.0"
+          verb: call
+          module: .
+          args: build-docs --arg-0=. export --path ./docs-site
 
       - name: Upload site artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
-          path: docs/_site
+          path: docs-site
 
   # Deploy to GitHub Pages (only on main)
   deploy:

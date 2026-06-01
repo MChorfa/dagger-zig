@@ -28,7 +28,7 @@ dagger.gen.json
 # OS
 .DS_Store
 Thumbs.db
-
+.codegraph
 # Temporary/backup files
 *.tmp
 *.bak
@@ -59,3 +59,6 @@ _site/
 
 # Zig cache
 .zig-cache
+reports
+tests/fixtures/downstream-smoke
+docs-site

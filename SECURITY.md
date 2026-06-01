@@ -62,13 +62,13 @@ We will acknowledge receipt within 24 hours and provide a timeline for resolutio
 
 | Threat                        | Mitigation                            | Status |
 | ----------------------------- | ------------------------------------- | ------ |
-| Compromised build environment | Hermetic builds, SLSA L4              | ✅      |
-| Malicious dependency          | SBOM scanning, lock files             | ✅      |
-| Secret leakage                | GitLeaks, secret scanning             | ✅      |
-| Replay attacks                | Signed timestamps, nonces             | ✅      |
-| Supply chain tampering        | Sigstore signatures, transparency log | ✅      |
-| Privilege escalation          | mTLS, workload identity               | 🔄      |
-| Side-channel attacks          | Constant-time crypto (planned)        | ⏳      |
+| Compromised build environment | Hermetic builds, SLSA L4              | ✅     |
+| Malicious dependency          | SBOM scanning, lock files             | ✅     |
+| Secret leakage                | GitLeaks, secret scanning             | ✅     |
+| Replay attacks                | Signed timestamps, nonces             | ✅     |
+| Supply chain tampering        | Sigstore signatures, transparency log | ✅     |
+| Privilege escalation          | mTLS, workload identity               | 🔄     |
+| Side-channel attacks          | Constant-time crypto (planned)        | ⏳     |
 
 ## Security Best Practices
 
@@ -125,7 +125,7 @@ const verified = try dagger.verifyProvenance(.{
 
 We thank the following security researchers who have responsibly disclosed vulnerabilities:
 
-- *None yet - be the first!*
+- _None yet - be the first!_
 
 ## License
 

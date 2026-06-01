@@ -37,6 +37,31 @@ pub fn build(b: *std.Build) void {
     });
     dagger_mod.addOptions("spiffe_options", spiffe_options);
 
+    const schema_mod = b.addModule("dagger_schema", .{
+        .root_source_file = b.path("schema/main.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "dagger_sdk", .module = dagger_mod }},
+    });
+
+    const ci_mod = b.createModule(.{
+        .root_source_file = b.path("ci/docs_main.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{
+            .{ .name = "dagger_sdk", .module = dagger_mod },
+            .{ .name = "dagger_schema", .module = schema_mod },
+        },
+    });
+    const ci_module = b.addExecutable(.{
+        .name = "module",
+        .root_module = ci_mod,
+    });
+    const ci_runtime_install = b.addInstallArtifact(ci_module, .{});
+    const ci_runtime_step = b.step("module-runtime", "Install the Dagger CI module runtime");
+    ci_runtime_step.dependOn(&ci_runtime_install.step);
+
     // ── unit tests ──────────────────────────────────────────────────────
     const unit_mod = b.createModule(.{
         .root_source_file = b.path("src/root.zig"),
