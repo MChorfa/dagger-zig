@@ -2,9 +2,9 @@ name: Multi-Architecture Build & Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -12,58 +12,23 @@ permissions:
   actions: read
 
 jobs:
-  # Matrix build across all supported platforms (native Zig cross-compilation)
   build:
-    name: Build (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-linux-gnu
-            os: ubuntu-latest
-          - target: aarch64-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-macos
-            os: macos-latest
-          - target: aarch64-macos
-            os: macos-latest
-
+    name: Multi-Arch Build Pipeline
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v4
 
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
+      - name: Run Dagger build pipeline
+        uses: dagger/dagger-for-github@v6
         with:
-          version: 0.16.0
-
-      - name: Verify Zig installation
-        run: |
-          which zig
-          zig version
-          zig env
-
-      - name: Build (${{ matrix.target }})
-        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe
+          verb: call
+          module: ./ci/pipeline
+          args: build --arg-0=. --arg-1=multi-arch
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.target }}
-          path: |
-            zig-out/bin/
-            zig-out/lib/
+          name: multi-arch-builds
+          path: /tmp/dagger-artifacts/build/
           retention-days: 30
-
-  # Summary
-  summary:
-    name: Build Summary
-    needs: build
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Generate summary
-        run: |
-          echo "## Multi-Architecture Build Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All builds use native Zig cross-compilation." >> $GITHUB_STEP_SUMMARY

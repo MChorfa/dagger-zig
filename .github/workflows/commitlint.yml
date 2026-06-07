@@ -2,7 +2,7 @@ name: Commit Lint
 
 on:
   pull_request:
-    types: [ opened, synchronize, edited ]
+    types: [opened, synchronize, edited]
 
 permissions:
   contents: read
@@ -13,32 +13,21 @@ jobs:
     name: Lint Commit Messages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+      - name: Run Dagger compliance pipeline (commitlint)
+        uses: dagger/dagger-for-github@v6
         with:
-          node-version: "20"
+          verb: call
+          module: ./ci/pipeline
+          args: compliance --arg-0=. --arg-1=https://github.com/${{ github.repository }} --arg-2=${{ github.ref_name }} --arg-3=${{ github.repository_is_fork }}
 
-      - name: Install commitlint
-        run: |
-          npm install -g @commitlint/cli @commitlint/config-conventional
-
-      - name: Lint PR commits
-        run: |
-          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
-            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-          else
-            echo "No PR context available (running locally), linting last commit only"
-            commitlint --from HEAD~1 --to HEAD --verbose
-          fi
-
-      - name: Check PR title
-        run: |
-          if [ -n "${{ github.event.pull_request.title }}" ]; then
-            echo "${{ github.event.pull_request.title }}" | commitlint --verbose
-          else
-            echo "No PR title available (running locally), skipping"
-          fi
+      - name: Upload commitlint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: commitlint-results
+          path: /tmp/dagger-artifacts/compliance/commitlint*
+          retention-days: 7

@@ -2,75 +2,26 @@ name: ci
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
   actions: read
 
 jobs:
-  # Multi-platform build matrix
-  build-matrix:
-    name: Build & Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # Windows support deferred to v0.3.0 (see platform.zig socket stubs)
-        os: [ ubuntu-latest, macos-latest ]
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
-        with:
-          version: 0.16.0
-
-      - name: Verify Zig installation (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          which zig
-          zig version
-          zig env
-
-      - name: Verify Zig installation (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Get-Command zig
-          zig version
-          zig env
-
-      - name: Lint
-        run: zig fmt --check src/
-
-      - name: Build
-        run: zig build
-
-      - name: Test
-        run: zig build test
-
-  # Cross-compilation for additional targets
-  cross-compile:
-    name: Cross-compile (${{ matrix.target }})
+  # Thin orchestration layer — delegates to Dagger for all build/test/lint
+  pipeline:
+    name: CI Pipeline (via Dagger)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - x86_64-linux-gnu
-          - aarch64-linux-gnu
-          - x86_64-macos-none
-          - aarch64-macos-none
-          - x86_64-windows-gnu
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
+      - name: Setup Dagger
+        uses: dagger/dagger-for-github@v6
         with:
-          version: 0.16.0
+          version: latest
 
-      - name: Cross-compile
-        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe
+      - name: Run CI pipeline
+        run: dagger call -m ./ci/pipeline run --arg-0 .

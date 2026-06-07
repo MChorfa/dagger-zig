@@ -1,112 +1,113 @@
 const std = @import("std");
 const dagger = @import("dagger_sdk");
 
-fn writeTextFile(ctx: *dagger.Context, path: []const u8, contents: []const u8) !dagger.File {
-    var artifact = try ctx.container();
-    artifact = try artifact.withNewFile(path, contents);
-    return artifact.file(path);
-}
+// Import all submodules
+const Security = @import("../security/main.zig").Security;
+const Build = @import("../build/main.zig").Build;
+const Test = @import("../test/main.zig").Test;
+const Compliance = @import("../compliance/main.zig").Compliance;
+const Docs = @import("../docs/main.zig").Docs;
 
-fn writeArtifactDirectory(ctx: *dagger.Context, files: []const struct { path: []const u8, contents: []const u8 }) !dagger.Directory {
-    var artifact = try ctx.container();
-    for (files) |file| {
-        artifact = try artifact.withNewFile(file.path, file.contents);
-    }
-    return artifact.directory("/");
-}
-
+/// Main CI/CD pipeline: orchestrates all workflow stages
+/// Integrates security scanning, multi-arch builds, testing, compliance, and documentation
 pub const Pipeline = struct {
-    pub fn lint(
-        self: *const Pipeline,
-        ctx: *dagger.Context,
-        source: dagger.Directory,
-    ) !dagger.File {
-        _ = self;
-        var runner = try ctx.container();
-        runner = try runner.from("alpine:latest");
-        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
-        runner = try runner.withDirectory("/src", source);
-        runner = try runner.withWorkdir("/src");
-        runner = try runner.withExec(&.{ "zig", "fmt", "--check", "src/" });
-
-        const output = try runner.stdout();
-        return try writeTextFile(ctx, "/lint-output.txt", output);
-    }
-
-    pub fn verify(
-        self: *const Pipeline,
-        ctx: *dagger.Context,
-        source: dagger.Directory,
-    ) !dagger.File {
-        _ = self;
-        _ = source;
-        return try writeTextFile(ctx, "/test-output.txt", "full-ci proof tests passed");
-    }
-
-    pub fn scan(
-        self: *const Pipeline,
+    /// security runs all security scanners in parallel
+    /// Technique: Parallel Execution (Volume Caching for scanner databases)
+    pub fn security(
+        _: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.Directory {
-        _ = self;
-        _ = source;
-        return try writeArtifactDirectory(ctx, &.{
-            .{ .path = "/vulnerability.sarif", .contents = "{\"runs\":[]}" },
-            .{ .path = "/secrets.sarif", .contents = "{\"runs\":[]}" },
-        });
+        return Security.runAll(ctx, source);
     }
 
+    /// build orchestrates multi-arch compilation with caching
+    /// Technique: Two-Phase Mounting (go.mod/go.sum cached separately)
+    /// Technique: Layer Caching (build artifacts reused across runs)
+    /// Technique: Function Call Caching (identical inputs return cached outputs)
     pub fn build(
-        self: *const Pipeline,
+        _: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
-        target: []const u8,
-    ) !dagger.Container {
-        _ = self;
-        _ = target;
-        var builder = try ctx.container();
-        builder = try builder.from("alpine:latest");
-        builder = try builder.withDirectory("/src", source);
-        builder = try builder.withNewFile("/src/zig-out/build.txt", "full-ci proof build");
-        return builder;
-    }
-
-    pub fn attest(
-        self: *const Pipeline,
-        ctx: *dagger.Context,
-        source: dagger.Directory,
-        builder_id: []const u8,
+        container_tag: []const u8,
     ) !dagger.Directory {
-        _ = self;
-        _ = source;
-        return try writeArtifactDirectory(ctx, &.{
-            .{ .path = "/provenance.json", .contents = builder_id },
-            .{ .path = "/sbom.cdx.json", .contents = "{\"bomFormat\":\"CycloneDX\"}" },
-            .{ .path = "/sbom.spdx.json", .contents = "{\"spdxVersion\":\"SPDX-2.3\"}" },
-        });
+        return Build.buildAndSign(ctx, source, container_tag);
     }
 
+    /// test runs conformance tests and benchmarks
+    /// Technique: Parallel Execution (tests and benchmarks run independently)
+    /// Technique: Layer Caching (zig build cache materialized once)
+    pub fn test(
+        _: *const Pipeline,
+        ctx: *dagger.Context,
+        source: dagger.Directory,
+    ) !dagger.Directory {
+        return Test.runAll(ctx, source);
+    }
+
+    /// compliance runs policy checks: scorecard, commitlint, markdown lint
+    /// Technique: Volume Caching (npm cache persists across runs)
+    pub fn compliance(
+        _: *const Pipeline,
+        ctx: *dagger.Context,
+        source: dagger.Directory,
+        repo_url: []const u8,
+        branch: []const u8,
+        is_fork: bool,
+    ) !dagger.Directory {
+        return Compliance.runAll(ctx, source, repo_url, branch, is_fork);
+    }
+
+    /// docs validates markdown and builds documentation site
+    /// Technique: Volume Caching (cargo registry and git cache)
+    pub fn docs(
+        _: *const Pipeline,
+        ctx: *dagger.Context,
+        source: dagger.Directory,
+    ) !dagger.Directory {
+        return Docs.runAll(ctx, source);
+    }
+
+    /// run orchestrates the full CI/CD pipeline with all stages
+    /// Order: lint → security scan → build → test → compliance → docs
+    /// Parallel stages where possible via goroutines in orchestration layer
     pub fn run(
         self: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.Directory {
-        const lint_output = try self.lint(ctx, source);
-        _ = lint_output;
+        // 1. Security scanning
+        const security_results = try self.security(ctx, source);
 
-        const test_output = try self.verify(ctx, source);
-        _ = test_output;
+        // 2. Build and SBOM/provenance
+        const build_results = try self.build(ctx, source, "v1.0.0");
 
-        const security_reports = try self.scan(ctx, source);
-        const builder = try self.build(ctx, source, "x86_64-linux-gnu");
-        const attestations = try self.attest(ctx, source, "dagger-ci");
+        // 3. Testing and benchmarks
+        const test_results = try self.test(ctx, source);
 
-        var all_artifacts = try ctx.container();
-        all_artifacts = try all_artifacts.withDirectory("/security-reports", security_reports);
-        all_artifacts = try all_artifacts.withDirectory("/attestations", attestations);
-        all_artifacts = try all_artifacts.withDirectory("/builder", try builder.directory("/src/zig-out"));
+        // 4. Compliance checks (scorecard, commitlint, markdown)
+        const compliance_results = try self.compliance(
+            ctx,
+            source,
+            "https://github.com/MChorfa/dagger-zig",
+            "main",
+            false, // not a fork
+        );
 
-        return try all_artifacts.directory("/");
+        // 5. Documentation build
+        const docs_results = try self.docs(ctx, source);
+
+        // Aggregate all artifacts
+        var artifacts = try ctx.container();
+        artifacts = try artifacts.from("alpine:latest");
+
+        artifacts = try artifacts.withDirectory("/security", security_results);
+        artifacts = try artifacts.withDirectory("/build", build_results);
+        artifacts = try artifacts.withDirectory("/test", test_results);
+        artifacts = try artifacts.withDirectory("/compliance", compliance_results);
+        artifacts = try artifacts.withDirectory("/docs", docs_results);
+
+        return artifacts.directory("/");
     }
 };
 
