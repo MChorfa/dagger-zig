@@ -43,7 +43,7 @@ zig build ci                 # full pipeline (lint->test->c_lib->c_smoke)
 Or with Dagger:
 
 ```shell
-dagger call ci --source=.
+dagger call -m ./ci/full full-pipeline --arg-0 .
 ```
 
 ## Development

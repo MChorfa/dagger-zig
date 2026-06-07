@@ -90,7 +90,7 @@ pub fn main(init: std.process.Init) !void {
 Run your module:
 
 ```bash
-dagger call build --source=. --output=./output
+dagger call build --arg-0 . --output=./output
 ```
 
 ## See Also

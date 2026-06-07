@@ -130,7 +130,7 @@ git flow feature finish my-feature
 2. **Implement feature** — Follow existing patterns
 3. **Update documentation** — README, docs/, and inline comments
 4. **Test locally** — `make workflow-lint && make ci-local`
-5. **Run full CI** — `dagger call ci --source=.`
+5. **Run full CI** — `dagger call -m ./ci/full full-pipeline --arg-0 .`
 
 ## Commit Message Format
 

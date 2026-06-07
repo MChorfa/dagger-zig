@@ -19,21 +19,17 @@ The CI pipeline follows a 7-phase security-hardened build process:
 ## Usage
 
 ```bash
-# Run full pipeline locally
-dagger call full-pipeline --source=.
+# Run the full proof pipeline locally
+dagger call -m ./ci/full full-pipeline --arg-0 .
 
-# Run release pipeline with signing
-dagger call release-pipeline --source=. --version=v0.1.0 --signing-key=env://COSIGN_KEY
+# Inspect the available proof functions
+dagger functions -m ./ci/full
 ```
 
 ## Structure
 
-- `main.zig` - Pipeline orchestrator
-- `build/hermetic.zig` - Reproducible builds
-- `scan/vulnerability.zig` - Security scanning (Trivy, Gitleaks)
-- `attest/provenance.zig` - SLSA provenance generation
-- `attest/sbom.zig` - SBOM generation (CycloneDX, SPDX)
-- `sign/cosign.zig` - Artifact signing with Sigstore
+- `full/main.zig` - Self-contained proof pipeline orchestrator
+- `full/build.zig` - Module runtime wrapper for the proof module
 
 ## Security
 

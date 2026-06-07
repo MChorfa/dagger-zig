@@ -146,8 +146,8 @@ Then:
 
 ```bash
 dagger develop              # runs codegen, emits internal/dagger/dagger.gen.zig
-dagger call build --source=.
-dagger call test --source=. | less
+dagger call build --arg-0 .
+dagger call test --arg-0 . | less
 ```
 
 ## Parallel pipelines
