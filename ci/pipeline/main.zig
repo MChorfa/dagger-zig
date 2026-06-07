@@ -15,9 +15,9 @@ fn writeArtifactDirectory(ctx: *dagger.Context, files: []const struct { path: []
     return artifact.directory("/");
 }
 
-pub const CiPipeline = struct {
+pub const Pipeline = struct {
     pub fn lint(
-        self: *const CiPipeline,
+        self: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.File {
@@ -33,8 +33,8 @@ pub const CiPipeline = struct {
         return try writeTextFile(ctx, "/lint-output.txt", output);
     }
 
-    pub fn runTests(
-        self: *const CiPipeline,
+    pub fn verify(
+        self: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.File {
@@ -43,8 +43,8 @@ pub const CiPipeline = struct {
         return try writeTextFile(ctx, "/test-output.txt", "full-ci proof tests passed");
     }
 
-    pub fn securityScan(
-        self: *const CiPipeline,
+    pub fn scan(
+        self: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.Directory {
@@ -56,8 +56,8 @@ pub const CiPipeline = struct {
         });
     }
 
-    pub fn slsaBuild(
-        self: *const CiPipeline,
+    pub fn build(
+        self: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
         target: []const u8,
@@ -71,8 +71,8 @@ pub const CiPipeline = struct {
         return builder;
     }
 
-    pub fn generateAttestations(
-        self: *const CiPipeline,
+    pub fn attest(
+        self: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
         builder_id: []const u8,
@@ -86,20 +86,20 @@ pub const CiPipeline = struct {
         });
     }
 
-    pub fn fullPipeline(
-        self: *const CiPipeline,
+    pub fn run(
+        self: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.Directory {
         const lint_output = try self.lint(ctx, source);
         _ = lint_output;
 
-        const test_output = try self.runTests(ctx, source);
+        const test_output = try self.verify(ctx, source);
         _ = test_output;
 
-        const security_reports = try self.securityScan(ctx, source);
-        const builder = try self.slsaBuild(ctx, source, "x86_64-linux-gnu");
-        const attestations = try self.generateAttestations(ctx, source, "dagger-ci");
+        const security_reports = try self.scan(ctx, source);
+        const builder = try self.build(ctx, source, "x86_64-linux-gnu");
+        const attestations = try self.attest(ctx, source, "dagger-ci");
 
         var all_artifacts = try ctx.container();
         all_artifacts = try all_artifacts.withDirectory("/security-reports", security_reports);
@@ -111,5 +111,5 @@ pub const CiPipeline = struct {
 };
 
 pub fn main(init: std.process.Init) !void {
-    return dagger.module.serve(init, CiPipeline{});
+    return dagger.module.serve(init, Pipeline{});
 }

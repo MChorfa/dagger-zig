@@ -152,19 +152,19 @@ auth-status:
 
 # Dagger-based workflows
 dagger-ci:
-	dagger call -m ./ci/full full-pipeline --arg-0 .
+	dagger call -m ./ci/pipeline run --arg-0 .
 
 dagger-full-ci:
-	dagger call -m ./ci/full full-pipeline --arg-0 .
+	dagger call -m ./ci/pipeline run --arg-0 .
 
 dagger-lint:
-	dagger call -m ./ci/full lint --arg-0 .
+	dagger call -m ./ci/pipeline lint --arg-0 .
 
 dagger-test:
-	dagger call -m ./ci/full run-tests --arg-0 .
+	dagger call -m ./ci/pipeline test --arg-0 .
 
 dagger-conformance:
-	dagger call -m ./ci/full security-scan --arg-0 .
+	dagger call -m ./ci/pipeline scan --arg-0 .
 
 # Documentation
 docs:

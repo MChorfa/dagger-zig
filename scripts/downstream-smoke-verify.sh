@@ -6,7 +6,7 @@ FIXTURE_DIR="${PROJECT_ROOT}/tests/fixtures/downstream-smoke"
 
 cd "${PROJECT_ROOT}"
 
-bash "scripts/prewarm-downstream-smoke.sh"
+bash "scripts/downstream-smoke-prewarm.sh"
 
 for path in \
     tests/fixtures/downstream-smoke/build.zig \
@@ -18,7 +18,7 @@ for path in \
     if [[ -n "${ignore_details}" ]]; then
         ignore_source="${ignore_details%%:*}"
         if [[ "${ignore_source}" == *".gitignore" ]]; then
-            echo "ERROR: downstream smoke fixture is ignored by repository .gitignore: ${path}" >&2
+            echo "ERROR: downstream smoke fixture hidden by repository .gitignore: ${path}" >&2
             echo "       rule source: ${ignore_source}" >&2
             exit 1
         fi

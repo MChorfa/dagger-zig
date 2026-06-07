@@ -63,9 +63,9 @@ reports/
 docs-site/
 
 # Nested module build artifacts
-ci/full/.zig-cache/
-ci/full/zig-out/
-ci/full/zig-pkg/
+ci/pipeline/.zig-cache/
+ci/pipeline/zig-out/
+ci/pipeline/zig-pkg/
 
 # Downstream smoke fixture build artifacts.
 tests/fixtures/downstream-smoke/.zig-cache/

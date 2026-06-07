@@ -38,7 +38,7 @@ pub fn build(b: *std.Build) void {
     dagger_mod.addOptions("spiffe_options", spiffe_options);
 
     const ci_mod = b.createModule(.{
-        .root_source_file = b.path("ci/full_main.zig"),
+        .root_source_file = b.path("ci/pipeline.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
@@ -105,13 +105,13 @@ pub fn build(b: *std.Build) void {
     test_suite_step.dependOn(&run_test_suite.step);
 
     // ── downstream smoke regression ────────────────────────────────────
-    const downstream_smoke = b.addSystemCommand(&.{ "bash", "scripts/check-downstream-smoke.sh" });
-    const downstream_smoke_step = b.step("test-downstream-smoke", "Verify the downstream Zig module smoke fixture still loads and runs");
+    const downstream_smoke = b.addSystemCommand(&.{ "bash", "scripts/downstream-smoke-verify.sh" });
+    const downstream_smoke_step = b.step("downstream-verify", "Verify the downstream Zig module smoke fixture still loads and runs");
     downstream_smoke_step.dependOn(&downstream_smoke.step);
 
     // ── full CI proof ──────────────────────────────────────────────────
-    const full_ci = b.addSystemCommand(&.{ "bash", "scripts/check-full-ci.sh" });
-    const full_ci_step = b.step("test-full-ci", "Verify the full CI pipeline runs through the repository SDK");
+    const full_ci = b.addSystemCommand(&.{ "bash", "scripts/ci-pipeline-verify.sh" });
+    const full_ci_step = b.step("ci-verify", "Verify the full CI pipeline runs through the repository SDK");
     full_ci_step.dependOn(&full_ci.step);
 
     // ── codegen tool ────────────────────────────────────────────────────

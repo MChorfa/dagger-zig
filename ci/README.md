@@ -20,16 +20,16 @@ The CI pipeline follows a 7-phase security-hardened build process:
 
 ```bash
 # Run the full proof pipeline locally
-dagger call -m ./ci/full full-pipeline --arg-0 .
+dagger call -m ./ci/pipeline run --arg-0 .
 
 # Inspect the available proof functions
-dagger functions -m ./ci/full
+dagger functions -m ./ci/pipeline
 ```
 
 ## Structure
 
-- `full/main.zig` - Self-contained proof pipeline orchestrator
-- `full/build.zig` - Module runtime wrapper for the proof module
+- `pipeline/main.zig` - Self-contained proof pipeline orchestrator
+- `pipeline/build.zig` - Module runtime wrapper for the proof module
 
 ## Security
 
