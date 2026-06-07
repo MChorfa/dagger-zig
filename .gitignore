@@ -58,7 +58,19 @@ _site/
 .actrc.user
 
 # Zig cache
-.zig-cache
-reports
-tests/fixtures/downstream-smoke
-docs-site
+.zig-cache/
+reports/
+docs-site/
+
+# Nested module build artifacts
+ci/full/.zig-cache/
+ci/full/zig-out/
+ci/full/zig-pkg/
+
+# Downstream smoke fixture build artifacts.
+tests/fixtures/downstream-smoke/.zig-cache/
+tests/fixtures/downstream-smoke/.zig-cache/**
+tests/fixtures/downstream-smoke/zig-out/
+tests/fixtures/downstream-smoke/zig-out/**
+tests/fixtures/downstream-smoke/zig-pkg/
+tests/fixtures/downstream-smoke/zig-pkg/**
