@@ -6,14 +6,9 @@
   },
   "source": ".",
   "include": [
-    "../build.zig",
-    "../build.zig.zon",
-    "../schema",
+    "build.zig",
     "../src",
-    "!main.zig",
-    "!attest",
-    "!build",
-    "!scan",
-    "!sign"
+    "full_main.zig",
+    "!docs_main.zig"
   ]
 }

@@ -1,0 +1,13 @@
+{
+    "name": "ci-full",
+    "engineVersion": "v0.21.0",
+    "sdk": {
+        "source": "../../sdk"
+    },
+    "source": ".",
+    "include": [
+        "build.zig",
+        "main.zig",
+        "../../src"
+    ]
+}

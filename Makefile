@@ -1,7 +1,7 @@
 # dagger-zig SDK Makefile
 # Provides convenient shortcuts for common development tasks
 
-.PHONY: help build test lint clean bench ci-local security-local multi-arch-local lint-md fmt-md
+.PHONY: help build test lint clean bench ci-local security-local multi-arch-local lint-md fmt-md dagger-ci dagger-full-ci
 
 # Default target
 help:
@@ -152,16 +152,19 @@ auth-status:
 
 # Dagger-based workflows
 dagger-ci:
-	dagger call -m ci full-pipeline --source=.
+	dagger call -m ./ci/full full-pipeline --arg-0 .
+
+dagger-full-ci:
+	dagger call -m ./ci/full full-pipeline --arg-0 .
 
 dagger-lint:
-	dagger call -m ci lint --source=.
+	dagger call -m ./ci/full lint --arg-0 .
 
 dagger-test:
-	dagger call -m ci run-tests --source=.
+	dagger call -m ./ci/full run-tests --arg-0 .
 
 dagger-conformance:
-	dagger call -m ci schema-conformance --source=.
+	dagger call -m ./ci/full security-scan --arg-0 .
 
 # Documentation
 docs:
