@@ -189,7 +189,7 @@ sec(deps): update dependencies for CVE-2024-XXXX
 
 - Never commit secrets — Use Dagger secrets or environment variables
 - Follow the [Security Policy](../SECURITY.md) for vulnerability reporting
-- Ensure new code passes security scanning (Semgrep, CodeQL)
+- Ensure new code passes security scanning (Semgrep, GitLeaks, Grype)
 
 ## Enterprise Considerations
 

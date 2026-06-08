@@ -2,7 +2,7 @@
 
 ## Overview
 
-The dagger-zig SDK provides enterprise-grade observability through OpenTelemetry integration, structured logging, and health checking.
+The dagger-zig SDK provides observability through OpenTelemetry integration, structured logging, and health checking.
 
 ## OpenTelemetry Integration
 
