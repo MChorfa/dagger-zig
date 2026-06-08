@@ -34,11 +34,12 @@ pub const Test = struct {
 
         // Run the offline unit tests (no Dagger engine exists inside this
         // container, so the live integration suite cannot run here). Capture
-        // output to a log so the function always returns a materialized file.
+        // output to a log and echo it, but propagate the real exit code so a
+        // genuine test failure fails the pipeline (no silent suppression).
         tester = try tester.withExec(&.{
             "sh",
             "-c",
-            "mkdir -p /src/zig-out; zig build test -Doptimize=ReleaseSafe > /src/zig-out/test.log 2>&1 || true",
+            "mkdir -p /src/zig-out; zig build test -Doptimize=ReleaseSafe > /src/zig-out/test.log 2>&1; rc=$?; cat /src/zig-out/test.log; exit $rc",
         });
 
         return tester.file("/src/zig-out/test.log");
