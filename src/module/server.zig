@@ -528,7 +528,7 @@ test "comptime: module with no eligible methods fails to compile" {
     try testing.expectEqualStrings("run", table[0].name);
 }
 
-test "emitTypeDefBuilder emits expected fragments" {
+test "newTypeDefSelection emits expected fragments" {
     const a = testing.allocator;
     var scalar_sel = try newTypeDefSelection(a);
     scalar_sel = try withKindSelection(scalar_sel, a, .string);
@@ -565,7 +565,7 @@ test "emitTypeDefBuilder emits expected fragments" {
     );
 }
 
-test "emitFunctionBuilder emits function + withArg chain" {
+test "newFunctionSelection emits function + withArg chain" {
     const a = testing.allocator;
     var function_sel = try newFunctionSelection(a, "build", "return-id");
     function_sel = try withFunctionArgSelection(function_sel, a, "target", "string-id");

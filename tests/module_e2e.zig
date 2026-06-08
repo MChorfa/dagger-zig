@@ -98,7 +98,7 @@ test "invoker runs a method and writes the return to the buffer" {
     // Build a Context manually. Client and arena are what the serde layer
     // touches; we can skip the real client because `echo` only uses
     // ctx.arena for its dupe.
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -134,7 +134,7 @@ test "invoker runs a method and writes the return to the buffer" {
 }
 
 test "invoker runs a numeric add" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
     var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);
@@ -165,7 +165,7 @@ test "invoker runs a numeric add" {
 }
 
 test "invoker handles struct arg with defaults" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
     var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);

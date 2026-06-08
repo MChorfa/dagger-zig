@@ -8,7 +8,7 @@ pub const Security = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var runner = try ctx.container();
-        runner = try runner.from("semgrep/semgrep:latest");
+        runner = try runner.from("semgrep/semgrep@sha256:207983631beecdbe7fa29196c7f4a7a5f29033933cdb76c687ce4a672e07618d");
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
 
@@ -30,7 +30,7 @@ pub const Security = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var runner = try ctx.container();
-        runner = try runner.from("zricethezav/gitleaks:latest");
+        runner = try runner.from("zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f");
         runner = try runner.withDirectory("/repo", source);
         runner = try runner.withWorkdir("/repo");
 
@@ -53,6 +53,8 @@ pub const Security = struct {
         runner = try runner.from("ghcr.io/github/codeql-action/codeql:latest");
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
+        // Seed /results so the analyze step can write into it.
+        runner = try runner.withNewFile("/results/.keep", "");
         runner = try runner.withExec(&.{
             "codeql",
             "database",
@@ -78,7 +80,7 @@ pub const Security = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var runner = try ctx.container();
-        runner = try runner.from("anchore/grype:latest");
+        runner = try runner.from("anchore/grype@sha256:7a9fc7f89ccef78ae5a7691a115d3f0d41b1f319d589dd8cc1dcb9ab3f01dd28");
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
 
@@ -109,7 +111,8 @@ pub const Security = struct {
         var results = try ctx.container();
         results = try results.from("alpine:latest");
 
-        // Run all scanners in parallel (conceptually; actual parallelization via goroutines in Go wrapper)
+        // Each scanner is an independent Dagger pipeline; the engine evaluates
+        // these graph branches concurrently at execution time (no goroutines here).
         const semgrep_results = try semgrep(ctx, source);
         const gitleaks_results = try gitleaks(ctx, source);
         const grype_results = try grype(ctx, source);

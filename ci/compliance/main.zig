@@ -37,7 +37,7 @@ pub const Compliance = struct {
     ) !dagger.File {
         var linter = try ctx.container();
         linter = try linter.from("node:20-alpine");
-        linter = try linter.withExec(&.{ "npm", "install", "-g", "commitlint@latest", "@commitlint/config-conventional" });
+        linter = try linter.withExec(&.{ "npm", "install", "-g", "commitlint@19", "@commitlint/config-conventional@19" });
         linter = try linter.withDirectory("/src", source);
         linter = try linter.withWorkdir("/src");
         linter = try linter.withNewFile("/src/.commitlintrc.json", "{\"extends\":[\"@commitlint/config-conventional\"]}");

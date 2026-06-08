@@ -16,7 +16,7 @@ fn skipIfNoEngine(alloc: std.mem.Allocator) !void {
 test "alpine echo hello end-to-end" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -36,7 +36,7 @@ test "alpine echo hello end-to-end" {
 test "container id is opaque and non-empty" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -55,7 +55,7 @@ test "container id is opaque and non-empty" {
 test "container withEnvVariable and env resolution" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -76,7 +76,7 @@ test "container withEnvVariable and env resolution" {
 test "directory operations" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -97,7 +97,7 @@ test "directory operations" {
 test "cache volume persistence" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -131,7 +131,7 @@ test "cache volume persistence" {
 test "git repository operations" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -153,7 +153,7 @@ test "git repository operations" {
 test "secret handling" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -174,7 +174,7 @@ test "secret handling" {
 test "multi-platform container" {
     try skipIfNoEngine(std.testing.allocator);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -203,7 +203,7 @@ test "container publish and reference" {
     const registry = try std.testing.allocator.dupe(u8, std.mem.span(registry_ptr));
     defer std.testing.allocator.free(registry);
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator, undefined);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 

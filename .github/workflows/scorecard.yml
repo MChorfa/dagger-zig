@@ -36,13 +36,13 @@ jobs:
 
       - name: Upload scorecard results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: scorecard-results
           path: /tmp/dagger-artifacts/compliance/
           retention-days: 90
 
       - name: Upload to code-scanning
-        uses: github/codeql-action/upload-sarif@v3.28.12
+        uses: github/codeql-action/upload-sarif@63e4bdc93048c6d9800b99332842de18443db5b1 # v3.28.12
         with:
           sarif_file: /tmp/dagger-artifacts/compliance/scorecard.sarif

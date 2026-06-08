@@ -6,7 +6,7 @@
 //!   3. Commit the regenerated `src/gen.zig`.
 //!   4. Bump the SDK minor version.
 
-pub const engine_version: [:0]const u8 = "v0.20.6";
+pub const engine_version: [:0]const u8 = "v0.21.0";
 
 /// SDK version for `--label dagger.io/sdk.version:x.y.z` metadata.
 /// Kept in sync with build.zig.zon by hand (no file-embed in zon).
