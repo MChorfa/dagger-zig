@@ -15,16 +15,28 @@ in microseconds:
 | `query build (4-deep)` | Building a 4-level GraphQL selection chain and rendering it to a string |
 | `serializeString`      | Escaping a string for inclusion in a GraphQL query                      |
 
-Example output:
+It then prints a per-stage breakdown of the query-build pipeline as ASCII bars,
+so you can see where the time goes without an external profiler — all in the
+terminal. Example output:
 
 ```
 === dagger-zig offline benchmarks (100000 iterations) ===
-  query build (4-deep)     min   0.167  avg   0.322  p95   0.458  p99   0.500  max  20.625  (us)
-  serializeString          min   0.791  avg   1.109  p95   1.791  p99   2.375  max 150.292  (us)
+  query build (4-deep)     min   0.208  avg   0.337  p95   0.459  p99   0.542  max  16.083  (us)
+  serializeString          min   0.791  avg   1.065  p95   1.625  p99   2.417  max  19.792  (us)
+
+=== query build stage breakdown (instrumented avg ns/op) ===
+  select(container)  ####                            22 ns  (10.4%)
+  argStr(address)    #######                         37 ns  (17.5%)
+  select(withExec)   ##                              11 ns  ( 5.2%)
+  select(stdout)     ##                              10 ns  ( 4.7%)
+  build() -> string  ############################   131 ns  (62.1%)
+  total                                             211 ns
 ```
 
-Numbers are machine-dependent; use them for relative comparison across commits on
-the same host, not as absolute targets.
+The breakdown uses cumulative-prefix instrumented timing (time the chain up to N
+stages, subtract adjacent prefixes), so read it as a relative "where does the
+time go" view, not absolute per-op cost. Numbers are machine-dependent; use them
+for relative comparison across commits on the same host, not as absolute targets.
 
 ## CI
 
