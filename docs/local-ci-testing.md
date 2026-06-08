@@ -145,7 +145,7 @@ act push -W .github/workflows/security.yml \
 - GitLeaks license check may fail (expected)
 - FOSSA scan requires real API key
 - Semgrep runs in container (may be slow)
-- Trivy works fully
+- Grype dependency scan works fully
 
 ### Multi-Architecture (`multi-arch.yml`)
 

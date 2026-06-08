@@ -23,7 +23,10 @@ pub const Compliance = struct {
         _ = branch;
         _ = skip_on_fork;
 
-        const empty_sarif = "{\"version\":\"2.1.0\",\"$schema\":\"https://json.schemastore.org/sarif-2.1.0.json\",\"runs\":[]}";
+        // A SARIF run with empty `results` ("tool ran, no findings"). An empty
+        // `runs` array is rejected by GitHub code-scanning upload-sarif
+        // ("1 item required; only 0 were supplied"), so one run is required.
+        const empty_sarif = "{\"version\":\"2.1.0\",\"$schema\":\"https://json.schemastore.org/sarif-2.1.0.json\",\"runs\":[{\"tool\":{\"driver\":{\"name\":\"scorecard-stub\",\"informationUri\":\"https://github.com/ossf/scorecard\",\"version\":\"0.0.0\",\"rules\":[]}},\"results\":[]}]}";
         var stub = try ctx.container();
         stub = try stub.from("alpine:latest");
         stub = try stub.withNewFile("/scorecard.sarif", empty_sarif);

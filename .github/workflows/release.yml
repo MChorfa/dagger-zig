@@ -81,6 +81,8 @@ jobs:
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
     runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -93,14 +95,81 @@ jobs:
           name: build-artifacts
           path: ./artifacts
 
+      # The Dagger build produces per-target install dirs under builds/<target>/
+      # and SBOMs under sbom/. Package each target into a release tarball with a
+      # SHA-256 checksum so there is a concrete artifact to attest and sign.
+      - name: Package per-target tarballs + checksums
+        env:
+          TAG: ${{ needs.detect-release.outputs.tag_name || needs.release-please.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir -p dist
+          for d in artifacts/builds/*/; do
+            target="$(basename "$d")"
+            tar -czf "dist/dagger-zig-${TAG}-${target}.tar.gz" -C "$d" .
+          done
+          cp artifacts/sbom/* dist/ 2>/dev/null || true
+          (cd dist && for f in *.tar.gz; do sha256sum "$f" > "$f.sha256"; done)
+          ls -la dist
+
+      # Base64-encoded sha256 subjects fed to the SLSA Build L3 generator below.
+      - name: Generate subject hashes
+        id: hash
+        run: |
+          set -euo pipefail
+          echo "hashes=$(cd dist && sha256sum *.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      # SLSA build provenance (GitHub-native attestation) for each tarball.
+      # Verify: gh attestation verify <file> --repo MChorfa/dagger-zig
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: "dist/*.tar.gz"
+
       - name: Install cosign
         uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
 
-      - name: Sign & upload release assets
+      # Keyless cosign signature (Sigstore bundle) for each tarball.
+      # Verify: cosign verify-blob --bundle <file>.bundle \
+      #   --certificate-identity 'https://github.com/MChorfa/dagger-zig/.github/workflows/release.yml@refs/tags/<TAG>' \
+      #   --certificate-oidc-issuer https://token.actions.githubusercontent.com <file>
+      - name: Sign artifacts with cosign
+        env:
+          COSIGN_YES: "true"
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for f in dist/*.tar.gz; do
+            cosign sign-blob --yes --bundle "${f}.bundle" "${f}"
+          done
+
+      - name: Upload release assets
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
           tag_name: ${{ needs.detect-release.outputs.tag_name || needs.release-please.outputs.tag_name }}
           files: |
-            artifacts/**/*.tar.gz
-            artifacts/**/*.sha256
-            artifacts/**/*.sbom.*
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+            dist/*.tar.gz.bundle
+            dist/sbom.*
+
+  # SLSA Build Level 3 provenance via the certified slsa-github-generator
+  # reusable workflow. It runs in an isolated, trusted context the build job
+  # cannot influence (non-forgeable provenance), and attaches a signed
+  # multiple.intoto.jsonl to the release. Must be pinned to a semver tag.
+  # Verify: slsa-verifier verify-artifact <tarball> \
+  #   --provenance-path multiple.intoto.jsonl \
+  #   --source-uri github.com/MChorfa/dagger-zig --source-tag <tag>
+  provenance:
+    name: SLSA L3 Provenance
+    needs: [detect-release, sbom-and-sign]
+    if: github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true'
+    permissions:
+      actions: read # read the workflow path for provenance
+      id-token: write # keyless signing of the provenance
+      contents: write # attach provenance to the release
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.sbom-and-sign.outputs.hashes }}
+      upload-assets: true
