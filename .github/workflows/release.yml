@@ -48,6 +48,7 @@ jobs:
     name: Build & Attest
     needs: [detect-release, release-please]
     if: |
+      !cancelled() &&
       github.repository == 'MChorfa/dagger-zig' &&
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
@@ -77,6 +78,7 @@ jobs:
     name: SBOM & Sign
     needs: [detect-release, release-please, build-and-attest]
     if: |
+      !cancelled() &&
       github.repository == 'MChorfa/dagger-zig' &&
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
@@ -164,7 +166,7 @@ jobs:
   provenance:
     name: SLSA L3 Provenance
     needs: [detect-release, sbom-and-sign]
-    if: github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true'
+    if: ${{ !cancelled() && github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true' }}
     permissions:
       actions: read # read the workflow path for provenance
       id-token: write # keyless signing of the provenance
