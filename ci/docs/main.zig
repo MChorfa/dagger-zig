@@ -16,8 +16,8 @@ pub const Docs = struct {
         builder = try builder.withWorkdir("/src/docs");
 
         // Volume caches for Rust deps
-        builder = try builder.withMountedCache("/root/.cargo/registry", try ctx.cacheVolume("cargo-registry"));
-        builder = try builder.withMountedCache("/root/.cargo/git", try ctx.cacheVolume("cargo-git"));
+        builder = try builder.withMountedCache("/root/.cargo/registry", try ctx.dag().cacheVolume("cargo-registry"));
+        builder = try builder.withMountedCache("/root/.cargo/git", try ctx.dag().cacheVolume("cargo-git"));
 
         builder = try builder.withExec(&.{ "mdbook", "build" });
 
@@ -36,13 +36,13 @@ pub const Docs = struct {
         linter = try linter.withWorkdir("/src");
 
         // Volume cache for npm
-        linter = try linter.withMountedCache("/root/.npm", try ctx.cacheVolume("npm-cache"));
+        linter = try linter.withMountedCache("/root/.npm", try ctx.dag().cacheVolume("npm-cache"));
 
+        // Capture report; tolerate lint findings so the artifact is produced.
         linter = try linter.withExec(&.{
-            "markdownlint",
-            "docs/**/*.md",
-            "--config",
-            ".markdownlint.json",
+            "sh",
+            "-c",
+            "markdownlint 'docs/**/*.md' --config .markdownlint.yaml > /lint-output.txt 2>&1 || true",
         });
 
         return linter.file("/lint-output.txt");

@@ -8,6 +8,11 @@
     "include": [
         "build.zig",
         "main.zig",
-        "../../src"
+        "../../src",
+        "../security",
+        "../build",
+        "../test",
+        "../compliance",
+        "../docs"
     ]
 }

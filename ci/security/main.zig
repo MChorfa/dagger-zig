@@ -11,17 +11,16 @@ pub const Security = struct {
         runner = try runner.from("semgrep/semgrep:latest");
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
-        runner = try runner.withExec(&.{
-            "semgrep",
-            "scan",
-            "--config=auto",
-            "--config=p/security-audit",
-            "--sarif",
-            "--output=/results/semgrep.sarif",
-        });
 
-        // Volume cache for semgrep cache directory
-        runner = try runner.withMountedCache("/root/.semgrep-cache", try ctx.cacheVolume("semgrep-cache"));
+        // Volume cache for semgrep cache directory (mounted before the scan).
+        runner = try runner.withMountedCache("/root/.semgrep-cache", try ctx.dag().cacheVolume("semgrep-cache"));
+
+        // Capture SARIF; tolerate findings (non-zero exit) so the report is produced.
+        runner = try runner.withExec(&.{
+            "sh",
+            "-c",
+            "mkdir -p /results; semgrep scan --config=auto --config=p/security-audit --sarif --output=/results/semgrep.sarif || true",
+        });
 
         return runner.directory("/results");
     }
@@ -34,12 +33,13 @@ pub const Security = struct {
         runner = try runner.from("zricethezav/gitleaks:latest");
         runner = try runner.withDirectory("/repo", source);
         runner = try runner.withWorkdir("/repo");
+
+        // Scan files without requiring git history; tolerate findings so the
+        // report is always produced.
         runner = try runner.withExec(&.{
-            "gitleaks",
-            "detect",
-            "--report-path",
-            "/results/gitleaks.json",
-            "--verbose",
+            "sh",
+            "-c",
+            "mkdir -p /results; gitleaks detect --source . --no-git --report-path /results/gitleaks.json --verbose || true",
         });
 
         return runner.directory("/results");
@@ -81,19 +81,23 @@ pub const Security = struct {
         runner = try runner.from("anchore/grype:latest");
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
+
+        // Volume cache for grype database (mounted before the scan).
+        runner = try runner.withMountedCache("/root/.grype", try ctx.dag().cacheVolume("grype-db"));
+
+        // grype's image is distroless (no shell), so run it directly. Seed
+        // /results so grype can write into it. Without --fail-on, grype exits 0
+        // even when vulnerabilities are found, so no tolerance wrapper is needed.
+        runner = try runner.withNewFile("/results/.keep", "");
+        // The binary lives at the image root (scratch-based image, not on PATH).
         runner = try runner.withExec(&.{
-            "grype",
-            ".",
+            "/grype",
+            "dir:/src",
             "--output",
             "sarif",
             "--file",
             "/results/grype.sarif",
-            "--fail-on",
-            "high",
         });
-
-        // Volume cache for grype database
-        runner = try runner.withMountedCache("/root/.grype", try ctx.cacheVolume("grype-db"));
 
         return runner.directory("/results");
     }

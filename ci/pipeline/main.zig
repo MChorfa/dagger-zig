@@ -1,12 +1,13 @@
 const std = @import("std");
 const dagger = @import("dagger_sdk");
 
-// Import all submodules
-const Security = @import("../security/main.zig").Security;
-const Build = @import("../build/main.zig").Build;
-const Test = @import("../test/main.zig").Test;
-const Compliance = @import("../compliance/main.zig").Compliance;
-const Docs = @import("../docs/main.zig").Docs;
+// Import all submodules. They live in sibling directories and are wired as
+// named modules in build.zig (file imports cannot cross the module root).
+const Security = @import("ci_security").Security;
+const Build = @import("ci_build").Build;
+const Test = @import("ci_test").Test;
+const Compliance = @import("ci_compliance").Compliance;
+const Docs = @import("ci_docs").Docs;
 
 /// Main CI/CD pipeline: orchestrates all workflow stages
 /// Integrates security scanning, multi-arch builds, testing, compliance, and documentation
@@ -37,7 +38,9 @@ pub const Pipeline = struct {
     /// test runs conformance tests and benchmarks
     /// Technique: Parallel Execution (tests and benchmarks run independently)
     /// Technique: Layer Caching (zig build cache materialized once)
-    pub fn test(
+    /// Note: `test` is a Zig reserved keyword, so the function is declared via
+    /// the `@"test"` escaped identifier. Dagger still exposes it as `test`.
+    pub fn @"test"(
         _: *const Pipeline,
         ctx: *dagger.Context,
         source: dagger.Directory,
@@ -83,7 +86,7 @@ pub const Pipeline = struct {
         const build_results = try self.build(ctx, source, "v1.0.0");
 
         // 3. Testing and benchmarks
-        const test_results = try self.test(ctx, source);
+        const test_results = try self.@"test"(ctx, source);
 
         // 4. Compliance checks (scorecard, commitlint, markdown)
         const compliance_results = try self.compliance(

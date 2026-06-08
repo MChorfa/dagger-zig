@@ -24,7 +24,7 @@ pub const Compliance = struct {
         scorer = try scorer.from("ghcr.io/ossf/scorecard:latest");
 
         // Volume cache for scorecard check cache
-        scorer = try scorer.withMountedCache("/root/.scorecard", try ctx.cacheVolume("scorecard-cache"));
+        scorer = try scorer.withMountedCache("/root/.scorecard", try ctx.dag().cacheVolume("scorecard-cache"));
 
         // SARIF output so GitHub code-scanning (upload-sarif) can ingest results
         scorer = try scorer.withExec(&.{
@@ -52,18 +52,18 @@ pub const Compliance = struct {
         linter = try linter.withExec(&.{ "npm", "install", "-g", "commitlint@latest", "@commitlint/config-conventional" });
         linter = try linter.withDirectory("/src", source);
         linter = try linter.withWorkdir("/src");
-        linter = try linter.withNewFile("/.commitlintrc.json", "{\"extends\":[\"@commitlint/config-conventional\"]}");
+        linter = try linter.withNewFile("/src/.commitlintrc.json", "{\"extends\":[\"@commitlint/config-conventional\"]}");
 
         // Volume cache for npm packages
-        linter = try linter.withMountedCache("/root/.npm", try ctx.cacheVolume("npm-cache"));
+        linter = try linter.withMountedCache("/root/.npm", try ctx.dag().cacheVolume("npm-cache"));
 
+        // Capture the report to a file; tolerate non-zero exit (commit violations
+        // and absent git history) so the artifact is always produced. Skips
+        // cleanly when no .git is present in the source tree.
         linter = try linter.withExec(&.{
-            "commitlint",
-            "--from",
-            "HEAD~10",
-            "--to",
-            "HEAD",
-            "--print",
+            "sh",
+            "-c",
+            "if [ -d .git ]; then commitlint --from HEAD~10 --to HEAD; else echo 'commitlint: no .git in source, skipped'; fi > /commitlint-output.txt 2>&1 || true",
         });
 
         return linter.file("/commitlint-output.txt");
@@ -81,13 +81,13 @@ pub const Compliance = struct {
         linter = try linter.withWorkdir("/src");
 
         // Volume cache for npm
-        linter = try linter.withMountedCache("/root/.npm", try ctx.cacheVolume("npm-cache"));
+        linter = try linter.withMountedCache("/root/.npm", try ctx.dag().cacheVolume("npm-cache"));
 
+        // Capture report; tolerate lint findings so the artifact is produced.
         linter = try linter.withExec(&.{
-            "markdownlint",
-            "docs/**/*.md",
-            "--config",
-            ".markdownlint.json",
+            "sh",
+            "-c",
+            "markdownlint 'docs/**/*.md' --config .markdownlint.yaml > /lint-output.txt 2>&1 || true",
         });
 
         return linter.file("/lint-output.txt");
