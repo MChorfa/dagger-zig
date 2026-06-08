@@ -51,10 +51,12 @@ pub fn main() !void {
     var client = try dagger.connect(gpa, io, .{});
     defer client.close();
 
-    const out = try client.dag().container()
-        .from("alpine:latest")
-        .withExec(&.{ "echo", "hello from zig" })
-        .stdout();
+    // Each builder call returns `!T`, so `try` each step (handles are lazy;
+    // the pipeline only runs at the terminal `stdout()`).
+    const ctr = try client.dag().container();
+    const alpine = try ctr.from("alpine:latest");
+    const exec = try alpine.withExec(&.{ "echo", "hello from zig" });
+    const out = try exec.stdout();
     defer gpa.free(out);
     std.debug.print("{s}", .{out});
 }
@@ -77,11 +79,11 @@ const MyModule = struct {
         source: dagger.Directory,
     ) !dagger.Container {
         _ = self;
-        return ctx.dag().container()
-            .from("golang:1.23-alpine")
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withExec(&.{ "go", "build", "./..." });
+        const ctr = try ctx.dag().container();
+        const based = try ctr.from("golang:1.23-alpine");
+        const sourced = try based.withDirectory("/src", source);
+        const workdir = try sourced.withWorkdir("/src");
+        return workdir.withExec(&.{ "go", "build", "./..." });
     }
 };
 
@@ -120,7 +122,8 @@ The individual `slsa-verifier` / `gh attestation verify` / `cosign verify-blob` 
 ```shell
 zig build                          build the library module
 zig build -Dspiffe-experimental    enable experimental SPIFFE support
-zig build test                     offline unit tests (all subsystems)
+zig build test                     offline unit tests
+zig build test-suite               comprehensive suite (platform, telemetry, perf)
 zig build test-integration         live-engine tests (under `dagger run --`)
 zig build codegen                  regenerate src/gen.zig from engine schema
 zig build run-first-pipeline       example: alpine echo hello
