@@ -81,6 +81,8 @@ jobs:
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
     runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -110,6 +112,13 @@ jobs:
           cp artifacts/sbom/* dist/ 2>/dev/null || true
           (cd dist && for f in *.tar.gz; do sha256sum "$f" > "$f.sha256"; done)
           ls -la dist
+
+      # Base64-encoded sha256 subjects fed to the SLSA Build L3 generator below.
+      - name: Generate subject hashes
+        id: hash
+        run: |
+          set -euo pipefail
+          echo "hashes=$(cd dist && sha256sum *.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       # SLSA build provenance (GitHub-native attestation) for each tarball.
       # Verify: gh attestation verify <file> --repo MChorfa/dagger-zig
@@ -144,3 +153,23 @@ jobs:
             dist/*.tar.gz.sha256
             dist/*.tar.gz.bundle
             dist/sbom.*
+
+  # SLSA Build Level 3 provenance via the certified slsa-github-generator
+  # reusable workflow. It runs in an isolated, trusted context the build job
+  # cannot influence (non-forgeable provenance), and attaches a signed
+  # multiple.intoto.jsonl to the release. Must be pinned to a semver tag.
+  # Verify: slsa-verifier verify-artifact <tarball> \
+  #   --provenance-path multiple.intoto.jsonl \
+  #   --source-uri github.com/MChorfa/dagger-zig --source-tag <tag>
+  provenance:
+    name: SLSA L3 Provenance
+    needs: [detect-release, sbom-and-sign]
+    if: github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true'
+    permissions:
+      actions: read # read the workflow path for provenance
+      id-token: write # keyless signing of the provenance
+      contents: write # attach provenance to the release
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.sbom-and-sign.outputs.hashes }}
+      upload-assets: true
