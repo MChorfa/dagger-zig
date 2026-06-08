@@ -17,7 +17,7 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine �
 
 > **Status — v0.3.1.** Synchronous client, module authoring, and tracing on Linux/macOS. Windows and broader async are planned ([what works](#what-works)).
 >
-> **Dogfooded.** dagger-zig builds, tests, and releases *itself* — the CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this very SDK.
+> **Self-hosting.** dagger-zig builds, tests, and releases *itself* — the CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this very SDK.
 >
 > **Supply chain.** Tagged releases ship SBOMs (CycloneDX + SPDX), keyless [Sigstore](https://sigstore.dev) signatures, and [SLSA](https://slsa.dev) Build **Level 3** provenance. This is an open-source SDK, **not a certified product** — see [docs/compliance.md](docs/compliance.md).
 
