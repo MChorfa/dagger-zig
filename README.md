@@ -15,7 +15,7 @@
 
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine — **zero external dependencies**, Zig stdlib only, built against Zig 0.16.
 
-> **Status — v0.3.1.** Synchronous client, module authoring, and tracing on Linux/macOS. Windows and broader async are planned ([what works](#what-works)).
+> **Status — v0.3.1.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, and tracing on Linux/macOS. Windows support is planned ([what works](#what-works)).
 >
 > **Self-hosting.** dagger-zig builds, tests, and releases *itself* — the CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this very SDK.
 >
@@ -25,6 +25,7 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine �
 
 - **Client API** — synchronous Dagger API for Linux/macOS: containers, directories, files, secrets, cache volumes, services, git. Chained the way you'd expect from any SDK.
 - **Module authoring** — write a Zig struct with methods, expose it with `dagger.module.serve(...)`. Comptime reflection maps Zig types to Dagger `TypeDef`s; unmappable signatures fail at `zig build`, not at engine dispatch.
+- **Concurrent fan-out** — run independent pipelines in parallel via `dagger.parallel` (`map`/`forEach`) over `std.Io.Group`; each task gets its own `Client.branch()`. See [examples/parallel](examples/parallel/main.zig).
 - **Tracing** — OpenTelemetry-compatible spans via `dagger.tracing`.
 - **CLI session lifecycle** — three-tier handshake (`dagger run --` env → `_EXPERIMENTAL_DAGGER_CLI_BIN` → `dagger` on `$PATH`). Never auto-downloads the CLI.
 - **SPIFFE/SPIRE (experimental)** — build with `-Dspiffe-experimental`; the `spire-agent` shellout backend works, the native Workload API is a typed skeleton. See [docs/spiffe.md](docs/spiffe.md).
@@ -32,7 +33,7 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine �
 
 ## Planned
 
-Async patterns (`dagger.async`), full Windows support, the C ABI (`zig build c-lib`), the native SPIFFE Workload API, and per-module codegen are typed or skeletoned but currently disabled to avoid `error.NotImplemented` paths. See [docs/roadmap.md](docs/roadmap.md).
+Full Windows support, the C ABI (`zig build c-lib`), the native SPIFFE Workload API, and per-module codegen are typed or skeletoned but currently disabled to avoid `error.NotImplemented` paths. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Quick start
 
@@ -133,7 +134,7 @@ zig build run-parallel             example: Io.Group concurrent pipelines
 ## Repository layout
 
 ```shell
-src/        Public surface, query builder, types, tracing, async, C FFI, module/, spiffe/
+src/        Public surface, query builder, types, tracing, parallel, C FFI, module/, spiffe/
 ci/         Self-hosting CI — a Zig Dagger module that builds dagger-zig with dagger-zig
 sdk/        Module SDK interface (Go shim — the bootstrap layer)
 codegen/    Introspection-based bindings emitter

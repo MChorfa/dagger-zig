@@ -1,131 +1,106 @@
-# Async Patterns
+# Concurrency & Parallelism
 
-> ⚠️ **v0.2.0 Status: Deferred to v0.3.0**
->
-> The `dagger.async` module (`QueryGroup`, `QueryBatch`, `withRetry`) is **not available in
-> v0.2.0**. It has been temporarily disabled to prevent `error.NotImplemented` failures at
-> runtime. Full async support will ship in v0.3.0.
->
-> The examples below document the planned API for reference.
+dagger-zig fans out concurrent engine queries with Zig 0.16's `std.Io` — no
+threading boilerplate. Under the multi-threaded `Io` backend tasks run in
+parallel; under `-fsingle-threaded` they schedule cooperatively. The same user
+code works either way.
 
-Concurrent operations for Dagger pipelines using the `dagger.async` module.
+## The one rule: a client per task
 
-## Overview
+A `dagger.Client` carries per-query mutable state (the last domain error, the
+circuit breaker, an in-progress flag) that is **not** synchronized. Sharing one
+client across concurrent tasks is a data race. Give each task its own
+`client.branch()` — it reuses the parent's engine session (same port and token,
+no new subprocess) but has independent state and its own arena. Close each
+branch when done; do not let a branch outlive its parent.
 
-The async module provides utilities for executing multiple Dagger operations concurrently, enabling faster pipeline execution by parallelizing independent work.
+## `dagger.parallel.map`
 
-## QueryGroup
-
-Group multiple queries and execute them concurrently:
+Apply an operation to each input concurrently, writing results into disjoint
+slots. The op returns `std.Io.Cancelable!void` and reports its result through an
+output pointer (this is the `std.Io.Group` model — `await` surfaces only
+cancellation).
 
 ```zig
 const dagger = @import("dagger_sdk");
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+const Image = []const u8;
 
-    var io_impl: std.Io.Threaded = .init(gpa.allocator(), .{});
-    defer io_impl.deinit();
+fn fetchOS(io: std.Io, parent: *dagger.Client, image: Image, out: *[]u8) std.Io.Cancelable!void {
+    _ = io;
+    var c = parent.branch() catch return error.Canceled;
+    defer c.close();
+    const ctr = c.dag().container() catch return error.Canceled;
+    const based = ctr.from(image) catch return error.Canceled;
+    const run = based.withExec(&.{ "cat", "/etc/os-release" }) catch return error.Canceled;
+    out.* = run.stdout() catch return error.Canceled;
+}
 
-    var client = try dagger.connect(gpa.allocator(), io_impl.io(), .{});
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    var client = try dagger.connect(init.gpa, io, .{});
     defer client.close();
 
-    // Create a query group for concurrent operations
-    var group = try dagger.async.QueryGroup.init(gpa.allocator(), io_impl.io());
-    defer group.deinit();
+    const images = [_]Image{ "alpine:3.20", "debian:bookworm-slim", "ubuntu:24.04" };
+    var results: [images.len][]u8 = undefined;
 
-    // Add multiple container builds
-    const alpine = try group.add(client.dag().container().from("alpine:latest"));
-    const ubuntu = try group.add(client.dag().container().from("ubuntu:latest"));
-    const fedora = try group.add(client.dag().container().from("fedora:latest"));
+    try dagger.parallel.map(io, &images, &results, &client, fetchOS);
 
-    // Wait for all to complete
-    try group.awaitAll();
-
-    // Get results
-    const alpine_id = try alpine.getResult(dagger.Container);
-    const ubuntu_id = try ubuntu.getResult(dagger.Container);
-    const fedora_id = try fedora.getResult(dagger.Container);
+    for (&results) |*r| init.gpa.free(r.*);
 }
 ```
 
-## QueryBatch
+## `dagger.parallel.forEach`
 
-Batch multiple GraphQL queries into a single request:
-
-```zig
-var batch = dagger.async.QueryBatch.init(allocator);
-defer batch.deinit();
-
-try batch.add("query { container { id } }");
-try batch.add("query { directory { id } }");
-try batch.add("query { git(url: \"https://github.com/example/repo\") { id } }");
-
-const combined_query = try batch.build();
-```
-
-## Retry with Backoff
-
-Automatically retry failed operations with exponential backoff:
+When you only need side effects (no per-item result), `forEach` runs the op over
+every item concurrently:
 
 ```zig
-const config = dagger.async.RetryConfig{
-    .max_attempts = 3,
-    .initial_delay_ms = 100,
-    .backoff_multiplier = 2.0,
-};
-
-const result = try dagger.async.withRetry(
-    allocator,
-    io,
-    config,
-    fetchContainer,
-    .{client, "alpine:latest"},
-);
+try dagger.parallel.forEach(io, &images, &client, struct {
+    fn run(io_: std.Io, parent: *dagger.Client, image: []const u8) std.Io.Cancelable!void {
+        _ = io_;
+        var c = parent.branch() catch return error.Canceled;
+        defer c.close();
+        // … do work with `c` …
+    }
+}.run);
 ```
 
-## Concurrent Map
+## Raw `std.Io.Group`
 
-Apply an operation to multiple items concurrently:
+The helpers are thin wrappers; you can drive `std.Io.Group` directly when you
+want more control (mixed task shapes, early `await`, etc.). See
+[`examples/parallel/main.zig`](../examples/parallel/main.zig) for a complete,
+runnable example:
 
 ```zig
-const images = &.{ "alpine:latest", "ubuntu:latest", "fedora:latest" };
+var group: std.Io.Group = .init;
+defer group.cancel(io); // cancel any outstanding task on early return
 
-const containers = try dagger.async.concurrentMap(
-    allocator,
-    io,
-    images,
-    struct {
-        fn fetch(img: []const u8) !dagger.Container {
-            return client.dag().container().from(img);
-        }
-    }.fetch,
-);
+for (images, 0..) |image, i| {
+    group.async(io, fetchOS, .{ io, &branches[i], image, &results[i] });
+}
+try group.await(io); // surfaces the first cancellation; rest are cancelled
 ```
 
-## Performance Considerations
+## Retries and circuit breaking
 
-- Use `QueryGroup` for operations with no dependencies
-- Use `QueryBatch` for many small queries to reduce round trips
-- Be mindful of resource limits when using high concurrency
-- Consider `withRetry` for network-dependent operations
+Retry with backoff and the circuit breaker are **client configuration**, not a
+separate async helper — they apply to every query automatically:
 
-## API Reference
+```zig
+var client = try dagger.connect(gpa, io, .{
+    .enable_circuit_breaker = true,
+    // .retry_policy = .{ .max_retries = 3, .initial_backoff_ms = 100, ... },
+});
+```
 
-### Types
+See [`src/core/resilience.zig`](../src/core/resilience.zig) for the policy fields.
 
-- `PendingQuery` — A query that will execute asynchronously
-- `QueryGroup` — A collection of queries executed concurrently
-- `QueryBatch` — Batched GraphQL queries
-- `RetryConfig` — Configuration for retry behavior
+## Notes
 
-### Functions
-
-- `QueryGroup.init(allocator, io)` — Create a new query group
-- `QueryGroup.add(query)` — Add a query to the group
-- `QueryGroup.awaitAll()` — Wait for all queries to complete
-- `QueryGroup.awaitAny()` — Wait for the first query to complete
-- `QueryBatch.build()` — Combine batched queries
-- `withRetry(allocator, io, config, operation, args)` — Retry with backoff
-- `concurrentMap(allocator, io, items, operation)` — Map operation over items concurrently
+- `std.Io.Group.await` returns `Cancelable!void`. Task functions return
+  `std.Io.Cancelable!void` and surface real errors through their output slot
+  (e.g. make `Out` an error union), not through `await`.
+- Branch up front (one per task) so the concurrent hot path does no extra
+  connection work.

@@ -29,12 +29,14 @@ the Python SDK trades them for rapid prototyping and data-science integration.
 ### Zig: std.Io.async
 
 ```zig
-// True parallelism with async/await
-var group: std.Io.Group(void) = .{};
-for (containers) |ctr| {
-    group.add(ctr.stdout());
+// Fan out one task per item; runs in parallel under the multi-threaded
+// Io backend, cooperatively under -fsingle-threaded. Same code either way.
+var group: std.Io.Group = .init;
+defer group.cancel(io);
+for (clients, outputs) |*c, *out| {
+    group.async(io, fetch, .{ io, c, out });
 }
-try group.wait();
+try group.await(io);
 ```
 
 **Advantages:**

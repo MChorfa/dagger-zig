@@ -6,6 +6,10 @@
 //! multi-threaded mode they run in parallel. Either way, user code is
 //! identical.
 //!
+//! Each task gets its own `client.branch()` — sharing one client across
+//! concurrent tasks would race on its per-query state. Branches reuse the
+//! same engine session (no extra subprocess).
+//!
 //! If any one pipeline fails, `group.await` surfaces the first error; the
 //! others are automatically cancelled by the defer-cancel pattern.
 //!
@@ -50,6 +54,16 @@ pub fn main(init: std.process.Init) !void {
     var client = try dagger.connect(gpa, io, .{});
     defer client.close();
 
+    // One independent client per task. Sharing `client` across the concurrent
+    // tasks below would race on its per-query state; branches share the engine
+    // session but have their own. Each branch is closed on the way out.
+    var branches: [Images.len]dagger.Client = undefined;
+    var made: usize = 0;
+    defer for (branches[0..made]) |*b| b.close();
+    while (made < Images.len) : (made += 1) {
+        branches[made] = try client.branch();
+    }
+
     // Allocate one Result slot per image. The Group writes into these
     // concurrently; the indices are disjoint so no locking is needed.
     var results: [Images.len]Result = undefined;
@@ -60,7 +74,7 @@ pub fn main(init: std.process.Init) !void {
     defer group.cancel(io);
 
     for (Images, 0..) |image, i| {
-        group.async(io, fetchVersion, .{ io, &client, image, &results[i] });
+        group.async(io, fetchVersion, .{ io, &branches[i], image, &results[i] });
     }
 
     try group.await(io);
