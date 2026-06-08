@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Dagger compliance pipeline (scorecard)
-        uses: dagger/dagger-for-github@v6
+        uses: dagger/dagger-for-github@v8.4.0
         with:
           verb: call
           module: ./ci/pipeline

@@ -59,7 +59,7 @@ jobs:
             needs.release-please.outputs.tag_name }}
 
       - name: Run Dagger build pipeline
-        uses: dagger/dagger-for-github@v6
+        uses: dagger/dagger-for-github@v8.4.0
         with:
           verb: call
           module: ./ci/pipeline
