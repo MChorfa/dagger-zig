@@ -23,7 +23,7 @@ jobs:
           version: "v0.21.0" # match ci/pipeline/dagger.json engineVersion
           verb: call
           module: ./ci/pipeline
-          args: compliance --arg-0=. --arg-1=https://github.com/${{ github.repository }} --arg-2=${{ github.ref_name }} --arg-3=${{ github.repository_is_fork }} export --path=/tmp/dagger-artifacts/compliance
+          args: compliance --arg-0=. --arg-1=https://github.com/${{ github.repository }} --arg-2=${{ github.ref_name }} --arg-3=${{ github.event.repository.fork }} export --path=/tmp/dagger-artifacts/compliance
 
       - name: Upload commitlint results
         if: always()
