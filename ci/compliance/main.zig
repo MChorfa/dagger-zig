@@ -10,12 +10,14 @@ pub const Compliance = struct {
         branch: []const u8,
         skip_on_fork: bool,
     ) !dagger.File {
+        // Minimal valid SARIF 2.1.0 doc so upload-sarif accepts the fork-skip case
+        const empty_sarif = "{\"version\":\"2.1.0\",\"$schema\":\"https://json.schemastore.org/sarif-2.1.0.json\",\"runs\":[]}";
         if (skip_on_fork) {
             // Return empty report for forks
             var stub = try ctx.container();
             stub = try stub.from("alpine:latest");
-            stub = try stub.withNewFile("/scorecard.json", "{\"skip_reason\":\"fork\"}");
-            return stub.file("/scorecard.json");
+            stub = try stub.withNewFile("/scorecard.sarif", empty_sarif);
+            return stub.file("/scorecard.sarif");
         }
 
         var scorer = try ctx.container();
@@ -24,6 +26,7 @@ pub const Compliance = struct {
         // Volume cache for scorecard check cache
         scorer = try scorer.withMountedCache("/root/.scorecard", try ctx.cacheVolume("scorecard-cache"));
 
+        // SARIF output so GitHub code-scanning (upload-sarif) can ingest results
         scorer = try scorer.withExec(&.{
             "scorecard",
             "--repo",
@@ -31,12 +34,12 @@ pub const Compliance = struct {
             "--branch",
             branch,
             "--format",
-            "json",
+            "sarif",
             "--output",
-            "/results/scorecard.json",
+            "/results/scorecard.sarif",
         });
 
-        return scorer.file("/results/scorecard.json");
+        return scorer.file("/results/scorecard.sarif");
     }
 
     /// commitlint validates commit messages in the source tree
@@ -105,7 +108,7 @@ pub const Compliance = struct {
         const commitlint_result = try commitlint(ctx, source);
         const markdown_result = try markdownLint(ctx, source);
 
-        results = try results.withFile("/scorecard.json", scorecard_result);
+        results = try results.withFile("/scorecard.sarif", scorecard_result);
         results = try results.withFile("/commitlint.txt", commitlint_result);
         results = try results.withFile("/markdown-lint.txt", markdown_result);
 
