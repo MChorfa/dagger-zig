@@ -17,14 +17,33 @@
 | Vulnerability reporting | Coordinated disclosure                                  | `SECURITY.md`                                      |
 | Change control         | Required PR review + CI checks + branch protection       | GitHub repository settings                         |
 
-## Not yet wired
+## Release provenance & signing
 
-These exist in the tree but are **not** part of the release flow today. Don't rely on them:
+Tagged releases carry build provenance and a keyless signature, wired in `release.yml`
+(this applies to releases cut after this change):
 
-- **SLSA provenance** — a `slsa.dev/provenance/v0.2` predicate generator lives in `ci/attest/provenance.zig`, but no workflow attaches provenance to releases.
-- **Artifact signing** — cosign helpers live in `ci/sign`, and `release.yml` installs cosign, but no release artifact is actually signed yet.
+- **SLSA build provenance** — `actions/attest-build-provenance` attaches GitHub-native
+  provenance to each release tarball.
+- **Keyless signature** — each tarball is signed with cosign (Sigstore bundle, OIDC; no
+  long-term keys), and the `.bundle` is published with the release.
 
-These are tracked on the [roadmap](roadmap.md).
+> The older `ci/attest` / `ci/sign` Zig modules (a `provenance/v0.2` predicate generator
+> and cosign blob helpers) are not used by the release flow — it uses the GitHub-native
+> attestation + cosign actions above instead.
+
+### Verifying a release
+
+```bash
+# Verify the keyless Sigstore signature (requires cosign)
+cosign verify-blob \
+  --bundle dagger-zig-<tag>-<target>.tar.gz.bundle \
+  --certificate-identity "https://github.com/MChorfa/dagger-zig/.github/workflows/release.yml@refs/tags/<tag>" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  dagger-zig-<tag>-<target>.tar.gz
+
+# Verify the SLSA build provenance (requires gh CLI)
+gh attestation verify dagger-zig-<tag>-<target>.tar.gz --repo MChorfa/dagger-zig
+```
 
 ## Framework mapping
 
