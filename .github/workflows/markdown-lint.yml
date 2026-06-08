@@ -51,6 +51,19 @@ jobs:
         with:
           path: /tmp/dagger-artifacts/docs/site
 
+  # Separate deploy job that declares the github-pages environment.
+  # actions/deploy-pages only publishes from a job with this environment — in a
+  # plain job the step succeeds but creates no deployment, so the live site
+  # never refreshes (which is exactly what was happening).
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: docs
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
+        id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
