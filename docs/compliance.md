@@ -40,6 +40,14 @@ Tagged releases carry SLSA build provenance and a keyless signature, wired in `r
 
 ### Verifying a release
 
+One command (runs all three checks below for every tarball):
+
+```bash
+scripts/release-verify.sh v0.3.1   # tag defaults to the latest release
+```
+
+Or run the checks individually:
+
 ```bash
 # 1. SLSA Build L3 provenance (requires slsa-verifier)
 slsa-verifier verify-artifact dagger-zig-<tag>-<target>.tar.gz \
