@@ -7,21 +7,22 @@ your workload, measure them on your own runners.
 
 ## What Zig brings
 
-Zig has **no garbage collector and no language runtime**. A pipeline compiles to a
-single statically linked native executable. That has a few concrete consequences
-relative to the Go and Python SDKs:
+These are facts about the language, not measurements:
 
-| Property            | Why it follows from the language                                                                                |
-| ------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Small binaries      | No runtime to embed; a static Zig binary is smaller than the Go equivalent and far smaller than a Python image |
-| Low, flat memory    | No GC heap and no interpreter; baseline memory is low and does not grow with collector slack                   |
-| Fast startup        | No managed runtime to initialize before the first query                                                        |
-| Predictable latency | No GC pauses; allocation is explicit and visible in the source                                                 |
-| Compile-time safety | Errors are values; many failure modes are caught by the compiler instead of at runtime                         |
+- **No garbage collector.** No GC pauses; memory is freed at points you write
+  (`defer`, explicit `free`).
+- **No language runtime.** A pipeline compiles to a single statically linked
+  native executable; there is no interpreter or managed runtime to ship or
+  initialize before the first query.
+- **Explicit allocation.** Allocators are passed as parameters, so where memory
+  comes from is visible in the source.
+- **Errors are values.** Error sets are part of function signatures, so many
+  failure modes are caught by the compiler instead of at runtime.
 
-These are design-level statements, not measurements. The Go SDK trades some of
-these for ecosystem maturity and GC convenience; the Python SDK trades them for
-rapid prototyping and data-science integration.
+Whether these translate into smaller binaries, lower memory, or faster startup
+for *your* pipeline depends on the pipeline — measure it on your own runners. The
+Go SDK trades some of these properties for ecosystem maturity and GC convenience;
+the Python SDK trades them for rapid prototyping and data-science integration.
 
 ## Concurrency Model
 
@@ -103,23 +104,6 @@ await asyncio.gather(
 - Data science integration
 - You accept runtime overhead
 
-## Expected Characteristics
-
-The points below follow from language design — Zig has no garbage collector and no
-runtime — rather than from a measured benchmark suite in this repository. Treat
-them as qualitative expectations, not numbers we have published.
-
-- **Binaries**: a statically linked Zig pipeline is a single small native
-  executable with no runtime dependencies, smaller than the equivalent Go binary
-  and far smaller than a Python runtime + interpreter.
-- **Memory**: no GC means lower and more predictable baseline memory use, which
-  matters on constrained CI runners.
-- **Startup**: a native binary starts faster than a process that must initialize
-  a managed runtime.
-
-If you need concrete numbers for your own workload, measure it on your runners —
-language-level comparisons depend heavily on the specific pipeline.
-
 ## The Zig Philosophy in dagger-zig
 
 1. **No hidden costs**: What you write is what runs
@@ -144,10 +128,10 @@ in this repository.
 
 **dagger-zig is for you if:**
 
-- You want maximum performance
-- You value small binaries
-- You prefer compile-time safety
-- You're building resource-constrained systems
+- You want a single static binary with zero runtime dependencies
+- You prefer explicit memory management over a garbage collector
+- You prefer compile-time safety and errors-as-values
+- You are comfortable working in Zig
 
 **dagger-zig may not be for you if:**
 
