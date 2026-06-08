@@ -33,13 +33,27 @@ Dagger pipeline and captures the output as an artifact (see
 `.github/workflows/benchmark.yml`). It is informational — the run is not gated on
 benchmark numbers, and no automatic regression threshold is enforced.
 
-## Profiling
+## Flamegraph / profiling
 
-There is no built-in flamegraph or profiler flag. Capture a CPU profile with an
-external sampling profiler against the built binary, e.g.:
+Zig has no built-in profiler, so there is no profiler flag on the `bench` step
+itself. A separate step drives an external sampling profiler:
 
 ```bash
-zig build bench   # builds zig-out/bin/bench
+zig build flamegraph                 # writes flamegraph.svg
+zig build flamegraph -- out.svg      # custom output path
+```
+
+This requires [`flamegraph`](https://github.com/flamegraph-rs/flamegraph)
+(`cargo install flamegraph`), which renders an SVG directly — `perf` on Linux,
+`dtrace` on macOS (dtrace needs `sudo`). If it is not installed, the step fails
+with install instructions rather than producing nothing.
+
+For an interactive profile (no `sudo` on macOS, but not an `.svg` file) use
+[`samply`](https://github.com/mstange/samply):
+
+```bash
+cargo install samply
+zig build bench
 samply record -- ./zig-out/bin/bench
 ```
 

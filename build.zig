@@ -96,6 +96,16 @@ pub fn build(b: *std.Build) void {
     const bench_step = b.step("bench", "Run offline performance benchmarks (query builder, serialization)");
     bench_step.dependOn(&run_bench.step);
 
+    // ── flamegraph (external profiler; renders an SVG from the bench binary) ──
+    // Zig has no built-in profiler. This step builds the bench binary, then
+    // drives `flamegraph` (cargo install flamegraph) to render a CPU flamegraph.
+    // Fails loudly with install instructions if no profiler is present.
+    const flamegraph = b.addSystemCommand(&.{ "bash", "scripts/bench-flamegraph.sh" });
+    flamegraph.step.dependOn(&bench_install.step); // ensure zig-out/bin/bench exists first
+    if (b.args) |args| flamegraph.addArgs(args);
+    const flamegraph_step = b.step("flamegraph", "Render a CPU flamegraph SVG of the benchmarks (requires `flamegraph`; see benches/README.md)");
+    flamegraph_step.dependOn(&flamegraph.step);
+
     // ── module E2E test (offline, proves comptime plumbing) ─────────────
     const mod_e2e_mod = b.createModule(.{
         .root_source_file = b.path("tests/module_e2e.zig"),
