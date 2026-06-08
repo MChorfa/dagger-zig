@@ -117,6 +117,7 @@ pub const api = @import("gen_sample.zig");
 pub const module_api = @import("module_api.zig");
 
 pub const Query = api.Query;
+pub const Context = module.Context;
 pub const Container = api.Container;
 pub const Directory = api.Directory;
 pub const File = api.File;

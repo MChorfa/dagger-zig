@@ -71,6 +71,34 @@ pub const FunctionCall = struct {
         const body = try self.gql.query(query_str);
         self.allocator.free(body);
     }
+
+    pub fn returnError(self: FunctionCall, engine_error: EngineError) !void {
+        const error_id = try engine_error.id();
+        defer self.allocator.free(error_id);
+
+        const s1 = try self.selection.select(self.arena, "returnError");
+        const s2 = try s1.arg(self.arena, "error", .{
+            .eager = try qb.serializeString(self.arena, error_id),
+        });
+
+        const query_str = try s2.build(self.allocator);
+        defer self.allocator.free(query_str);
+
+        const body = try self.gql.query(query_str);
+        self.allocator.free(body);
+    }
+};
+
+pub const EngineError = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    pub fn id(self: EngineError) ![]u8 {
+        const s = try self.selection.select(self.arena, "id");
+        return fetchScalarString(self.allocator, s, self.gql);
+    }
 };
 
 pub const FunctionCallArgValue = struct {
@@ -92,6 +120,17 @@ pub const ModuleQuery = struct {
     arena: std.mem.Allocator,
     selection: *const Selection,
     gql: *GraphQLClient,
+
+    pub fn newEngineError(self: ModuleQuery, message: []const u8) !EngineError {
+        const s1 = try self.selection.select(self.arena, "error");
+        const s2 = try s1.argStr(self.arena, "message", message);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
 
     pub fn currentFunctionCall(self: ModuleQuery) !FunctionCall {
         const s = try self.selection.select(self.arena, "currentFunctionCall");
@@ -227,10 +266,10 @@ fn fetchArgList(
     if (!std.mem.endsWith(u8, base, "}")) return error.MalformedQuery;
     const trimmed = base[0 .. base.len - 1];
 
-    const query_str = try std.fmt.allocPrint(
+    const query_str = try std.mem.concat(
         allocator,
-        "{s}{{inputArgs{{name value}}}}",
-        .{trimmed},
+        u8,
+        &.{ trimmed, "{inputArgs{name value}}}" },
     );
     defer allocator.free(query_str);
 

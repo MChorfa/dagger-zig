@@ -9,7 +9,7 @@ The SDK uses comptime type generation for Dagger API types.
 ## Core Types
 
 - `Container` - Container operations
-- `Directory` - Directory operations  
+- `Directory` - Directory operations
 - `File` - File operations
 - `Service` - Service container management
 - `Secret` - Secret handling

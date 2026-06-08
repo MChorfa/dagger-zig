@@ -2,10 +2,8 @@ name: release
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "v*"
+    branches: [main]
+    tags: ["v*"]
 
 permissions:
   contents: write
@@ -14,9 +12,8 @@ permissions:
   attestations: write
 
 jobs:
-  # Determine if this is a release-please or manual tag release
   detect-release:
-    name: detect-release
+    name: Detect Release
     runs-on: ubuntu-latest
     outputs:
       should_build: ${{ steps.check.outputs.should_build }}
@@ -27,14 +24,12 @@ jobs:
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "Manual tag release detected: ${{ github.ref_name }}"
           else
             echo "should_build=false" >> $GITHUB_OUTPUT
-            echo "tag_name=" >> $GITHUB_OUTPUT
           fi
 
   release-please:
-    name: release-please
+    name: Release Please
     needs: detect-release
     if: ${{ github.ref_type == 'branch' }}
     runs-on: ubuntu-latest
@@ -45,80 +40,42 @@ jobs:
       - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4.2.0
         id: release
         with:
-          # NOTE: If you get "GitHub Actions is not permitted to create or approve pull requests",
-          # either:
-          # 1. Enable in Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests"
-          # 2. Use a Personal Access Token: token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: release-please-manifest.json
 
   build-and-attest:
-    name: build-and-attest
-    needs: [ detect-release, release-please ]
-    # Only run on main repo and when release is detected
+    name: Build & Attest
+    needs: [detect-release, release-please]
     if: |
       github.repository == 'MChorfa/dagger-zig' &&
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target:
-          [
-            x86_64-linux-gnu,
-            aarch64-linux-gnu,
-            x86_64-macos-none,
-            aarch64-macos-none,
-          ]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ needs.detect-release.outputs.tag_name ||
             needs.release-please.outputs.tag_name }}
 
-      - name: setup zig
-        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
+      - name: Run Dagger build pipeline
+        uses: dagger/dagger-for-github@496f1b3d8b0d823834c13e67cf8a8e08ca3b9602 # v8.4.0
         with:
-          version: 0.16.0
+          version: "v0.21.0" # match ci/pipeline/dagger.json engineVersion
+          verb: call
+          module: ./ci/pipeline
+          args: build --arg-0=. --arg-1=${{ needs.detect-release.outputs.tag_name || needs.release-please.outputs.tag_name }} export --path=/tmp/dagger-artifacts/build
 
-      - name: build
-        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe
-        env:
-          SOURCE_DATE_EPOCH: "1700000000"
-
-      - name: package artifacts
-        run: |
-          mkdir -p dist
-          # Package libraries, binaries, and headers
-          tar -czf dist/dagger-zig-${{ matrix.target }}.tar.gz \
-            -C zig-out \
-            lib/ bin/ include/ 2>/dev/null || \
-          tar -czf dist/dagger-zig-${{ matrix.target }}.tar.gz \
-            -C zig-out \
-            lib/ bin/ 2>/dev/null || \
-          tar -czf dist/dagger-zig-${{ matrix.target }}.tar.gz \
-            -C zig-out \
-            lib/
-          # Generate checksums
-          cd dist && sha256sum dagger-zig-${{ matrix.target }}.tar.gz > dagger-zig-${{ matrix.target }}.tar.gz.sha256
-
-      - name: upload artifact
-        uses: actions/upload-artifact@v4.6.1
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: build-${{ matrix.target }}
-          path: dist/
-
-      - name: attest build provenance
-        uses: actions/attest-build-provenance@520d128f165991a6c774bcb264f323e3d70747f4 # v2.2.0
-        with:
-          subject-path: dist/*
-          push-to-registry: false
+          name: build-artifacts
+          path: /tmp/dagger-artifacts/build/
+          retention-days: 30
 
   sbom-and-sign:
-    name: sbom-and-sign
-    needs: [ detect-release, release-please, build-and-attest ]
-    # Only run on main repo and when release is detected
+    name: SBOM & Sign
+    needs: [detect-release, release-please, build-and-attest]
     if: |
       github.repository == 'MChorfa/dagger-zig' &&
       (needs.detect-release.outputs.should_build == 'true' ||
@@ -130,33 +87,20 @@ jobs:
           ref: ${{ needs.detect-release.outputs.tag_name ||
             needs.release-please.outputs.tag_name }}
 
-      - name: download artifacts
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+      - name: Download build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          path: artifacts
-          merge-multiple: true
+          name: build-artifacts
+          path: ./artifacts
 
-      - name: generate sbom
-        uses: anchore/sbom-action@9f7302141466aa6482940f15371237e9d9f4c34a # v0.19.0
-        with:
-          path: .
-          format: spdx-json
-          output-file: sbom.spdx.json
-
-      - name: install cosign
+      - name: Install cosign
         uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
 
-      - name: sign sbom
-        run: |
-          cosign sign-blob --yes --output-signature sbom.spdx.json.sig sbom.spdx.json
-
-      - name: upload release assets
+      - name: Sign & upload release assets
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
-          tag_name: ${{ needs.detect-release.outputs.tag_name ||
-            needs.release-please.outputs.tag_name }}
+          tag_name: ${{ needs.detect-release.outputs.tag_name || needs.release-please.outputs.tag_name }}
           files: |
-            sbom.spdx.json
-            sbom.spdx.json.sig
             artifacts/**/*.tar.gz
             artifacts/**/*.sha256
+            artifacts/**/*.sbom.*

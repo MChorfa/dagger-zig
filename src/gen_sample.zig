@@ -198,7 +198,7 @@ pub const Container = struct {
         const id_lit = try qb.serializeString(self.arena, dir_id.value);
         const s1 = try self.selection.select(self.arena, "withDirectory");
         const s2 = try s1.argStr(self.arena, "path", path);
-        const s3 = try s2.arg(self.arena, "directory", .{ .eager = id_lit });
+        const s3 = try s2.arg(self.arena, "source", .{ .eager = id_lit });
         return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
     }
 
@@ -345,6 +345,18 @@ pub const Container = struct {
     /// Get a file from this container.
     pub fn file(self: Container, path: []const u8) !File {
         const s1 = try self.selection.select(self.arena, "file");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        return .{
+            .allocator = self.allocator,
+            .arena = self.arena,
+            .selection = s2,
+            .gql = self.gql,
+        };
+    }
+
+    /// Get a directory from this container.
+    pub fn directory(self: Container, path: []const u8) !Directory {
+        const s1 = try self.selection.select(self.arena, "directory");
         const s2 = try s1.argStr(self.arena, "path", path);
         return .{
             .allocator = self.allocator,

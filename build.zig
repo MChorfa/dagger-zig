@@ -37,6 +37,21 @@ pub fn build(b: *std.Build) void {
     });
     dagger_mod.addOptions("spiffe_options", spiffe_options);
 
+    const ci_mod = b.createModule(.{
+        .root_source_file = b.path("ci/pipeline.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{.{ .name = "dagger_sdk", .module = dagger_mod }},
+    });
+    const ci_module = b.addExecutable(.{
+        .name = "module",
+        .root_module = ci_mod,
+    });
+    const ci_runtime_install = b.addInstallArtifact(ci_module, .{});
+    const ci_runtime_step = b.step("module-runtime", "Install the Dagger CI module runtime");
+    ci_runtime_step.dependOn(&ci_runtime_install.step);
+
     // ── unit tests ──────────────────────────────────────────────────────
     const unit_mod = b.createModule(.{
         .root_source_file = b.path("src/root.zig"),
@@ -88,6 +103,16 @@ pub fn build(b: *std.Build) void {
     const run_test_suite = b.addRunArtifact(test_suite);
     const test_suite_step = b.step("test-suite", "Run comprehensive test suite (platform, telemetry, performance)");
     test_suite_step.dependOn(&run_test_suite.step);
+
+    // ── downstream smoke regression ────────────────────────────────────
+    const downstream_smoke = b.addSystemCommand(&.{ "bash", "scripts/downstream-smoke-verify.sh" });
+    const downstream_smoke_step = b.step("downstream-verify", "Verify the downstream Zig module smoke fixture still loads and runs");
+    downstream_smoke_step.dependOn(&downstream_smoke.step);
+
+    // ── full CI proof ──────────────────────────────────────────────────
+    const full_ci = b.addSystemCommand(&.{ "bash", "scripts/ci-pipeline-verify.sh" });
+    const full_ci_step = b.step("ci-verify", "Verify the full CI pipeline runs through the repository SDK");
+    full_ci_step.dependOn(&full_ci.step);
 
     // ── codegen tool ────────────────────────────────────────────────────
     const codegen_mod = b.createModule(.{

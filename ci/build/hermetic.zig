@@ -16,18 +16,19 @@ pub const HermeticBuilder = struct {
         _ = self;
         const alpine_digest = "alpine:3.19@sha256:c5b1261d6d3e43071626931fc004f70149bae1552ea0340ca1c5f0f0a3b5b6a6";
 
-        return try ctx.container()
-            .from(alpine_digest)
-            .withExec(&.{ "apk", "add", "--no-cache", "zig=0.16.0-r0", "git" })
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withEnvVariable("SOURCE_DATE_EPOCH", "1700000000")
-            .withEnvVariable("ZIG_LOCAL_CACHE_DIR", "/tmp/zig-cache")
-            .withEnvVariable("ZIG_GLOBAL_CACHE_DIR", "/tmp/zig-global-cache")
-            .withExec(&.{
+        var builder = try ctx.container();
+        builder = try builder.from(alpine_digest);
+        builder = try builder.withExec(&.{ "apk", "add", "--no-cache", "zig=0.16.0-r0", "git" });
+        builder = try builder.withDirectory("/src", source);
+        builder = try builder.withWorkdir("/src");
+        builder = try builder.withEnvVariable("SOURCE_DATE_EPOCH", "1700000000");
+        builder = try builder.withEnvVariable("ZIG_LOCAL_CACHE_DIR", "/tmp/zig-cache");
+        builder = try builder.withEnvVariable("ZIG_GLOBAL_CACHE_DIR", "/tmp/zig-global-cache");
+        builder = try builder.withExec(&.{
             "zig",                        "build",
             "-Dtarget=" ++ config.target, "-Doptimize=" ++ config.optimize,
         });
+        return builder;
     }
 
     pub fn buildMultiTarget(
@@ -35,7 +36,6 @@ pub const HermeticBuilder = struct {
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.Directory {
-        _ = self;
         const targets = [_][]const u8{
             "x86_64-linux-gnu",
             "aarch64-linux-gnu",

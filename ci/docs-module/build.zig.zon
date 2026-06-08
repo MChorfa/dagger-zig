@@ -1,0 +1,18 @@
+.{
+    .fingerprint = 0xa17180fd32c03fa1,
+    .name = .docs_ci,
+    .version = "0.0.0",
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .dagger_sdk = .{
+            .path = "../..",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "dagger.json",
+        "main.zig",
+        "markdown.zig",
+    },
+}

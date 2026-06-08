@@ -28,7 +28,7 @@ dagger.gen.json
 # OS
 .DS_Store
 Thumbs.db
-
+.codegraph
 # Temporary/backup files
 *.tmp
 *.bak
@@ -58,4 +58,19 @@ _site/
 .actrc.user
 
 # Zig cache
-.zig-cache
+.zig-cache/
+reports/
+docs-site/
+
+# Nested module build artifacts
+ci/pipeline/.zig-cache/
+ci/pipeline/zig-out/
+ci/pipeline/zig-pkg/
+
+# Downstream smoke fixture build artifacts.
+tests/fixtures/downstream-smoke/.zig-cache/
+tests/fixtures/downstream-smoke/.zig-cache/**
+tests/fixtures/downstream-smoke/zig-out/
+tests/fixtures/downstream-smoke/zig-out/**
+tests/fixtures/downstream-smoke/zig-pkg/
+tests/fixtures/downstream-smoke/zig-pkg/**

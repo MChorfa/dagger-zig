@@ -125,7 +125,7 @@ const verified = try dagger.verifyProvenance(.{
 
 We thank the following security researchers who have responsibly disclosed vulnerabilities:
 
-- *None yet - be the first!*
+- _None yet - be the first!_
 
 ## License
 

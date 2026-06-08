@@ -121,7 +121,15 @@ pub const GraphQLClient = struct {
         };
 
         // Execute with retry logic - use simple loop instead of closure for now
-        return self.queryWithRetry(body, &executor);
+        const res = self.queryWithRetry(body, &executor) catch |err| {
+            if (self.last_error) |le| {
+                std.debug.print("DAGGER GRAPHQL ERROR: {s}\n", .{le.message});
+            } else {
+                std.debug.print("DAGGER GRAPHQL TRANSPORT ERROR: {}\n", .{err});
+            }
+            return err;
+        };
+        return res;
     }
 
     fn queryWithRetry(self: *GraphQLClient, body: []const u8, executor: *resilience.ResilientExecutor) errs.QueryError![]u8 {
@@ -189,8 +197,8 @@ pub const GraphQLClient = struct {
         defer http_client.deinit();
 
         const extra_headers = [_]std.http.Header{
-            .{ .name = "content-type", .value = "application/json" },
-            .{ .name = "authorization", .value = self.auth_header },
+            .{ .name = "Content-Type", .value = "application/json" },
+            .{ .name = "Authorization", .value = self.auth_header },
         };
 
         var req = http_client.request(.POST, self.endpoint_uri, .{

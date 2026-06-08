@@ -1,7 +1,14 @@
 {
   "name": "dagger-zig-ci",
-  "sdk": "./sdk",
-  "source": "./ci",
-  "engineVersion": "v0.20.6",
-  "description": "dagger-zig self-hosting CI. Uses dagger-zig itself as its SDK. If `dagger call ci --source=.` passes, dagger-zig is verified end-to-end."
+  "engineVersion": "v0.21.0",
+  "sdk": {
+    "source": "./sdk"
+  },
+  "source": "ci",
+  "include": [
+    "build.zig",
+    "build.zig.zon",
+    "schema",
+    "src"
+  ]
 }

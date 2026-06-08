@@ -45,7 +45,7 @@ including Windows.
 | [Error Handling](errors.md)             | Error types and handling patterns |
 | [Type System](types.md)                 | Type definitions and conversions  |
 
-### ⚡ Advanced Features (v0.2.0)
+### ⚡ Advanced Topics (v0.2.x)
 
 | Document                            | Description                               |
 | ----------------------------------- | ----------------------------------------- |
@@ -85,17 +85,17 @@ including Windows.
 
 ## Current Status
 
-**v0.2.0** — Multi-platform support, async patterns, tracing, expanded API types
+**v0.2.1** — POSIX synchronous client SDK, module authoring, tracing, and experimental SPIFFE shellout support
 
 ## Enterprise Feature Matrix
 
-| Feature               | Status | Implementation                                 |
-| --------------------- | ------ | ---------------------------------------------- |
-| Supply Chain Security | ✅      | SLSA Level 4, Sigstore, SBOM (CycloneDX, SPDX) |
-| Security Scanning     | ✅      | Semgrep, CodeQL, Trivy, GitLeaks               |
-| Compliance            | ✅      | SOC2, ISO27001, PCI DSS, NIST CSF 2.0          |
-| Multi-Platform        | ✅      | Linux, macOS, Windows + 8 architectures        |
-| Async Operations      | ✅      | `dagger.async` module with QueryGroup          |
-| Observability         | ✅      | OpenTelemetry tracing, structured logging      |
-| Self-Hosting CI       | ✅      | SDK builds itself via `ci/` module             |
-| Windows Support       | ✅      | Native Windows builds, cross-compilation       |
+| Feature               | Status | Implementation                                           |
+| --------------------- | ------ | -------------------------------------------------------- |
+| Supply Chain Security | ✅     | SLSA Level 4, Sigstore, SBOM (CycloneDX, SPDX)           |
+| Security Scanning     | ✅     | Semgrep, CodeQL, Trivy, GitLeaks                         |
+| Compliance            | ✅     | SOC2, ISO27001, PCI DSS, NIST CSF 2.0                    |
+| Multi-Platform        | 🟡     | Linux and macOS stable; Windows deferred to v0.3.0       |
+| Async Operations      | 🟡     | Deferred to v0.3.0 to avoid `error.NotImplemented` paths |
+| Observability         | ✅     | OpenTelemetry tracing, structured logging                |
+| Self-Hosting CI       | ✅     | SDK builds itself via `ci/` module                       |
+| Windows Support       | 🟡     | Planned for v0.3.0; current release is POSIX-only        |

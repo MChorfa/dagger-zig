@@ -1,6 +1,14 @@
 {
   "name": "ci",
-  "sdk": "zig",
+  "engineVersion": "v0.21.0",
+  "sdk": {
+    "source": "../sdk"
+  },
   "source": ".",
-  "engineVersion": "v0.11.0"
+  "include": [
+    "build.zig",
+    "../src",
+    "full_main.zig",
+    "!docs_main.zig"
+  ]
 }

@@ -9,6 +9,7 @@ dagger-zig supports Windows as a build target and development platform. This gui
 ## Quick Start (Windows)
 
 Prerequisites:
+
 - Zig 0.16.0+ for Windows
 - Git for Windows
 - Dagger CLI (Windows build from [releases](https://github.com/dagger/dagger/releases))
@@ -48,6 +49,7 @@ const cache_path = try std.fs.path.join(allocator, &.{ cache_dir, "layer.tar.gz"
 ### Container Runtime
 
 On Windows, Dagger uses either:
+
 - **WSL2 backend** (recommended): Linux containers via WSL2
 - **Windows containers**: Native Windows container support (limited)
 

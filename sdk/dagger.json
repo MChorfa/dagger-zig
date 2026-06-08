@@ -1,7 +1,9 @@
 {
   "name": "dagger-zig-sdk",
-  "sdk": "go",
+  "engineVersion": "v0.21.0",
+  "sdk": {
+    "source": "go"
+  },
   "source": ".",
-  "engineVersion": "v0.20.6",
   "description": "Zig language runtime for Dagger modules. Implements ModuleRuntime + Codegen so users can `\"sdk\": \"github.com/MChorfa/dagger-zig/sdk@VERSION\"` in their dagger.json and author modules in Zig."
 }

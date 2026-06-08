@@ -47,6 +47,7 @@ Running 1000 container queries:
 ## Concurrency Model
 
 ### Zig: std.Io.async
+
 ```zig
 // True parallelism with async/await
 var group: std.Io.Group(void) = .{};
@@ -57,12 +58,14 @@ try group.wait();
 ```
 
 **Advantages:**
+
 - Zero-cost abstractions
 - No garbage collection pauses
 - Predictable memory layout
 - Comptime-optimized
 
 ### Go: Goroutines + Channels
+
 ```go
 // Concurrent but with GC overhead
 var wg sync.WaitGroup
@@ -77,11 +80,13 @@ wg.Wait()
 ```
 
 **Trade-offs:**
+
 - Garbage collection pauses
 - Higher memory per goroutine
 - Runtime overhead
 
 ### Python: asyncio
+
 ```python
 # Single-threaded event loop
 await asyncio.gather(
@@ -90,6 +95,7 @@ await asyncio.gather(
 ```
 
 **Limitations:**
+
 - GIL constraints
 - Heavy async overhead
 - Requires event loop management
@@ -109,6 +115,7 @@ CI pipeline running 50 container operations:
 ## When to Choose Each SDK
 
 ### Choose dagger-zig when
+
 - Performance is critical
 - Binary size matters (embedded, edge)
 - You want zero dependencies
@@ -116,12 +123,14 @@ CI pipeline running 50 container operations:
 - You prefer compile-time safety
 
 ### Choose dagger-go when
+
 - Team already knows Go
 - Ecosystem maturity is priority
 - You need maximum compatibility
 - Team prefers garbage collection
 
 ### Choose dagger-python when
+
 - Team already knows Python
 - Rapid prototyping
 - Data science integration
@@ -130,6 +139,7 @@ CI pipeline running 50 container operations:
 ## Real-World Scenarios
 
 ### Microservices Build
+
 Building 20 microservices in parallel:
 
 **Zig:** 8s, 40 MB RAM  
@@ -137,6 +147,7 @@ Building 20 microservices in parallel:
 **Python:** 48s, 400 MB RAM
 
 ### Edge Deployment
+
 Deploying to resource-constrained environments:
 
 **Zig:** Single 1.2 MB binary, runs anywhere  
@@ -144,6 +155,7 @@ Deploying to resource-constrained environments:
 **Python:** Requires full Python runtime
 
 ### CI/CD Runner Efficiency
+
 Running 1000 builds per day on GitHub Actions:
 
 **Zig:** ~30% faster job completion = lower billable minutes  
@@ -181,16 +193,18 @@ zig build run-benchmark
 ## Summary
 
 **dagger-zig is for you if:**
+
 - You want maximum performance
 - You value small binaries
 - You prefer compile-time safety
 - You're building resource-constrained systems
 
 **dagger-zig may not be for you if:**
+
 - Team is unfamiliar with Zig
 - You need extensive ecosystem libraries
 - You prefer runtime flexibility over compile-time safety
 
 ---
 
-*Benchmarks run on: AMD Ryzen 9, 32GB RAM, Linux 6.5, Dagger 0.11*
+_Benchmarks run on: AMD Ryzen 9, 32GB RAM, Linux 6.5, Dagger 0.11_

@@ -18,6 +18,7 @@
 
 const std = @import("std");
 const dagger = @import("../root.zig");
+const qb = @import("../querybuilder.zig");
 const dispatch = @import("dispatch.zig");
 const td_mod = @import("typedef.zig");
 const serde = @import("serde.zig");
@@ -67,137 +68,331 @@ pub fn serve(init: std.process.Init, module_instance: anytype) ServeError!void {
     };
 
     const mq = module_api.moduleQuery(client.dag());
-    const call = try mq.currentFunctionCall();
-    const fn_name = try call.name();
+    const call = mq.currentFunctionCall() catch |err| {
+        std.debug.print("dagger-zig: currentFunctionCall failed: {s}\n", .{@errorName(err)});
+        return err;
+    };
+    const parent_name = call.parentName() catch |err| {
+        std.debug.print("dagger-zig: parentName query failed: {s}\n", .{@errorName(err)});
+        return err;
+    };
+    defer gpa.free(parent_name);
+
+    if (parent_name.len == 0) {
+        runIntrospection(M, &ctx, &call, table) catch |err| {
+            const msg = try std.fmt.allocPrint(arena, "introspection failed: {s}", .{@errorName(err)});
+            const engine_error = try mq.newEngineError(msg);
+            _ = call.returnError(engine_error) catch {};
+            return err;
+        };
+        return;
+    }
+
+    const fn_name = call.name() catch |err| {
+        std.debug.print("dagger-zig: name query failed: {s}\n", .{@errorName(err)});
+        return err;
+    };
     defer gpa.free(fn_name);
 
-    if (fn_name.len == 0) {
-        return runIntrospection(M, &ctx, &call, table);
-    } else {
-        return runDispatch(M, &module_instance, &ctx, &call, fn_name, table);
-    }
+    return runDispatch(M, &module_instance, &ctx, &call, fn_name, table);
 }
 
 // ─────────────────────────── introspection ──────────────────────────────
 
-/// Build the module's schema and return it as a `ModuleSource` ID.
+/// Build the module's schema and return it as a module ID.
 ///
-/// The engine expects us to build a `ModuleSource` via its API, add each
-/// user function with `withFunction(...)`, and call `.id()`.
-///
-/// Because our linear-chain querybuilder can't cleanly express the nested
-/// TypeDef construction Dagger uses, we emit the raw introspection query
-/// as a template string. This is the same approach other modules use when
-/// their SDKs don't have a fluent schema builder.
+/// The Dagger schema builder API wires object references together by ID.
+/// We therefore construct TypeDefs first, then Functions, then the module
+/// object itself.
 fn runIntrospection(
     comptime M: type,
     ctx: *Context,
     call: *const module_api.FunctionCall,
     table: []const dispatch.Entry(M),
 ) !void {
-    // Assemble the GraphQL mutation that builds the ModuleSource and
-    // attaches one Function per table entry.
-    var buf: std.ArrayList(u8) = .empty;
-    defer buf.deinit(ctx.arena);
+    const module_name = try resolveModuleName(M, ctx);
+    const object_id = try buildModuleObjectID(M, ctx, table, module_name);
+    var module = try qb.Selection.root.select(ctx.arena, "module");
+    module = try module.select(ctx.arena, "withObject");
+    module = try module.arg(ctx.arena, "object", .{
+        .eager = try qb.serializeString(ctx.arena, object_id),
+    });
 
-    try buf.appendSlice(ctx.arena, "query{moduleSource(refString:\".\")");
-    for (table) |entry| {
-        try buf.appendSlice(ctx.arena, ".withFunction(function:");
-        try emitFunctionBuilder(&buf, ctx.arena, entry.def);
-        try buf.appendSlice(ctx.arena, ")");
-    }
-    try buf.appendSlice(ctx.arena, ".id}");
-
-    // Execute the schema-building query. Returns the ModuleSource ID.
-    const query_str = buf.items;
-    const body = try ctx.client.gql.query(query_str);
-    defer ctx.client.allocator.free(body);
-
-    const parsed = try std.json.parseFromSlice(std.json.Value, ctx.arena, body, .{});
-    defer parsed.deinit();
-
-    const id = walkToString(parsed.value) orelse return error.SchemaRegistrationFailed;
+    const id = try executeLeafString(ctx, try module.select(ctx.arena, "id"));
 
     // Now hand the ID back to the engine via returnValue.
     const id_json = try std.fmt.allocPrint(ctx.arena, "\"{s}\"", .{id});
     try call.returnValue(id_json);
 }
 
-/// Emit the GraphQL fragment that constructs a `Function` value with its
-/// return TypeDef and args. Appends into `buf`.
-fn emitFunctionBuilder(
-    buf: *std.ArrayList(u8),
-    a: std.mem.Allocator,
-    def: td_mod.FunctionDef,
-) !void {
-    // function(name: "X", returnType: <typedef>)
-    try buf.appendSlice(a, "function(name:\"");
-    try buf.appendSlice(a, def.name);
-    try buf.appendSlice(a, "\",returnType:");
-    try emitTypeDefBuilder(buf, a, def.return_type);
-    try buf.appendSlice(a, ")");
+fn buildModuleObjectID(
+    comptime M: type,
+    ctx: *Context,
+    table: []const dispatch.Entry(M),
+    object_name: []const u8,
+) ![]const u8 {
+    var object_sel = try newTypeDefSelection(ctx.arena);
+    object_sel = try withObjectSelection(object_sel, ctx.arena, object_name);
 
-    // Chain .withArg(name, typedef) for each arg.
-    for (def.args) |arg| {
-        try buf.appendSlice(a, ".withArg(name:\"");
-        try buf.appendSlice(a, arg.name);
-        try buf.appendSlice(a, "\",typeDef:");
-        try emitTypeDefBuilder(buf, a, arg.type_def);
-        try buf.appendSlice(a, ")");
+    for (table) |entry| {
+        const function_id = try buildFunctionID(ctx, entry.def);
+        object_sel = try object_sel.select(ctx.arena, "withFunction");
+        object_sel = try object_sel.arg(ctx.arena, "function", .{
+            .eager = try qb.serializeString(ctx.arena, function_id),
+        });
     }
+
+    const object_type_id = try executeLeafString(ctx, try object_sel.select(ctx.arena, "id"));
+    const constructor_id = try buildConstructorID(ctx, object_name, object_type_id);
+    object_sel = try withConstructorSelection(object_sel, ctx.arena, constructor_id);
+
+    return executeLeafString(ctx, try object_sel.select(ctx.arena, "id"));
 }
 
-/// Emit the GraphQL fragment that constructs a `TypeDef` value.
-/// Uses the engine's TypeDef builder: typeDef().withKind(X) then further
-/// withXxx() for complex kinds.
-fn emitTypeDefBuilder(
-    buf: *std.ArrayList(u8),
-    a: std.mem.Allocator,
+fn buildConstructorID(
+    ctx: *Context,
+    name: []const u8,
+    return_type_id: []const u8,
+) ![]const u8 {
+    const function_sel = try newFunctionSelection(ctx.arena, name, return_type_id);
+    return executeLeafString(ctx, try function_sel.select(ctx.arena, "id"));
+}
+
+fn buildFunctionID(
+    ctx: *Context,
+    def: td_mod.FunctionDef,
+) ![]const u8 {
+    const return_type_id = try buildTypeDefID(ctx, def.return_type);
+    var function_sel = try newFunctionSelection(ctx.arena, def.name, return_type_id);
+
+    for (def.args) |arg| {
+        const arg_type_id = try buildTypeDefID(ctx, arg.type_def);
+        function_sel = try withFunctionArgSelection(function_sel, ctx.arena, arg.name, arg_type_id);
+    }
+
+    return executeLeafString(ctx, try function_sel.select(ctx.arena, "id"));
+}
+
+fn buildTypeDefID(
+    ctx: *Context,
     def: td_mod.TypeDef,
-) !void {
-    try buf.appendSlice(a, "typeDef");
+) ![]const u8 {
+    var type_sel = try newTypeDefSelection(ctx.arena);
 
     switch (def.kind) {
         .string, .integer, .boolean, .void_kind => {
-            try buf.appendSlice(a, ".withKind(kind:");
-            try buf.appendSlice(a, def.kind.graphqlName());
-            try buf.appendSlice(a, ")");
+            type_sel = try withKindSelection(type_sel, ctx.arena, def.kind);
         },
         .list => {
-            try buf.appendSlice(a, ".withListOf(elementType:");
-            try emitTypeDefBuilder(buf, a, def.element.?.*);
-            try buf.appendSlice(a, ")");
+            const element_id = try buildTypeDefID(ctx, def.element.?.*);
+            type_sel = try withListSelection(type_sel, ctx.arena, element_id);
         },
         .object => {
-            try buf.appendSlice(a, ".withObject(name:\"");
-            try buf.appendSlice(a, def.object_name.?);
-            try buf.appendSlice(a, "\")");
+            type_sel = try withObjectSelection(type_sel, ctx.arena, def.object_name.?);
         },
         .input => {
-            try buf.appendSlice(a, ".withInput(name:\"");
-            try buf.appendSlice(a, def.input.?.name);
-            try buf.appendSlice(a, "\")");
+            type_sel = try withInputSelection(type_sel, ctx.arena, def.input.?.name);
             for (def.input.?.fields) |f| {
-                try buf.appendSlice(a, ".withField(name:\"");
-                try buf.appendSlice(a, f.name);
-                try buf.appendSlice(a, "\",typeDef:");
-                try emitTypeDefBuilder(buf, a, f.type_def);
-                try buf.appendSlice(a, ")");
+                const field_type_id = try buildTypeDefID(ctx, f.type_def);
+                type_sel = try withFieldSelection(type_sel, ctx.arena, f.name, field_type_id);
             }
         },
         .enum_kind => {
-            try buf.appendSlice(a, ".withEnum(name:\"");
-            try buf.appendSlice(a, def.enum_def.?.name);
-            try buf.appendSlice(a, "\")");
+            type_sel = try withEnumSelection(type_sel, ctx.arena, def.enum_def.?.name);
             for (def.enum_def.?.values) |v| {
-                try buf.appendSlice(a, ".withValue(name:\"");
-                try buf.appendSlice(a, v);
-                try buf.appendSlice(a, "\")");
+                type_sel = try withEnumMemberSelection(type_sel, ctx.arena, v);
             }
         },
     }
 
-    if (def.optional) try buf.appendSlice(a, ".withOptional(optional:true)");
+    if (def.optional) type_sel = try withOptionalSelection(type_sel, ctx.arena);
+
+    return executeLeafString(ctx, try type_sel.select(ctx.arena, "id"));
+}
+
+fn newTypeDefSelection(arena: std.mem.Allocator) !*qb.Selection {
+    return qb.Selection.root.select(arena, "typeDef");
+}
+
+fn withKindSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    kind: td_mod.Kind,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withKind");
+    sel = try sel.arg(arena, "kind", .{ .eager = kind.graphqlName() });
+    return sel;
+}
+
+fn withListSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    element_type_id: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withListOf");
+    sel = try sel.arg(arena, "elementType", .{
+        .eager = try qb.serializeString(arena, element_type_id),
+    });
+    return sel;
+}
+
+fn withObjectSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    name: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withObject");
+    sel = try sel.argStr(arena, "name", name);
+    return sel;
+}
+
+fn withInputSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    name: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withInput");
+    sel = try sel.argStr(arena, "name", name);
+    return sel;
+}
+
+fn withFieldSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    name: []const u8,
+    type_id: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withField");
+    sel = try sel.argStr(arena, "name", name);
+    sel = try sel.arg(arena, "typeDef", .{ .eager = try qb.serializeString(arena, type_id) });
+    return sel;
+}
+
+fn withEnumSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    name: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withEnum");
+    sel = try sel.argStr(arena, "name", name);
+    return sel;
+}
+
+fn withEnumMemberSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    name: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withEnumMember");
+    sel = try sel.argStr(arena, "name", name);
+    return sel;
+}
+
+fn withOptionalSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withOptional");
+    sel = try sel.arg(arena, "optional", .{ .eager = "true" });
+    return sel;
+}
+
+fn newFunctionSelection(
+    arena: std.mem.Allocator,
+    name: []const u8,
+    return_type_id: []const u8,
+) !*qb.Selection {
+    var sel = try qb.Selection.root.select(arena, "function");
+    sel = try sel.argStr(arena, "name", name);
+    sel = try sel.arg(arena, "returnType", .{
+        .eager = try qb.serializeString(arena, return_type_id),
+    });
+    return sel;
+}
+
+fn withFunctionArgSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    name: []const u8,
+    type_id: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withArg");
+    sel = try sel.argStr(arena, "name", name);
+    sel = try sel.arg(arena, "typeDef", .{ .eager = try qb.serializeString(arena, type_id) });
+    return sel;
+}
+
+fn withConstructorSelection(
+    selection: *qb.Selection,
+    arena: std.mem.Allocator,
+    function_id: []const u8,
+) !*qb.Selection {
+    var sel = try selection.select(arena, "withConstructor");
+    sel = try sel.arg(arena, "function", .{
+        .eager = try qb.serializeString(arena, function_id),
+    });
+    return sel;
+}
+
+fn executeLeafString(ctx: *Context, selection: *const qb.Selection) ![]const u8 {
+    const query_str = try selection.build(ctx.arena);
+    const body = try ctx.client.gql.query(query_str);
+    defer ctx.client.allocator.free(body);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, ctx.arena, body, .{});
+    defer parsed.deinit();
+
+    if (parsed.value.object.get("errors")) |errs_val| {
+        if (errs_val == .array and errs_val.array.items.len > 0) {
+            const first = errs_val.array.items[0];
+            if (first == .object) {
+                if (first.object.get("message")) |msg_val| {
+                    if (msg_val == .string) {
+                        std.debug.print("dagger-zig: graphql error: {s}\n", .{msg_val.string});
+                    }
+                }
+            }
+        }
+    }
+
+    const root = parsed.value.object.get("data") orelse return error.SchemaRegistrationFailed;
+    return walkToString(root) orelse error.SchemaRegistrationFailed;
+}
+
+fn resolveModuleName(comptime M: type, ctx: *Context) ![]const u8 {
+    var current_module = try qb.Selection.root.select(ctx.arena, "currentModule");
+    const current_name = executeLeafString(ctx, try current_module.select(ctx.arena, "name")) catch null;
+    if (current_name) |name| {
+        if (name.len != 0) return name;
+    }
+
+    return shortTypeName(M);
+}
+
+fn resolveModuleEngineVersion(ctx: *Context) ![]const u8 {
+    var module_source = try qb.Selection.root.select(ctx.arena, "moduleSource");
+    module_source = try module_source.argStr(ctx.arena, "refString", ".");
+    return executeLeafString(ctx, try module_source.select(ctx.arena, "engineVersion")) catch "";
+}
+
+fn resolveModuleSDKSource(ctx: *Context) ![]const u8 {
+    var module_source = try qb.Selection.root.select(ctx.arena, "moduleSource");
+    module_source = try module_source.argStr(ctx.arena, "refString", ".");
+
+    const sdk = try module_source.select(ctx.arena, "sdk");
+    return executeLeafString(ctx, try sdk.select(ctx.arena, "source")) catch "";
+}
+
+fn resolveModuleSourceSubpath(ctx: *Context) ![]const u8 {
+    var module_source = try qb.Selection.root.select(ctx.arena, "moduleSource");
+    module_source = try module_source.argStr(ctx.arena, "refString", ".");
+    return executeLeafString(ctx, try module_source.select(ctx.arena, "sourceSubpath")) catch "";
+}
+
+fn shortTypeName(comptime T: type) []const u8 {
+    const full = @typeName(T);
+    if (std.mem.lastIndexOfScalar(u8, full, '.')) |index| return full[index + 1 ..];
+    return full;
 }
 
 fn walkToString(v: std.json.Value) ?[]const u8 {
@@ -223,6 +418,10 @@ fn runDispatch(
     fn_name: []const u8,
     table: []const dispatch.Entry(M),
 ) !void {
+    if (fn_name.len == 0) {
+        return runConstructor(module_instance, ctx, call);
+    }
+
     // Find the entry for this function.
     const entry = for (table) |e| {
         if (std.mem.eql(u8, e.name, fn_name)) break e;
@@ -241,21 +440,43 @@ fn runDispatch(
 
     var aw: std.Io.Writer.Allocating = .fromArrayList(ctx.arena, &buf);
     entry.invoke(module_instance, ctx, args_json, &aw.writer) catch |e| {
-        // Translate Zig errors into a GraphQL error by rerouting through
-        // returnValue with a structured error payload. v0.1 keeps this
-        // simple: send the error name as a string so `dagger call` shows
-        // something actionable.
-        const err_json = try std.fmt.allocPrint(
-            ctx.arena,
-            "{{\"error\":\"{s}\"}}",
-            .{@errorName(e)},
-        );
-        try call.returnValue(err_json);
+        const engine_error = try module_api.moduleQuery(ctx.client.dag()).newEngineError(@errorName(e));
+        try call.returnError(engine_error);
         return e;
     };
     buf = aw.toArrayList();
 
     try call.returnValue(buf.items);
+}
+
+fn runConstructor(
+    module_instance: anytype,
+    ctx: *Context,
+    call: *const module_api.FunctionCall,
+) !void {
+    std.debug.print("dagger-zig: constructor dispatch start\n", .{});
+
+    var buf: std.ArrayList(u8) = .empty;
+    defer buf.deinit(ctx.arena);
+
+    var aw: std.Io.Writer.Allocating = .fromArrayList(ctx.arena, &buf);
+    serde.serializeReturn(@TypeOf(module_instance.*), module_instance.*, &aw.writer) catch |err| {
+        std.debug.print("dagger-zig: constructor serializeReturn failed: {s}\n", .{@errorName(err)});
+        const msg = try std.fmt.allocPrint(ctx.arena, "constructor serializeReturn failed: {s}", .{@errorName(err)});
+        const engine_error = try module_api.moduleQuery(ctx.client.dag()).newEngineError(msg);
+        try call.returnError(engine_error);
+        return err;
+    };
+    buf = aw.toArrayList();
+
+    std.debug.print("dagger-zig: constructor return payload bytes={d}\n", .{buf.items.len});
+    call.returnValue(buf.items) catch |err| {
+        std.debug.print("dagger-zig: constructor returnValue failed: {s}\n", .{@errorName(err)});
+        const msg = try std.fmt.allocPrint(ctx.arena, "constructor returnValue failed: {s}", .{@errorName(err)});
+        const engine_error = try module_api.moduleQuery(ctx.client.dag()).newEngineError(msg);
+        try call.returnError(engine_error);
+        return err;
+    };
 }
 
 /// Pull every inputArg from the FunctionCall and stitch them into a single
@@ -307,64 +528,53 @@ test "comptime: module with no eligible methods fails to compile" {
     try testing.expectEqualStrings("run", table[0].name);
 }
 
-test "emitTypeDefBuilder emits expected fragments" {
+test "newTypeDefSelection emits expected fragments" {
     const a = testing.allocator;
-    var buf: std.ArrayList(u8) = .empty;
-    defer buf.deinit(a);
+    var scalar_sel = try newTypeDefSelection(a);
+    scalar_sel = try withKindSelection(scalar_sel, a, .string);
+    const scalar_query = try (try scalar_sel.select(a, "id")).build(a);
+    defer a.free(scalar_query);
+    try testing.expectEqualStrings("query{typeDef{withKind(kind:STRING_KIND){id}}}", scalar_query);
 
-    try emitTypeDefBuilder(&buf, a, .{ .kind = .string });
-    try testing.expectEqualStrings("typeDef.withKind(kind:STRING_KIND)", buf.items);
-
-    buf.clearRetainingCapacity();
-    try emitTypeDefBuilder(&buf, a, .{ .kind = .boolean, .optional = true });
+    var optional_sel = try newTypeDefSelection(a);
+    optional_sel = try withKindSelection(optional_sel, a, .boolean);
+    optional_sel = try withOptionalSelection(optional_sel, a);
+    const optional_query = try (try optional_sel.select(a, "id")).build(a);
+    defer a.free(optional_query);
     try testing.expectEqualStrings(
-        "typeDef.withKind(kind:BOOLEAN_KIND).withOptional(optional:true)",
-        buf.items,
+        "query{typeDef{withKind(kind:BOOLEAN_KIND){withOptional(optional:true){id}}}}",
+        optional_query,
     );
 
-    buf.clearRetainingCapacity();
-    try emitTypeDefBuilder(&buf, a, .{
-        .kind = .object,
-        .object_name = "Container",
-    });
+    var object_sel = try newTypeDefSelection(a);
+    object_sel = try withObjectSelection(object_sel, a, "Container");
+    const object_query = try (try object_sel.select(a, "id")).build(a);
+    defer a.free(object_query);
     try testing.expectEqualStrings(
-        "typeDef.withObject(name:\"Container\")",
-        buf.items,
+        "query{typeDef{withObject(name:\"Container\"){id}}}",
+        object_query,
     );
 
-    buf.clearRetainingCapacity();
-    const int_def: td_mod.TypeDef = .{ .kind = .integer };
-    try emitTypeDefBuilder(&buf, a, .{
-        .kind = .list,
-        .element = &int_def,
-    });
+    var list_sel = try newTypeDefSelection(a);
+    list_sel = try withListSelection(list_sel, a, "typedef-id");
+    const list_query = try (try list_sel.select(a, "id")).build(a);
+    defer a.free(list_query);
     try testing.expectEqualStrings(
-        "typeDef.withListOf(elementType:typeDef.withKind(kind:INTEGER_KIND))",
-        buf.items,
+        "query{typeDef{withListOf(elementType:\"typedef-id\"){id}}}",
+        list_query,
     );
 }
 
-test "emitFunctionBuilder emits function + withArg chain" {
+test "newFunctionSelection emits function + withArg chain" {
     const a = testing.allocator;
-    var buf: std.ArrayList(u8) = .empty;
-    defer buf.deinit(a);
+    var function_sel = try newFunctionSelection(a, "build", "return-id");
+    function_sel = try withFunctionArgSelection(function_sel, a, "target", "string-id");
+    function_sel = try withFunctionArgSelection(function_sel, a, "parallelism", "integer-id");
 
-    const str_def: td_mod.TypeDef = .{ .kind = .string };
-    const int_def: td_mod.TypeDef = .{ .kind = .integer };
-    const def: td_mod.FunctionDef = .{
-        .name = "build",
-        .args = &.{
-            .{ .name = "target", .type_def = str_def },
-            .{ .name = "parallelism", .type_def = int_def },
-        },
-        .return_type = str_def,
-    };
-
-    try emitFunctionBuilder(&buf, a, def);
+    const function_query = try (try function_sel.select(a, "id")).build(a);
+    defer a.free(function_query);
     try testing.expectEqualStrings(
-        "function(name:\"build\",returnType:typeDef.withKind(kind:STRING_KIND))" ++
-            ".withArg(name:\"target\",typeDef:typeDef.withKind(kind:STRING_KIND))" ++
-            ".withArg(name:\"parallelism\",typeDef:typeDef.withKind(kind:INTEGER_KIND))",
-        buf.items,
+        "query{function(name:\"build\", returnType:\"return-id\"){withArg(name:\"target\", typeDef:\"string-id\"){withArg(name:\"parallelism\", typeDef:\"integer-id\"){id}}}}",
+        function_query,
     );
 }
