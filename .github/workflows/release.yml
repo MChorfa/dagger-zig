@@ -48,6 +48,7 @@ jobs:
     name: Build & Attest
     needs: [detect-release, release-please]
     if: |
+      !cancelled() &&
       github.repository == 'MChorfa/dagger-zig' &&
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
@@ -77,6 +78,7 @@ jobs:
     name: SBOM & Sign
     needs: [detect-release, release-please, build-and-attest]
     if: |
+      !cancelled() &&
       github.repository == 'MChorfa/dagger-zig' &&
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
@@ -164,7 +166,7 @@ jobs:
   provenance:
     name: SLSA L3 Provenance
     needs: [detect-release, sbom-and-sign]
-    if: github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true'
+    if: ${{ !cancelled() && github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true' }}
     permissions:
       actions: read # read the workflow path for provenance
       id-token: write # keyless signing of the provenance
@@ -173,3 +175,28 @@ jobs:
     with:
       base64-subjects: ${{ needs.sbom-and-sign.outputs.hashes }}
       upload-assets: true
+
+  # Closes the loop: after publish, verify the L3 provenance, GitHub attestation,
+  # and cosign signatures of every released tarball. Fails the run loudly if any
+  # check fails, so a broken/unsigned release can't pass silently.
+  verify-release:
+    name: Verify Release
+    needs: [detect-release, sbom-and-sign, provenance]
+    if: ${{ !cancelled() && github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      attestations: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+
+      - name: Install slsa-verifier
+        uses: slsa-framework/slsa-verifier/actions/installer@ea584f4502babc6f60d9bc799dbbb13c1caa9ee6 # v2.7.1
+
+      - name: Verify release provenance + signatures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/release-verify.sh "${{ needs.detect-release.outputs.tag_name }}"
