@@ -78,6 +78,24 @@ pub fn build(b: *std.Build) void {
     const integ_step = b.step("test-integration", "Run integration tests against a live Dagger engine");
     integ_step.dependOn(&run_integ.step);
 
+    // ── benchmarks (offline; no live engine required) ───────────────────
+    const bench_mod = b.createModule(.{
+        .root_source_file = b.path("benches/querybuilder.zig"),
+        .target = target,
+        .optimize = .ReleaseFast, // benchmarks are meaningless in Debug
+        .link_libc = true,
+        .imports = &.{.{ .name = "dagger_sdk", .module = dagger_mod }},
+    });
+    const bench_exe = b.addExecutable(.{ .name = "bench", .root_module = bench_mod });
+    // Install the binary (zig-out/bin/bench) so it can be profiled with an
+    // external sampling profiler, e.g. `samply record -- ./zig-out/bin/bench`.
+    const bench_install = b.addInstallArtifact(bench_exe, .{});
+    const run_bench = b.addRunArtifact(bench_exe);
+    run_bench.step.dependOn(&bench_install.step);
+    if (b.args) |args| run_bench.addArgs(args);
+    const bench_step = b.step("bench", "Run offline performance benchmarks (query builder, serialization)");
+    bench_step.dependOn(&run_bench.step);
+
     // ── module E2E test (offline, proves comptime plumbing) ─────────────
     const mod_e2e_mod = b.createModule(.{
         .root_source_file = b.path("tests/module_e2e.zig"),

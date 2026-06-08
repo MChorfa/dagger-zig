@@ -1,104 +1,49 @@
-# Performance Benchmarks
+# Benchmarks
 
-This directory contains performance benchmarks for the dagger-zig SDK.
-
-## Running Benchmarks
-
-### Local Development
+Offline micro-benchmarks for dagger-zig hot paths that need no live engine.
 
 ```bash
-# Run all benchmarks
 zig build bench
-
-# Run specific benchmark
-zig build bench --container-ops
-
-# With Dagger engine (for real operation benchmarks)
-dagger run zig build bench
 ```
 
-### CI
+The step builds in `ReleaseFast` and runs `benches/querybuilder.zig`, which times
+two hot paths over 100,000 iterations each and reports min / avg / p95 / p99 / max
+in microseconds:
 
-Benchmarks run automatically on every PR and release via `.github/workflows/benchmark.yml`.
+| Benchmark              | What it measures                                                        |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `query build (4-deep)` | Building a 4-level GraphQL selection chain and rendering it to a string |
+| `serializeString`      | Escaping a string for inclusion in a GraphQL query                      |
 
-Results are tracked in `gh-pages` branch for trend analysis.
+Example output:
 
-## Benchmark Categories
+```
+=== dagger-zig offline benchmarks (100000 iterations) ===
+  query build (4-deep)     min   0.167  avg   0.322  p95   0.458  p99   0.500  max  20.625  (us)
+  serializeString          min   0.791  avg   1.109  p95   1.791  p99   2.375  max 150.292  (us)
+```
 
-| Category        | File                  | Description                                |
-| --------------- | --------------------- | ------------------------------------------ |
-| Container Ops   | `container_ops.zig`   | Image pulls, file operations, exec latency |
-| Module Dispatch | `module_dispatch.zig` | Comptime reflection, function routing      |
-| Serialization   | `serialization.zig`   | GraphQL query building, JSON parsing       |
-| Memory          | `memory.zig`          | Allocator performance, heap usage          |
+Numbers are machine-dependent; use them for relative comparison across commits on
+the same host, not as absolute targets.
 
-## Metrics
+## CI
 
-All benchmarks report:
-
-- **iterations**: Number of samples collected
-- **min/max**: Fastest and slowest execution
-- **avg**: Mean execution time
-- **p95/p99**: 95th and 99th percentiles (latency-sensitive)
-- **throughput**: Operations per second (where applicable)
-
-## Interpreting Results
-
-### Target Performance (v0.1.0)
-
-| Operation           | Target Latency | Notes                |
-| ------------------- | -------------- | -------------------- |
-| Container.from()    | < 500ms        | Image already cached |
-| File.contents()     | < 50ms         | Small files (< 1MB)  |
-| Directory.entries() | < 100ms        | Standard directories |
-| Container.exec()    | < 200ms        | Simple commands      |
-| Module dispatch     | < 1μs          | Comptime overhead    |
-
-### Regression Detection
-
-CI compares benchmarks against `main` branch:
-
-- **PASS**: Within 10% of baseline
-- **WARN**: 10-25% slower (flagged for review)
-- **FAIL**: > 25% slower (blocks merge)
+The `benchmark` function in `ci/test/main.zig` runs `zig build bench` inside the
+Dagger pipeline and captures the output as an artifact (see
+`.github/workflows/benchmark.yml`). It is informational — the run is not gated on
+benchmark numbers, and no automatic regression threshold is enforced.
 
 ## Profiling
 
+There is no built-in flamegraph or profiler flag. Capture a CPU profile with an
+external sampling profiler against the built binary, e.g.:
+
 ```bash
-# CPU profiling
-zig build bench -- -p cpu
-
-# Memory profiling
-zig build bench -- -p heap
-
-# Export flamegraph
-zig build bench -- -f flamegraph.svg
+zig build bench   # builds zig-out/bin/bench
+samply record -- ./zig-out/bin/bench
 ```
 
-## Adding New Benchmarks
+## Not implemented
 
-1. Create new file in `benches/` directory
-2. Implement benchmark functions using `BenchResult` struct
-3. Register in `bench_runner.zig`
-4. Update this README
-
-Example:
-
-```zig
-const std = @import("std");
-const dagger = @import("dagger_sdk");
-
-fn myBenchmark(allocator: std.mem.Allocator, ctx: *dagger.Context) !BenchResult {
-    var samples = try allocator.alloc(u64, 100);
-    defer allocator.free(samples);
-
-    for (0..100) |i| {
-        const start = std.time.nanoTimestamp();
-        // ... benchmark code ...
-        const end = std.time.nanoTimestamp();
-        samples[i] = @intCast(end - start);
-    }
-
-    return BenchResult.fromSamples("my.benchmark", samples);
-}
-```
+Engine-dependent benchmarks (image pulls, exec latency, file/directory operations)
+require a running Dagger engine and are not implemented.

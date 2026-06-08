@@ -1,48 +1,27 @@
 # Why dagger-zig?
 
-Performance comparison and rationale for choosing Zig over Go or Python SDKs.
+Rationale for choosing Zig over the Go or Python SDKs. This page compares
+language characteristics, not benchmark numbers — the figures that previously
+appeared here were never measured and have been removed. If you need numbers for
+your workload, measure them on your own runners.
 
-## Binary Size Comparison
+## What Zig brings
 
-| SDK            | Hello World Binary | Runtime Dependencies      | Install Size |
-| -------------- | ------------------ | ------------------------- | ------------ |
-| **dagger-zig** | 1.2 MB             | None                      | 1.2 MB       |
-| dagger-go      | 12-15 MB           | None                      | 12-15 MB     |
-| dagger-python  | N/A                | Python 3.8+, 50+ packages | 150+ MB      |
+Zig has **no garbage collector and no language runtime**. A pipeline compiles to a
+single statically linked native executable. That has a few concrete consequences
+relative to the Go and Python SDKs:
 
-**Winner: Zig (10× smaller than Go, 100× smaller than Python)**
+| Property            | Why it follows from the language                                                                                |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Small binaries      | No runtime to embed; a static Zig binary is smaller than the Go equivalent and far smaller than a Python image |
+| Low, flat memory    | No GC heap and no interpreter; baseline memory is low and does not grow with collector slack                   |
+| Fast startup        | No managed runtime to initialize before the first query                                                        |
+| Predictable latency | No GC pauses; allocation is explicit and visible in the source                                                 |
+| Compile-time safety | Errors are values; many failure modes are caught by the compiler instead of at runtime                         |
 
-## Startup Time
-
-| Operation         | Zig   | Go    | Python  |
-| ----------------- | ----- | ----- | ------- |
-| Cold start        | 5 ms  | 25 ms | 200+ ms |
-| Connect to engine | 10 ms | 30 ms | 250+ ms |
-| First query       | 15 ms | 40 ms | 300+ ms |
-
-**Winner: Zig (4× faster than Go, 20× faster than Python)**
-
-## Memory Usage
-
-| Scenario            | Zig   | Go     | Python  |
-| ------------------- | ----- | ------ | ------- |
-| Idle connection     | 2 MB  | 15 MB  | 45 MB   |
-| Single container op | 8 MB  | 35 MB  | 120 MB  |
-| 100 parallel ops    | 45 MB | 180 MB | 600+ MB |
-
-**Winner: Zig (4× more efficient than Go, 13× more than Python)**
-
-## CPU Efficiency
-
-Running 1000 container queries:
-
-| Metric       | Zig  | Go    | Python  |
-| ------------ | ---- | ----- | ------- |
-| CPU time     | 0.8s | 2.5s  | 8.5s    |
-| Allocations  | 5000 | 50000 | 500000+ |
-| Peak threads | 2    | 8     | 32+     |
-
-**Winner: Zig (3× faster than Go, 10× faster than Python)**
+These are design-level statements, not measurements. The Go SDK trades some of
+these for ecosystem maturity and GC convenience; the Python SDK trades them for
+rapid prototyping and data-science integration.
 
 ## Concurrency Model
 
@@ -100,18 +79,6 @@ await asyncio.gather(
 - Heavy async overhead
 - Requires event loop management
 
-## Cold Start in CI/CD
-
-CI pipeline running 50 container operations:
-
-| SDK    | Total Time | Memory Peak |
-| ------ | ---------- | ----------- |
-| Zig    | 12s        | 25 MB       |
-| Go     | 28s        | 85 MB       |
-| Python | 65s        | 280 MB      |
-
-**Zig advantage: 2× faster than Go, 5× faster than Python**
-
 ## When to Choose Each SDK
 
 ### Choose dagger-zig when
@@ -136,31 +103,22 @@ CI pipeline running 50 container operations:
 - Data science integration
 - You accept runtime overhead
 
-## Real-World Scenarios
+## Expected Characteristics
 
-### Microservices Build
+The points below follow from language design — Zig has no garbage collector and no
+runtime — rather than from a measured benchmark suite in this repository. Treat
+them as qualitative expectations, not numbers we have published.
 
-Building 20 microservices in parallel:
+- **Binaries**: a statically linked Zig pipeline is a single small native
+  executable with no runtime dependencies, smaller than the equivalent Go binary
+  and far smaller than a Python runtime + interpreter.
+- **Memory**: no GC means lower and more predictable baseline memory use, which
+  matters on constrained CI runners.
+- **Startup**: a native binary starts faster than a process that must initialize
+  a managed runtime.
 
-**Zig:** 8s, 40 MB RAM  
-**Go:** 22s, 120 MB RAM  
-**Python:** 48s, 400 MB RAM
-
-### Edge Deployment
-
-Deploying to resource-constrained environments:
-
-**Zig:** Single 1.2 MB binary, runs anywhere  
-**Go:** 15 MB binary, no dependencies  
-**Python:** Requires full Python runtime
-
-### CI/CD Runner Efficiency
-
-Running 1000 builds per day on GitHub Actions:
-
-**Zig:** ~30% faster job completion = lower billable minutes  
-**Go:** Baseline  
-**Python:** ~50% longer job time
+If you need concrete numbers for your own workload, measure it on your runners —
+language-level comparisons depend heavily on the specific pipeline.
 
 ## The Zig Philosophy in dagger-zig
 
@@ -171,24 +129,16 @@ Running 1000 builds per day on GitHub Actions:
 
 ## Benchmarks
 
-See `benchmarks/` directory for reproducible tests:
+The repository ships offline micro-benchmarks for the SDK's hot paths (GraphQL
+query construction and string serialization). They need no live engine:
 
 ```bash
-cd benchmarks
-zig build run-benchmark
-# Compares Zig vs Go vs Python implementations
+zig build bench
 ```
 
-## Migration ROI
-
-| Factor            | Impact                |
-| ----------------- | --------------------- |
-| CI time reduction | 40-60% faster builds  |
-| Memory usage      | 4× lower on runners   |
-| Binary size       | 10× smaller artifacts |
-| Startup time      | Sub-10ms vs 100ms+    |
-
-**Typical payback period: 2-4 weeks** for teams running CI/CD heavily.
+See [`benches/README.md`](../benches/README.md) for what is measured and how to
+read the output. There is no cross-language (Zig vs Go vs Python) benchmark suite
+in this repository.
 
 ## Summary
 
@@ -204,7 +154,3 @@ zig build run-benchmark
 - Team is unfamiliar with Zig
 - You need extensive ecosystem libraries
 - You prefer runtime flexibility over compile-time safety
-
----
-
-_Benchmarks run on: AMD Ryzen 9, 32GB RAM, Linux 6.5, Dagger 0.11_
