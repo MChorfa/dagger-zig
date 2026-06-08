@@ -12,7 +12,7 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 Zero external dependencies — Zig stdlib only. Authored against Zig 0.16.0, with `std.Io.async` used for parallel container operations.
 
-This is a single-maintainer SDK at **v0.2.1**: a POSIX synchronous client, module authoring, tracing, and experimental SPIFFE support. See [Current Status](#current-status) for what is and isn't done.
+This is a single-maintainer SDK at **v0.3.1**: a POSIX synchronous client, module authoring, tracing, and experimental SPIFFE support. See [Current Status](#current-status) for what is and isn't done.
 
 ## Documentation Structure
 
@@ -84,7 +84,7 @@ This is a single-maintainer SDK at **v0.2.1**: a POSIX synchronous client, modul
 
 ## Current Status
 
-**v0.2.1** — POSIX synchronous client SDK, module authoring, tracing, and experimental SPIFFE shellout support
+**v0.3.1** — POSIX synchronous client SDK, module authoring, tracing, and experimental SPIFFE shellout support
 
 ## Feature Status
 
@@ -97,7 +97,7 @@ This is a single-maintainer SDK at **v0.2.1**: a POSIX synchronous client, modul
 | Observability     | 🟡     | OpenTelemetry tracing + structured logging in the SDK              |
 | SLSA provenance   | ✅     | SLSA Build **L3** (slsa-github-generator) + GitHub attestation, tagged releases |
 | Artifact signing  | ✅     | Keyless cosign signature (Sigstore bundle) on tagged releases       |
-| Async operations  | 🟡     | Experimental; broader support deferred to v0.3.0                   |
-| Windows support   | 🟡     | Planned for v0.3.0; current release is POSIX-only                  |
+| Async operations  | 🟡     | Experimental; broader support deferred to a future release         |
+| Windows support   | 🟡     | Planned for a future release; current release is POSIX-only         |
 
 See [Security & Compliance Notes](compliance.md) for what the project actually does — it is **not** a certified or audited product.
