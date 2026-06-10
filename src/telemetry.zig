@@ -9,6 +9,14 @@
 const std = @import("std");
 const gql = @import("core/graphql_client.zig");
 
+pub fn nowMs() i64 {
+    var ts: std.c.timespec = undefined;
+    _ = std.c.clock_gettime(std.c.CLOCK.MONOTONIC, &ts);
+    const sec_ms: i64 = @intCast(ts.sec);
+    const nsec_ms: i64 = @intCast(@divTrunc(ts.nsec, std.time.ns_per_ms));
+    return sec_ms * std.time.ms_per_s + nsec_ms;
+}
+
 /// Tracing configuration
 pub const Config = struct {
     /// Enable tracing
@@ -56,10 +64,10 @@ pub const Span = struct {
         return .{
             .name = name,
             .kind = kind,
-            .start_time = std.time.milliTimestamp(),
+            .start_time = nowMs(),
             .attributes = std.StringHashMap([]const u8).init(allocator),
             .parent_id = current_span_id,
-            .id = @intCast(std.time.nanoTimestamp()),
+            .id = @as(u64, @intCast(nowMs())),
         };
     }
 
@@ -78,7 +86,7 @@ pub const Span = struct {
     pub fn end(self: *Self, config: Config) void {
         if (!config.enabled) return;
 
-        const duration = std.time.milliTimestamp() - self.start_time;
+        const duration = nowMs() - self.start_time;
 
         if (config.console_exporter) {
             std.log.info("[TRACE] {s} - {s} ({d}ms)", .{
@@ -159,14 +167,14 @@ pub const Progress = struct {
             .allocator = allocator,
             .operation = operation,
             .total_steps = total_steps,
-            .start_time = std.time.milliTimestamp(),
+            .start_time = nowMs(),
         };
     }
 
     /// Report progress update
     pub fn update(self: *Progress, step: u32, message: []const u8) void {
         self.current_step = step;
-        const elapsed = std.time.milliTimestamp() - self.start_time;
+        const elapsed = nowMs() - self.start_time;
 
         if (self.total_steps) |total| {
             const percent = @as(f32, @floatFromInt(step)) / @as(f32, @floatFromInt(total)) * 100.0;
@@ -190,7 +198,7 @@ pub const Progress = struct {
 
     /// Mark operation as complete
     pub fn complete(self: *Progress) void {
-        const elapsed = std.time.milliTimestamp() - self.start_time;
+        const elapsed = nowMs() - self.start_time;
         std.log.info("[PROGRESS] {s}: complete [{d}ms]", .{ self.operation, elapsed });
     }
 };

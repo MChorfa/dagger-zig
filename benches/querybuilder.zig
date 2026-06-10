@@ -150,7 +150,8 @@ pub fn main() !void {
 
     // Zig 0.16 routes clock access through the std.Io interface; a
     // single-threaded threaded backend is all an offline benchmark needs.
-    var io_impl: std.Io.Threaded = .init_single_threaded;
+    var io_impl: std.Io.Threaded = .init(gpa, .{});
+    defer io_impl.deinit();
     const io = io_impl.io();
 
     std.debug.print("=== dagger-zig offline benchmarks ({d} iterations) ===\n", .{ITERATIONS});
