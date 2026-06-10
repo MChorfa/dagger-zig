@@ -68,7 +68,8 @@ pub const CosignSigner = struct {
 
         const output = try verifier.stdout();
         var dir = try ctx.directory();
-        return try dir.withNewFile("verify-output.txt", output);
+        dir = try dir.withNewFile("/verify-output.txt", output);
+        return dir.file("/verify-output.txt");
     }
 
     pub fn verifyContainer(
@@ -89,7 +90,32 @@ pub const CosignSigner = struct {
 
         const output = try verifier.stdout();
         var dir = try ctx.directory();
-        return try dir.withNewFile("container-verify.txt", output);
+        dir = try dir.withNewFile("/container-verify.txt", output);
+        return dir.file("/container-verify.txt");
+    }
+
+    pub fn signAttestation(
+        self: *const CosignSigner,
+        ctx: *dagger.Context,
+        predicate: dagger.File,
+        subject: dagger.File,
+        oidc_token: dagger.Secret,
+    ) !dagger.File {
+        _ = self;
+        var signer = try ctx.container();
+        signer = try signer.from("ghcr.io/sigstore/cosign/cosign:v2.2.3");
+        signer = try signer.withFile("/predicate.json", predicate);
+        signer = try signer.withFile("/subject", subject);
+        signer = try signer.withSecretVariable("SIGSTORE_ID_TOKEN", oidc_token);
+        signer = try signer.withExec(&.{
+            "cosign",          "attest",
+            "--yes",
+            "--predicate",     "/predicate.json",
+            "--type",          "slsaprovenance1",
+            "--output-bundle", "/output.bundle",
+            "/subject",
+        });
+        return signer.file("/output.bundle");
     }
 
     pub fn generateKeyPair(

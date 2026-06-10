@@ -8,14 +8,14 @@ pub const SbomGenerator = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
-        const scanner = try ctx
-            .container()
-            .from("anchore/syft:latest")
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withExec(&.{ "syft", "dir:/src", "-o", "cyclonedx-json=/sbom.cdx.json" });
-
-        return try scanner.file("/sbom.cdx.json");
+        var scanner = try ctx.container();
+        scanner = try scanner.from("ghcr.io/anchore/syft:v1.14.0");
+        scanner = try scanner.withDirectory("/src", source);
+        scanner = try scanner.withNewFile("/results/.keep", "");
+        scanner = try scanner.withExec(&.{
+            "/syft", "dir:/src", "-o", "cyclonedx-json=/results/sbom.cdx.json",
+        });
+        return scanner.file("/results/sbom.cdx.json");
     }
 
     pub fn spdx(
@@ -24,14 +24,14 @@ pub const SbomGenerator = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
-        const scanner = try ctx
-            .container()
-            .from("anchore/syft:latest")
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withExec(&.{ "syft", "dir:/src", "-o", "spdx-json=/sbom.spdx.json" });
-
-        return try scanner.file("/sbom.spdx.json");
+        var scanner = try ctx.container();
+        scanner = try scanner.from("ghcr.io/anchore/syft:v1.14.0");
+        scanner = try scanner.withDirectory("/src", source);
+        scanner = try scanner.withNewFile("/results/.keep", "");
+        scanner = try scanner.withExec(&.{
+            "/syft", "dir:/src", "-o", "spdx-json=/results/sbom.spdx.json",
+        });
+        return scanner.file("/results/sbom.spdx.json");
     }
 };
 

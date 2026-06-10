@@ -223,6 +223,17 @@ pub const Container = struct {
         return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
     }
 
+    /// Expose a secret as an environment variable. The secret value is never exposed in logs.
+    pub fn withSecretVariable(self: Container, name: []const u8, secret: Secret) !Container {
+        var secret_id = try secret.id();
+        defer secret_id.deinit(self.allocator);
+        const id_lit = try qb.serializeString(self.arena, secret_id.value);
+        const s1 = try self.selection.select(self.arena, "withSecretVariable");
+        const s2 = try s1.argStr(self.arena, "name", name);
+        const s3 = try s2.arg(self.arena, "secret", .{ .eager = id_lit });
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
+    }
+
     /// Add a service binding, making the service accessible to this container.
     pub fn withService(self: Container, alias: []const u8, svc: Service) !Container {
         var svc_id = try svc.id();
@@ -390,6 +401,14 @@ pub const Directory = struct {
     pub fn entries(self: Directory) ![][]u8 {
         const s = try self.selection.select(self.arena, "entries");
         return executeScalarStringList(self.allocator, s, self.gql);
+    }
+
+    /// Create a new file with the given contents inside this directory.
+    pub fn withNewFile(self: Directory, path: []const u8, contents: []const u8) !Directory {
+        const s1 = try self.selection.select(self.arena, "withNewFile");
+        const s2 = try s1.argStr(self.arena, "path", path);
+        const s3 = try s2.argStr(self.arena, "contents", contents);
+        return .{ .allocator = self.allocator, .arena = self.arena, .selection = s3, .gql = self.gql };
     }
 };
 

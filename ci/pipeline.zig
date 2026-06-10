@@ -87,12 +87,69 @@ pub const Pipeline = struct {
         builder_id: []const u8,
     ) !dagger.Directory {
         _ = self;
-        _ = source;
-        return try writeArtifactDirectory(ctx, &.{
-            .{ .path = "/provenance.json", .contents = builder_id },
-            .{ .path = "/sbom.cdx.json", .contents = "{\"bomFormat\":\"CycloneDX\"}" },
-            .{ .path = "/sbom.spdx.json", .contents = "{\"spdxVersion\":\"SPDX-2.3\"}" },
+
+        var sbom_runner = try ctx.container();
+        sbom_runner = try sbom_runner.from("ghcr.io/anchore/syft:v1.14.0");
+        sbom_runner = try sbom_runner.withDirectory("/src", source);
+        sbom_runner = try sbom_runner.withNewFile("/results/.keep", "");
+        sbom_runner = try sbom_runner.withExec(&.{
+            "/syft",   "dir:/src",
+            "-o",      "cyclonedx-json=/results/sbom.cdx.json",
+            "-o",      "spdx-json=/results/sbom.spdx.json",
         });
+        const sbom_results = try sbom_runner.directory("/results");
+
+        var hasher = try ctx.container();
+        hasher = try hasher.from("alpine:latest");
+        hasher = try hasher.withDirectory("/sbom", sbom_results);
+        hasher = try hasher.withExec(&.{
+            "sh", "-c", "sha256sum /sbom/sbom.spdx.json | awk '{print $1}'",
+        });
+        const sbom_hash_raw = try hasher.stdout();
+        const sbom_hash = std.mem.trim(u8, sbom_hash_raw, " \t\r\n");
+
+        var git_runner = try ctx.container();
+        git_runner = try git_runner.from("alpine/git");
+        git_runner = try git_runner.withDirectory("/src", source);
+        git_runner = try git_runner.withWorkdir("/src");
+        git_runner = try git_runner.withExec(&.{
+            "sh", "-c", "git rev-parse HEAD 2>/dev/null || echo unknown",
+        });
+        const git_commit_raw = try git_runner.stdout();
+        const git_commit = std.mem.trim(u8, git_commit_raw, " \t\r\n");
+
+        var ts_runner = try ctx.container();
+        ts_runner = try ts_runner.from("alpine:latest");
+        ts_runner = try ts_runner.withExec(&.{ "date", "-u", "+%Y-%m-%dT%H:%M:%SZ" });
+        const timestamp_raw = try ts_runner.stdout();
+        const timestamp = std.mem.trim(u8, timestamp_raw, " \t\r\n");
+
+        const json_fmt =
+            "{{" ++
+            "\"_type\":\"https://in-toto.io/Statement/v1\"," ++
+            "\"subject\":[{{\"name\":\"sbom.spdx.json\",\"digest\":{{\"sha256\":\"{s}\"}}}}]," ++
+            "\"predicateType\":\"https://slsa.dev/provenance/v1\"," ++
+            "\"predicate\":{{" ++
+            "\"buildDefinition\":{{" ++
+            "\"buildType\":\"https://dagger.io/build/v1\"," ++
+            "\"externalParameters\":{{\"entryPoint\":\"ci/pipeline.zig\"}}," ++
+            "\"internalParameters\":{{\"engine\":\"dagger\"}}," ++
+            "\"resolvedDependencies\":[{{\"uri\":\"https://gitlab.com/MChorfa/dagger-zig\",\"digest\":{{\"gitCommit\":\"{s}\"}}}}]}}," ++
+            "\"runDetails\":{{" ++
+            "\"builder\":{{\"id\":\"{s}\"}}," ++
+            "\"metadata\":{{" ++
+            "\"invocationId\":\"https://gitlab.com/MChorfa/dagger-zig\"," ++
+            "\"startedOn\":\"{s}\"}}}}}}}}";
+
+        const provenance_json = try std.fmt.allocPrint(ctx.allocator(), json_fmt, .{
+            sbom_hash, git_commit, builder_id, timestamp,
+        });
+
+        var out = try ctx.container();
+        out = try out.from("alpine:latest");
+        out = try out.withDirectory("/sbom", sbom_results);
+        out = try out.withNewFile("/provenance.json", provenance_json);
+        return try out.directory("/");
     }
 
     pub fn run(
@@ -108,7 +165,7 @@ pub const Pipeline = struct {
 
         const security_reports = try self.scan(ctx, source);
         const builder = try self.build(ctx, source, "x86_64-linux-gnu");
-        const attestations = try self.attest(ctx, source, "dagger-ci");
+        const attestations = try self.attest(ctx, source, "https://dagger.io/engine");
 
         var all_artifacts = try ctx.container();
         all_artifacts = try all_artifacts.withDirectory("/security-reports", security_reports);

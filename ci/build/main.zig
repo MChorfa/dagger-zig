@@ -90,7 +90,7 @@ pub const Build = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var sbom = try ctx.container();
-        sbom = try sbom.from("ghcr.io/anchore/syft:latest");
+        sbom = try sbom.from("ghcr.io/anchore/syft:v1.14.0");
         sbom = try sbom.withDirectory("/src", source);
         sbom = try sbom.withWorkdir("/src");
 
@@ -110,25 +110,72 @@ pub const Build = struct {
         return sbom.directory("/results");
     }
 
-    /// buildAndSign stages build, SBOM generation, and signing
+    /// buildAndSign stages build, SBOM generation, signing, and inline SLSA v1 provenance
     pub fn buildAndSign(
         ctx: *dagger.Context,
         source: dagger.Directory,
         container_tag: []const u8,
+        oidc_token: ?dagger.Secret,
     ) !dagger.Directory {
         var artifacts = try ctx.container();
         artifacts = try artifacts.from("alpine:latest");
 
-        // Build artifacts
         const multi_arch = try buildMultiArch(ctx, source);
         artifacts = try artifacts.withDirectory("/builds", multi_arch);
 
-        // SBOM
-        const sboms = try generateSBOM(ctx, source);
-        artifacts = try artifacts.withDirectory("/sbom", sboms);
+        const sbom_dir = try generateSBOM(ctx, source);
+        artifacts = try artifacts.withDirectory("/sbom", sbom_dir);
 
-        // Placeholder for signing (would call external cosign)
-        artifacts = try artifacts.withNewFile("/signed-manifest.txt", container_tag);
+        var hasher = try ctx.container();
+        hasher = try hasher.from("alpine:latest");
+        hasher = try hasher.withDirectory("/sbom", sbom_dir);
+        hasher = try hasher.withExec(&.{
+            "sh", "-c", "sha256sum /sbom/sbom.spdx.json | awk '{print $1}'",
+        });
+        const sbom_hash_raw = try hasher.stdout();
+        const sbom_hash = std.mem.trim(u8, sbom_hash_raw, " \t\r\n");
+
+        const json_fmt =
+            "{{" ++
+            "\"_type\":\"https://in-toto.io/Statement/v1\"," ++
+            "\"subject\":[{{\"name\":\"sbom.spdx.json\",\"digest\":{{\"sha256\":\"{s}\"}}}}]," ++
+            "\"predicateType\":\"https://slsa.dev/provenance/v1\"," ++
+            "\"predicate\":{{" ++
+            "\"buildDefinition\":{{" ++
+            "\"buildType\":\"https://dagger.io/build/v1\"," ++
+            "\"externalParameters\":{{\"entryPoint\":\"{s}\"}}," ++
+            "\"internalParameters\":{{\"engine\":\"dagger\"}}," ++
+            "\"resolvedDependencies\":[]}}," ++
+            "\"runDetails\":{{" ++
+            "\"builder\":{{\"id\":\"https://dagger.io/engine\"}}," ++
+            "\"metadata\":{{}}}}}}}}";
+
+        const provenance_json = try std.fmt.allocPrint(std.heap.page_allocator, json_fmt, .{
+            sbom_hash, container_tag,
+        });
+        defer std.heap.page_allocator.free(provenance_json);
+
+        artifacts = try artifacts.withNewFile("/provenance.json", provenance_json);
+
+        if (oidc_token) |token| {
+            var signer = try ctx.container();
+            signer = try signer.from("ghcr.io/sigstore/cosign/cosign:v2.2.3");
+            signer = try signer.withDirectory("/sbom", sbom_dir);
+            signer = try signer.withNewFile("/provenance.json", provenance_json);
+            signer = try signer.withSecretVariable("SIGSTORE_ID_TOKEN", token);
+            signer = try signer.withExec(&.{
+                "cosign",          "attest",
+                "--yes",
+                "--predicate",     "/provenance.json",
+                "--type",          "slsaprovenance1",
+                "--output-bundle", "/output.bundle",
+                "/sbom/sbom.spdx.json",
+            });
+            artifacts = try artifacts.withFile(
+                "/attestation.bundle",
+                try signer.file("/output.bundle"),
+            );
+        }
 
         return artifacts.directory("/");
     }
