@@ -43,7 +43,7 @@ Tagged releases carry SLSA build provenance and a keyless signature, wired in `r
 One command (runs all three checks below for every tarball):
 
 ```bash
-scripts/release-verify.sh v0.3.1   # tag defaults to the latest release
+scripts/release-verify.sh v0.3.2   # tag defaults to the latest release
 ```
 
 Or run the checks individually:

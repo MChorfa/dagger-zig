@@ -28,7 +28,8 @@ pub fn main() !void {
     defer _ = gpa_state.deinit();
     const gpa = gpa_state.allocator();
 
-    var io_impl: std.Io.Threaded = .init_single_threaded;
+    var io_impl: std.Io.Threaded = .init(gpa, .{});
+    defer io_impl.deinit();
     const io = io_impl.io();
 
     var client = try dagger.connect(gpa, io, .{});

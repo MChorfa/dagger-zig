@@ -12,7 +12,7 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
 Zero external dependencies — Zig stdlib only. Authored against Zig 0.16.0, with `std.Io.async` used for parallel container operations.
 
-This is a single-maintainer SDK at **v0.3.1**: a POSIX synchronous client, module authoring, tracing, and experimental SPIFFE support. See [Current Status](#current-status) for what is and isn't done.
+This is a single-maintainer SDK at **v0.3.2**: a POSIX synchronous client, module authoring, tracing, offline benchmarks, and experimental SPIFFE support. See [Current Status](#current-status) for what is and isn't done.
 
 ## Documentation Structure
 
@@ -84,7 +84,7 @@ This is a single-maintainer SDK at **v0.3.1**: a POSIX synchronous client, modul
 
 ## Current Status
 
-**v0.3.1** — POSIX synchronous client SDK, module authoring, tracing, and experimental SPIFFE shellout support
+**v0.3.2** — POSIX synchronous client SDK, module authoring, tracing, offline benchmarks (`zig build bench`), supply chain (SLSA v1 + Syft SBOM + Cosign attestation), and experimental SPIFFE shellout support
 
 ## Feature Status
 

@@ -15,7 +15,7 @@
 
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine — **zero external dependencies**, Zig stdlib only, built against Zig 0.16.
 
-> **Status — v0.3.1.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, and tracing on Linux/macOS. Windows support is planned ([what works](#what-works)).
+> **Status — v0.3.2.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, tracing, and offline benchmarks on Linux/macOS. Windows support is planned ([what works](#what-works)).
 >
 > **Self-hosting.** dagger-zig builds, tests, and releases *itself* — the CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this very SDK.
 >
@@ -46,7 +46,8 @@ pub fn main() !void {
     defer _ = gpa_state.deinit();
     const gpa = gpa_state.allocator();
 
-    var io_impl: std.Io.Threaded = .init_single_threaded;
+    var io_impl: std.Io.Threaded = .init(gpa, .{});
+    defer io_impl.deinit();
     const io = io_impl.io();
 
     var client = try dagger.connect(gpa, io, .{});
@@ -96,7 +97,7 @@ pub fn main(init: std.process.Init) !void {
 ```json
 {
   "name": "my-pipeline",
-  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.1",
+  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.2",
   "source": "."
 }
 ```
@@ -113,7 +114,7 @@ More examples: [parallel pipelines](examples/parallel/main.zig) (`Io.Group`), th
 Every tagged release is signed and carries SLSA Build L3 provenance:
 
 ```bash
-scripts/release-verify.sh v0.3.1     # slsa-verifier + gh attestation + cosign, all tarballs
+scripts/release-verify.sh v0.3.2     # slsa-verifier + gh attestation + cosign, all tarballs
 ```
 
 The individual `slsa-verifier` / `gh attestation verify` / `cosign verify-blob` commands are in [docs/compliance.md](docs/compliance.md).
@@ -124,8 +125,11 @@ The individual `slsa-verifier` / `gh attestation verify` / `cosign verify-blob` 
 zig build                          build the library module
 zig build -Dspiffe-experimental    enable experimental SPIFFE support
 zig build test                     offline unit tests
+zig build test-module              offline: verify module runtime comptime plumbing
 zig build test-suite               comprehensive suite (platform, telemetry, perf)
-zig build test-integration         live-engine tests (under `dagger run --`)
+zig build test-integration         live-engine tests (requires `dagger run --`)
+zig build bench                    offline performance benchmarks (query builder, serialization)
+zig build flamegraph               CPU flamegraph SVG via external profiler (see benches/README.md)
 zig build codegen                  regenerate src/gen.zig from engine schema
 zig build run-first-pipeline       example: alpine echo hello
 zig build run-parallel             example: Io.Group concurrent pipelines

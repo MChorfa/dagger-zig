@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.2](https://github.com/MChorfa/dagger-zig/compare/v0.3.1...v0.3.2) (2026-06-09)
+
+### Features
+
+- **bench:** add real offline `zig build bench` step — query-builder and serialization throughput ([28e1349](https://github.com/MChorfa/dagger-zig/commit/28e1349dc10550c313dea4d26316ad761deacc61))
+- **bench:** print per-stage breakdown to the terminal ([fbbf6a8](https://github.com/MChorfa/dagger-zig/commit/fbbf6a88d0783727229d1815b3acebac0dce7db5))
+- **bench:** add `zig build flamegraph` target (external profiler, fails loud if tooling absent) ([9d7413b](https://github.com/MChorfa/dagger-zig/commit/9d7413b2c2ddb0b02f151458617a98b9cd439963))
+- **parallel:** real concurrency via `std.Io.Group` + `Client.branch()` ([0565bec](https://github.com/MChorfa/dagger-zig/commit/0565bec04c49a8d0c3ac0d02936f146ad11a8281))
+- **ci:** SLSA v1 provenance, Syft SBOM (CycloneDX + SPDX), Cosign keyless attestation, OPA/Rego governance gate ([94b4b5d](https://github.com/MChorfa/dagger-zig/commit/94b4b5de553385c0cb03c14451d58705374c5ba6))
+
+### Bug Fixes
+
+- **zig-0.16:** replace removed `std.time` timestamp APIs with `std.c.clock_gettime(CLOCK.MONOTONIC)` in telemetry and test suite ([be80542](https://github.com/MChorfa/dagger-zig/commit/be80542a921512b147a510493b5cab7c4350e57f))
+- **zig-0.16:** fix removed `std.Io.Threaded.init_single_threaded` → `.init(gpa, .{})` with `defer deinit()` in bench ([be80542](https://github.com/MChorfa/dagger-zig/commit/be80542a921512b147a510493b5cab7c4350e57f))
+- **test-suite:** fix phantom error types (`errors.ClientError`, `ConnectionFailed`, `QueryFailed`) → correct `errors.QueryError` / `HandshakeFailed` / `TransportFailed` members ([be80542](https://github.com/MChorfa/dagger-zig/commit/be80542a921512b147a510493b5cab7c4350e57f))
+
+### Documentation
+
+- **why-zig:** remove unverified comparative claims ([29c86cf](https://github.com/MChorfa/dagger-zig/commit/29c86cf20f57a375beebaffcc5a788ab541b3633))
+
+---
+
 ## [0.2.1] (2026-05-27)
 
 ### Bug Fixes
