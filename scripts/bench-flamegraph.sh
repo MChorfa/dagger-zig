@@ -15,15 +15,8 @@ cd "$ROOT"
 
 BIN="zig-out/bin/bench"
 
-# Build only if the binary is missing. When invoked via `zig build flamegraph`
-# the build step already produced it, so we avoid a nested `zig build` (which
-# would contend on the build cache lock).
-if [ ! -x "$BIN" ]; then
-  echo "==> Building bench binary (ReleaseFast)…"
-  zig build bench >/dev/null
-fi
 [ -x "$BIN" ] || {
-  echo "error: $BIN not found after build" >&2
+  echo "error: $BIN not found. Run `zig build flamegraph` so the install step creates it first." >&2
   exit 1
 }
 

@@ -50,7 +50,7 @@ pub fn map(
     context: anytype,
     comptime op: anytype,
 ) std.Io.Cancelable!void {
-    std.debug.assert(inputs.len == results.len);
+    if (inputs.len != results.len) @panic("parallel.map requires inputs and results to have the same length");
     var group: std.Io.Group = .init;
     defer group.cancel(io);
     for (inputs, results) |in, *out| {

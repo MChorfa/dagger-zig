@@ -139,7 +139,10 @@ fn reportBreakdown(io: std.Io, gpa: std.mem.Allocator) !void {
         var bar: [28]u8 = undefined;
         const fill = (s * bar.len) / maxv;
         for (0..bar.len) |j| bar[j] = if (j < fill) '#' else ' ';
-        const pct = @as(f64, @floatFromInt(s)) / @as(f64, @floatFromInt(total)) * 100.0;
+        const pct: f64 = if (total == 0)
+            0.0
+        else
+            @as(f64, @floatFromInt(s)) / @as(f64, @floatFromInt(total)) * 100.0;
         std.debug.print("  {s:<18} {s}  {d:>4} ns  ({d:>4.1}%)\n", .{ name, &bar, s, pct });
     }
     std.debug.print("  {s:<18} {s}  {d:>4} ns\n", .{ "total", " " ** 28, total });
