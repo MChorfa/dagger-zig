@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.3](https://github.com/MChorfa/dagger-zig/compare/v0.3.2...v0.3.3) (2026-06-12)
+
+
+### Bug Fixes
+
+* publish release checksum manifests ([c2c79ae](https://github.com/MChorfa/dagger-zig/commit/c2c79ae04659ba5164a7db6aebe0d76609bfcec5))
+* require release manifest bundle in verifier ([7fbf1aa](https://github.com/MChorfa/dagger-zig/commit/7fbf1aada6126f6ea301cd966dabbb86e5aec2d6))
+* tolerate legacy release manifest bundles ([f016e11](https://github.com/MChorfa/dagger-zig/commit/f016e1182a1cc22548252eaf3e3036dac8e4c568))
+
 ## [0.3.2](https://github.com/MChorfa/dagger-zig/compare/v0.3.1...v0.3.2) (2026-06-09)
 
 ### Features
