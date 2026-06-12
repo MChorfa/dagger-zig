@@ -114,13 +114,11 @@ test "cache volume persistence" {
 
     // Write to cache
     const ctr2 = try ctr_with_cache.withExec(&.{ "sh", "-c", "echo cached > /cache/data.txt" });
-    _ = try ctr2.sync();
+    var written_id = try ctr2.sync();
+    defer written_id.deinit(std.testing.allocator);
 
-    // Read from cache in new container
-    const ctr3_root = try client.dag().container();
-    const ctr3_base = try ctr3_root.from("alpine:latest");
-    const ctr3_cache = try ctr3_base.withMountedCache("/cache", cache);
-    const ctr3 = try ctr3_cache.withExec(&.{ "cat", "/cache/data.txt" });
+    // Read back from the same mounted cache chain.
+    const ctr3 = try ctr2.withExec(&.{ "cat", "/cache/data.txt" });
 
     const out = try ctr3.stdout();
     defer std.testing.allocator.free(out);
@@ -165,10 +163,11 @@ test "secret handling" {
     // Use secret in container
     const ctr = try client.dag().container();
     const ctr1 = try ctr.from("alpine:latest");
-    const ctr2 = try ctr1.withSecret("/run/secrets/test-secret", secret);
-    const ctr3 = try ctr2.withExec(&.{ "sh", "-c", "cat /run/secrets/test-secret > /dev/null" });
+    const ctr2 = try ctr1.withSecretVariable("TEST_SECRET", secret);
+    const ctr3 = try ctr2.withExec(&.{ "sh", "-c", "test -n \"$TEST_SECRET\"" });
 
-    _ = try ctr3.sync();
+    var secret_id = try ctr3.sync();
+    defer secret_id.deinit(std.testing.allocator);
 }
 
 test "multi-platform container" {

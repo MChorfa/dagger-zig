@@ -1,178 +1,91 @@
-# dagger-zig — Architecture
+# Architecture
 
-This document explains _why_ the SDK is shaped the way it is. For the _what_,
-see the inline doc comments in each source file.
+This page explains the shape of the SDK, not every implementation detail.
 
-## The four codegen types
+## The model
 
-Per the upstream `dagger-codegen` skill, "codegen" means four different things
-in Dagger. dagger-zig handles them as follows:
+The SDK is built around a few simple ideas:
 
-| Type                  | What it produces                                                | dagger-zig status                                                                                                                      |
-| --------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. In-module bindings | `internal/dagger/dagger.gen.*` for a module to call `dag.*`     | **v0.1: stub** — re-exports `dagger_sdk`. Real codegen in v0.1.1 once per-module schema restriction lands.                             |
-| 2. Runtime dispatch   | `invoke()` that routes incoming calls to user fns               | **v0.1: done via comptime.** `dispatch.build(M)` returns a comptime table; specialized invoker shims per method. Offline E2E verified. |
-| 3. SDK library        | The shipped `dagger` package itself                             | **v0.1: hand-written in `gen_sample.zig`, with a codegen emitter for later**                                                           |
-| 4. Generated clients  | Standalone `Connect()` + `Close()` + types for regular programs | **v0.1: partial** — `connect()` + `close()` work, types are hand-written                                                               |
+- `Client` owns a session, an arena, and the mutable state needed for queries.
+- Each query is a chained selection that serializes to GraphQL at the edge.
+- Modules are plain Zig structs with methods.
+- Concurrent work is done by branching the client per task.
 
-The Type 2 decision was **comptime registration** — no macros, no source
-parsing. The user writes a plain struct:
+## Code generation categories
+
+| Area | What it means | Current state |
+| --- | --- | --- |
+| Module bindings | Code a module imports to call `dag.*` | Hand-wired for now |
+| Runtime dispatch | Routing from Dagger into Zig methods | Done with comptime tables |
+| SDK surface | The public `dagger` package | Hand-written |
+| Generated clients | Generic program clients and wrappers | Partial |
+
+The important decision is the runtime dispatch path: it uses comptime
+registration instead of macros or runtime reflection. A Zig struct like this:
 
 ```zig
 const MyModule = struct {
-    pub fn build(self: *const MyModule, ctx: *Context, src: Directory) !Container { ... }
+    pub fn build(self: *const MyModule, ctx: *Context, src: Directory) !Container {
+        _ = self;
+        _ = ctx;
+        _ = src;
+        return undefined;
+    }
 };
-pub fn main(init: std.process.Init) !void {
-    return dagger.module.serve(init, MyModule{});
-}
 ```
 
-At comptime, `dispatch.build(MyModule)` walks `@typeInfo(MyModule).@"struct".decls`,
-filters to eligible methods (`pub fn (*const Self, *Context, ...)`), and
-generates one specialized invoker shim per method. The shims know how to
-deserialize exactly the arg types that method takes — no runtime type
-inspection, no registration boilerplate.
+is walked at comptime, filtered for eligible methods, and converted into one
+specialized shim per callable method.
 
-See `src/module/dispatch.zig` + `src/module/typedef.zig` + `tests/module_e2e.zig`.
+## Handshake
 
-## The handshake
+The client starts by checking, in order:
 
-Three strategies, tried in order:
+1. `DAGGER_SESSION_PORT` + `DAGGER_SESSION_TOKEN`
+2. `_EXPERIMENTAL_DAGGER_CLI_BIN`
+3. `dagger` on `PATH`
 
-```
-┌──────────────────────────────────────────────┐
-│ 1. DAGGER_SESSION_PORT + DAGGER_SESSION_TOKEN│  ← inside a module runtime
-└──────────────────────────────────────────────┘
-                │ found? use as-is, no subprocess
-                ▼
-┌──────────────────────────────────────────────┐
-│ 2. _EXPERIMENTAL_DAGGER_CLI_BIN              │  ← dev override
-└──────────────────────────────────────────────┘
-                │ found? spawn that binary
-                ▼
-┌──────────────────────────────────────────────┐
-│ 3. `dagger` on PATH                          │  ← the common case
-└──────────────────────────────────────────────┘
-                │ spawn it
-                ▼
-      dagger session [--workdir …] [--project …] \
-          --label dagger.io/sdk.name:zig \
-          --label dagger.io/sdk.version:0.1.0
-                │
-                ▼
-      reads ONE line from stdout:
-      {"port":44273,"session_token":"…"}
-                │
-                ▼
-      background thread drains stdout/stderr for the rest of the session
-```
+If a session is not already present, the CLI is spawned and the SDK reads the
+handshake from stdout. That keeps the dependency boundary explicit and avoids
+hidden downloads.
 
-The Rust SDK has a 4th strategy: download the CLI from `dl.dagger.io`. We
-don't. Rationale documented in the README — supply-chain-purity trumps
-convenience in MChorfa/CortAIx's target deployments.
+## Query building
 
-## The query builder
+Calls are lowered to GraphQL selections. Each chained method produces a new
+selection node owned by the client arena.
 
-All API calls lower to GraphQL queries of the shape:
+That design keeps the ownership model simple:
 
-```
-query{A{B(arg:"v"){C{D}}}}
-```
-
-where each nesting level corresponds to one field selection in the user's
-chained call. We model this as an immutable singly-linked list:
-
-```
-Selection { name, alias, args, prev } ──prev──▶ … ──prev──▶ Selection.root
-                                                                   (name=null)
-```
-
-Every mutating method allocates a new `Selection` in a client-owned arena.
-`build()` walks `prev` pointers to a flat list, then joins them with `{`
-and closes with the appropriate number of `}`. The arena is freed when the
-client closes.
-
-### Why not refcounting?
-
-Refcounting in Zig is possible (`std.atomic.Value(usize)` + a `Drop` pattern)
-but invasive. Since a selection chain can't outlive the session it belongs
-to, arena-per-session is strictly simpler and has the same observable
-semantics. The one cost: two clients running in the same process don't share
-selection memory. That's fine — they shouldn't anyway (each holds its own
-GraphQL connection).
-
-### Why pre-serialize args instead of holding them as typed values?
-
-The Rust SDK holds `serde_json::Value` for each arg and serializes lazily
-in `build()`. We serialize eagerly in `.arg()` / `.argStr()` and store the
-resulting string literal.
-
-Pros:
-
-- Simpler types — `Arg { name, value_literal }` is all we need.
-- No generic serialization infrastructure.
-
-Cons:
-
-- An arg is materialized even if the chain is never built (rare in practice).
-- Lazy args (for IDs that require awaiting) need a separate `LazyArg` union
-  member — we have this in `ArgValue`.
-
-Net: eager is the right call for Zig, where stored polymorphic values would
-require type erasure that's annoying without `Arc<dyn Any>`.
-
-## Memory ownership map
-
-Who owns what:
-
-| Memory                                                               | Owner                      | Freed on                                    |
-| -------------------------------------------------------------------- | -------------------------- | ------------------------------------------- |
-| `Selection` nodes                                                    | `client.arena`             | `client.close()`                            |
-| Selection-internal strings (names, aliases, arg names, arg literals) | `client.arena`             | `client.close()`                            |
-| Query result bodies (from `gql.query()`)                             | Caller (returned to user)  | Caller's allocator                          |
-| `ContainerID`/`DirectoryID`/etc.                                     | Caller                     | `.deinit(allocator)`                        |
-| HTTP auth header, endpoint URL                                       | `GraphQLClient`            | `gql.deinit()`                              |
-| `DomainError`                                                        | `GraphQLClient.last_error` | Overwritten on next query or `gql.deinit()` |
-
-Rule of thumb: if it crossed the GraphQL boundary _in_ (an arg), the arena
-owns it. If it crossed _out_ (a scalar result), the user owns it and must
-free.
+| Memory | Owned by | Released when |
+| --- | --- | --- |
+| Selection chain | `client.arena` | `client.close()` |
+| Query result bodies | Caller | The caller allocator |
+| Transport state | `GraphQLClient` | `gql.deinit()` |
 
 ## Error model
 
-Four error sets, separated by concern:
+The code keeps the major failure classes separated:
 
-- `BuildError` — client-side (alloc, serialize, invalid input).
-- `QueryError` — wire-level (transport, HTTP status, GraphQL envelope, domain error).
-- `ConnectError` — bring-up (subprocess, handshake, env).
-- `DomainError` (struct, not error set) — carries the GraphQL error message so the caller can `switch` on the error then inspect `client.gql.last_error`.
+- `BuildError` for client-side serialization and allocation problems
+- `QueryError` for transport and GraphQL envelope failures
+- `ConnectError` for bring-up and handshake issues
+- `DomainError` for server-reported message payloads
 
-All public functions return one of the `std.mem.Allocator.Error`-inclusive
-error sets. We deliberately don't unify into one mega-error-set — callers
-matching on `error.TransportFailed` shouldn't also need to handle
-`error.UserCallbackFailed`.
+That makes error handling explicit without forcing everything into one giant
+error set.
 
-## Performance notes
+## Why the design looks this way
 
-- **Cold start:** `dagger session` spawn + handshake is ~200–400ms. Identical
-  to every other SDK. Zig's process spawn has no measurable overhead here.
-- **Per-query:** one HTTP POST per terminal op. localhost keep-alive keeps
-  this ~sub-ms of overhead on top of the engine's own processing.
-- **Selection building:** O(n) in chain length, arena-allocated, no syscalls.
-- **Memory per pipeline:** typically <100 KiB for the selection chain. The
-  engine does all the heavy lifting; we're just routing GraphQL.
+- predictable memory use matters more than generalized runtime magic
+- compile-time validation catches shape mismatches early
+- a branch-per-task model keeps fan-out safe
+- the handshake stays simple and inspectable
 
-## Comparison to Rust SDK
+## Comparison
 
-| Area                           | Rust SDK                       | dagger-zig        |
-| ------------------------------ | ------------------------------ | ----------------- |
-| Concurrency                    | async/Tokio                    | sync              |
-| Selection sharing              | `Arc<Selection>`               | arena-scoped      |
-| Arg storage                    | `HashMap<String, LazyResolve>` | immutable `[]Arg` |
-| Binary size (stripped release) | ~4 MB                          | ~500 KB (target)  |
-| Dependencies                   | 80+ transitive                 | 0                 |
-| Module runtime                 | yes                            | **no (v0.2)**     |
-
-The binary size gap is where Zig pays off for Dagger specifically: the
-module runtime container is pulled for every `dagger call`. Smaller base
-image = faster pipelines.
+| Area | Rust SDK | dagger-zig |
+| --- | --- | --- |
+| Concurrency | async/Tokio | sync |
+| Selection sharing | shared reference counting | arena scoped |
+| Dependencies | many | zero runtime deps |
+| Dispatch | runtime-heavy | comptime-generated |

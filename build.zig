@@ -170,9 +170,9 @@ pub fn build(b: *std.Build) void {
     addExample(b, dagger_mod, target, optimize, "service-containers", "examples/service-containers/main.zig");
 
     // ── C shared + static libraries ─────────────────────────────────────
-    // NOTE: C API is experimental and disabled for v0.2.0 release.
-    // The C example doesn't compile with Zig 0.16 and the API needs more work.
-    // Re-enable in v0.3.0 when C API is fully functional.
+    // NOTE: C API remains experimental and disabled by default while the
+    // public SDK line stays Zig-first. Re-enable only when the ABI story is
+    // ready to be shipped and documented end-to-end.
     //
     // const c_api_mod = b.createModule(.{
     //     .root_source_file = b.path("src/c_api.zig"),
@@ -202,7 +202,7 @@ pub fn build(b: *std.Build) void {
     // c_lib_step.dependOn(b.getInstallStep());
 
     // ── C example ───────────────────────────────────────────────────────
-    // TODO: C example disabled - Zig 0.16 API changes for C source files need investigation
+    // Disabled until the Zig 0.16 C source-file API is reworked for this SDK.
     // const c_example_mod = b.createModule(.{
     //     .target = target,
     //     .optimize = optimize,

@@ -3,7 +3,7 @@
 //! ```zig
 //! const spiffe = @import("dagger_sdk").spiffe;
 //!
-//! // v0.1.0: use the shellout backend
+//! // Use the shellout backend when SPIFFE is enabled
 //! var shell = try spiffe.ShelloutSource.init(gpa, io, .{}, null);
 //! defer shell.deinit();
 //!
@@ -12,12 +12,11 @@
 //! defer svid.deinit();
 //! ```
 //!
-//! In v0.1.1, swap `ShelloutSource` for `NativeWorkloadAPISource`. No other
-//! code changes. Same methods, same types, same error set.
+//! Swap `ShelloutSource` for `NativeWorkloadAPISource` when the native Workload
+//! API is ready. The public `SvidSource` interface stays the same.
 //!
-//! See `docs/SPIFFE.md` for integration patterns (Vault cert-auth, registry
-//! credentials, etc.) and `docs/SPIFFE_IMPL.md` for the wire-level spec of
-//! the native backend.
+//! See `docs/spiffe.md` for integration patterns (Vault cert-auth, registry
+//! credentials, etc.) and the SPIFFE source files for the native backend.
 
 pub const SpiffeID = @import("spiffe_id.zig").SpiffeID;
 pub const X509SVID = @import("svid.zig").X509SVID;

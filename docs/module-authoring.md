@@ -2,99 +2,96 @@
 
 Write Dagger modules in Zig with comptime type reflection.
 
-## Basic Module
+## Shape
+
+A module is a Zig struct with methods that follow the expected dispatch shape:
+
+- first argument: `self: *const Self` or `self: *Self`
+- second argument: `ctx: *dagger.module.Context`
+- optional user arguments after that
+
+The dispatcher ignores `init`, `deinit`, and `default`, and only exposes
+eligible methods as module functions.
+
+## Minimal Module
 
 ```zig
 const std = @import("std");
 const dagger = @import("dagger_sdk");
 
 const MyModule = struct {
+    tenant: []const u8 = "default",
+
     pub fn build(
         self: *const MyModule,
         ctx: *dagger.module.Context,
         source: dagger.Directory,
     ) !dagger.Container {
         _ = self;
-        return ctx.dag().container()
+        return try ctx.dag().container()
             .from("golang:1.23-alpine")
             .withDirectory("/src", source)
             .withWorkdir("/src")
             .withExec(&.{ "go", "build", "./..." });
     }
-
-    pub fn @"test"(
-        self: *const MyModule,
-        ctx: *dagger.module.Context,
-        source: dagger.Directory,
-    ) ![]const u8 {
-        _ = self;
-        const ctr = try ctx.dag().container()
-            .from("golang:1.23-alpine")
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withExec(&.{ "go", "test", "./..." });
-        return ctr.stdout();
-    }
 };
 
 pub fn main(init: std.process.Init) !void {
-    return dagger.module.serve(init, MyModule{});
+    return dagger.module.serve(init, MyModule{ .tenant = "acme" });
 }
 ```
 
-## Key Rules
+## Dispatch Model
 
-### Immutable Receivers
+`src/module/dispatch.zig` builds a table of:
 
-Use `self: *const Self` for all module methods. Mutation during dispatch is a bug; immutable receivers let the dispatcher safely parallelize.
+- method name
+- function signature metadata
+- generated invoker shim
 
-```zig
-// Correct
-pub fn build(self: *const MyModule, ...) !Container { ... }
+That shim handles JSON argument deserialization, invokes the Zig method, and
+serializes the return value back to the engine.
 
-// Wrong — breaks dispatcher invariants
-pub fn build(self: *MyModule, ...) !Container { ... }
-```
+## Type Mapping
 
-### Context Parameter
+`src/module/typedef.zig` maps Zig types to Dagger type definitions.
 
-All exposed methods must take `ctx: *dagger.module.Context` as the second parameter. This provides access to `ctx.dag()` for creating new Dagger objects.
+Supported categories include:
 
-### Return Types
+- `void`
+- booleans
+- integers
+- `[]const u8`
+- slices and arrays
+- optionals
+- Dagger handle types such as `Container`, `Directory`, `File`, `Secret`, and `CacheVolume`
+- user structs and enums
+- `anyerror!T` payloads
 
-Return Dagger types (`Container`, `Directory`, `File`, `Secret`, `CacheVolume`) or primitive values (`[]const u8`, `bool`, `i32`, etc.).
+If the type cannot be mapped, the build fails at comptime.
 
-## Comptime Registration
+## Context
 
-No macros needed. At compile time, `dispatch.build(MyModule)`:
+`dagger.module.Context` gives module methods access to:
 
-1. Walks `@typeInfo(MyModule).Struct.decls`
-2. Filters to eligible methods (`pub fn (*const Self, *Context, ...)`)
-3. Generates specialized invoker shims per method
-4. Maps Zig types to Dagger `TypeDef` automatically
-
-Unmappable signatures fail at `zig build`, not at engine dispatch.
+- `ctx.dag()` for building Dagger queries
+- the module arena and allocator
+- optional SPIFFE workload identity access when SPIFFE is enabled
 
 ## Serving
 
-`dagger.module.serve()` binds to stdin/stdout and processes JSON-RPC style protocol from the Dagger engine.
+`dagger.module.serve(init, module_instance)` binds the module to the Dagger
+engine and runs the request loop.
 
-```zig
-pub fn main(init: std.process.Init) !void {
-    return dagger.module.serve(init, MyModule{});
-}
-```
+## Practical Rules
 
-## Development
+- Keep module receivers immutable unless mutation is genuinely required.
+- Prefer plain values and Dagger handles over custom marshalling layers.
+- Put all runtime plumbing in the module, not in user-facing helpers.
+- Let comptime fail early when a method signature does not fit the contract.
 
-Run your module:
+## Related Pages
 
-```bash
-dagger call build --arg-0 . --output=./output
-```
-
-## See Also
-
-- [`src/module/dispatch.zig`](../src/module/dispatch.zig) — Dispatch implementation
-- [`src/module/typedef.zig`](../src/module/typedef.zig) — Type mapping
-- [`tests/module_e2e.zig`](../tests/module_e2e.zig) — End-to-end tests
+- [Architecture](architecture.md)
+- [Query Builder](query-builder.md)
+- [API Reference](api-reference.md)

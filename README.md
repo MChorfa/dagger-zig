@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/logo.svg" alt="dagger-zig logo" width="180" height="180">
-</p>
+![dagger-zig logo](assets/logo.svg)
 
 # dagger-zig
 
@@ -13,7 +11,7 @@
 [![Sigstore](https://img.shields.io/badge/Sigstore-signed-2ea44f.svg)](https://sigstore.dev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine — **zero external dependencies**, Zig stdlib only, built against Zig 0.16.
+A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine. The SDK itself is Zig stdlib only and is built against Zig 0.16.
 
 > **Status — v0.3.2.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, tracing, and offline benchmarks on Linux/macOS. Windows support is planned ([what works](#what-works)).
 >

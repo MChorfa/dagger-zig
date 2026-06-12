@@ -5,29 +5,27 @@ on:
     branches: [main]
     tags: ["v*"]
 
-# Minimal default for the workflow; write scopes are granted per-job below.
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   detect-release:
     name: Detect Release
     runs-on: ubuntu-latest
     outputs:
-      should_build: ${{ steps.check.outputs.should_build }}
-      tag_name: ${{ steps.check.outputs.tag_name }}
+      should_build: ${{ steps.check_tag.outputs.should_build || steps.check_branch.outputs.should_build }}
+      tag_name: ${{ steps.check_tag.outputs.tag_name }}
     steps:
-      - id: check
+      - id: check_tag
+        if: ${{ github.ref_type == 'tag' }}
         env:
-          REF_TYPE: ${{ github.ref_type }}
           REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "$REF_TYPE" == "tag" ]]; then
-            echo "should_build=true" >> "$GITHUB_OUTPUT"
-            echo "tag_name=$REF_NAME" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_build=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "should_build=true" >> "$GITHUB_OUTPUT"
+          echo "tag_name=$REF_NAME" >> "$GITHUB_OUTPUT"
+
+      - id: check_branch
+        if: ${{ github.ref_type != 'tag' }}
+        run: echo "should_build=false" >> "$GITHUB_OUTPUT"
 
   release-please:
     name: Release Please
@@ -57,8 +55,10 @@ jobs:
       (needs.detect-release.outputs.should_build == 'true' ||
        needs.release-please.outputs.release_created == 'true')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ needs.detect-release.outputs.tag_name ||
             needs.release-please.outputs.tag_name }}
@@ -72,7 +72,7 @@ jobs:
           args: build --arg-0=. --arg-1=${{ needs.detect-release.outputs.tag_name || needs.release-please.outputs.tag_name }} export --path=/tmp/dagger-artifacts/build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: build-artifacts
           path: /tmp/dagger-artifacts/build/
@@ -94,13 +94,13 @@ jobs:
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ needs.detect-release.outputs.tag_name ||
             needs.release-please.outputs.tag_name }}
 
       - name: Download build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: build-artifacts
           path: ./artifacts
@@ -192,11 +192,13 @@ jobs:
     needs: [detect-release, sbom-and-sign, provenance]
     if: ${{ !cancelled() && github.repository == 'MChorfa/dagger-zig' && needs.detect-release.outputs.should_build == 'true' }}
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     permissions:
       contents: read
       attestations: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install cosign
         uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
@@ -207,4 +209,5 @@ jobs:
       - name: Verify release provenance + signatures
         env:
           GH_TOKEN: ${{ github.token }}
-        run: scripts/release-verify.sh "${{ needs.detect-release.outputs.tag_name }}"
+          TAG_NAME: ${{ needs.detect-release.outputs.tag_name }}
+        run: scripts/release-verify.sh "$TAG_NAME"

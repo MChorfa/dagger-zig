@@ -86,9 +86,9 @@ pub const tracing = @import("tracing.zig");
 /// ⚠️ EXPERIMENTAL: Enable with `-Dspiffe-experimental` build flag.
 /// API is unstable and may change in future releases.
 ///
-/// v0.1.0 ships with a working `ShelloutSource` backend. v0.1.1 ships
-/// with `NativeWorkloadAPISource` — pure-Zig gRPC, zero subprocess dep.
-/// Same interface either way.
+/// The shellout backend works today; the native Workload API remains a
+/// skeleton behind the experimental SPIFFE flag. The public surface stays
+/// stable across both so call sites do not have to change.
 pub const spiffe = if (spiffe_options.spiffe_enabled)
     @import("spiffe/mod.zig")
 else

@@ -32,7 +32,7 @@ pub const SpiffeError = error{
     AlreadyClosed,
     NotInitialized,
 
-    // v0.1.0 placeholder — removed in v0.1.1
+    // Placeholder retained for compatibility with the current SPIFFE skeleton.
     NotImplementedInV010,
 
     // Allocation

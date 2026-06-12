@@ -1,8 +1,10 @@
 # Getting Started
 
-## Installation
+This is the shortest path to a working call.
 
-Add dagger-zig to your `build.zig.zon`:
+## 1. Add the SDK
+
+Add `dagger-zig` to your `build.zig.zon`:
 
 ```json
 {
@@ -10,14 +12,14 @@ Add dagger-zig to your `build.zig.zon`:
   "version": "0.1.0",
   "dependencies": {
     "dagger_sdk": {
-      "url": "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.1.0.tar.gz",
+      "url": "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.3.2.tar.gz",
       "hash": "..."
     }
   }
 }
 ```
 
-## First Pipeline
+## 2. Open a client
 
 ```zig
 const std = @import("std");
@@ -35,30 +37,30 @@ pub fn main() !void {
     var client = try dagger.connect(gpa, io, .{});
     defer client.close();
 
-    const ctr = try client.dag()
+    const out = try client.dag()
         .container()
         .from("alpine:latest")
-        .withExec(&.{"echo", "hello from zig"});
-
-    const out = try ctr.stdout();
+        .withExec(&.{"echo", "hello from zig"})
+        .stdout();
     defer gpa.free(out);
+
     std.debug.print("{s}", .{out});
 }
 ```
 
-Run under a Dagger session:
+## 3. Run it
 
-```shell
+```bash
 dagger run -- zig build run
 ```
 
 ## Requirements
 
 - Zig 0.16.0 or later
-- Dagger CLI installed (`dagger` on PATH)
+- Dagger CLI on `PATH`
 
-## Next Steps
+## What to read next
 
-- [Module Authoring](module-authoring.md) — Create reusable Dagger modules
-- [Resilience Patterns](resilience.md) — Configure retry and circuit breaker
-- [SPIFFE Integration](spiffe.md) — Workload identity for registry auth
+- [Examples](examples.md) for copyable patterns
+- [Module Authoring](module-authoring.md) for turning Zig structs into Dagger modules
+- [Async Patterns](async-patterns.md) for concurrent fan-out

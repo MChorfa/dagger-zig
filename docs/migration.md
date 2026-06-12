@@ -4,13 +4,13 @@ Guide for developers coming from Go or Python SDKs.
 
 ## Quick Comparison
 
-| Feature            | Go SDK           | Python SDK      | Zig SDK         |
-| ------------------ | ---------------- | --------------- | --------------- |
-| **Async**          | `ctx` + channels | `async`/`await` | `std.Io.async`  |
-| **Memory**         | GC               | GC              | Manual + arenas |
-| **Error handling** | `if err != nil`  | Exceptions      | `try`/`catch`   |
-| **Type safety**    | Runtime          | Runtime         | Compile-time    |
-| **Binary size**    | ~10MB            | ~50MB+          | ~1MB            |
+| Feature | Go SDK | Python SDK | Zig SDK |
+| --- | --- | --- | --- |
+| Concurrency | `ctx` + channels | `async`/`await` | `std.Io.Group` |
+| Memory | GC | GC | Manual + arenas |
+| Error handling | `if err != nil` | Exceptions | `try`/`catch` |
+| Type safety | Runtime | Runtime | Compile-time |
+| Binary size | ~10MB | ~50MB+ | ~1MB |
 
 ## Container Operations
 
@@ -121,8 +121,8 @@ const ctr = try client.dag()
 
 **Key differences:**
 
-- Secrets mounted as files in Zig (more secure)
-- No `withSecretVariable` equivalent (use file mounting)
+- Secrets mounted as files in Zig
+- No `withSecretVariable` equivalent; use file mounting
 
 ## Error Handling
 

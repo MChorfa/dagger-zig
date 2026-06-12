@@ -1,36 +1,35 @@
-# Why dagger-zig?
+# Why Zig
 
-Rationale for choosing Zig over the Go or Python SDKs. This page compares
-language characteristics, not benchmark numbers — the figures that previously
-appeared here were never measured and have been removed. If you need numbers for
-your workload, measure them on your own runners.
+This page is about trade-offs, not benchmarks.
 
-## What Zig brings
+## The short version
 
-These are facts about the language, not measurements:
+Zig gives the SDK:
 
-- **No garbage collector.** No GC pauses; memory is freed at points you write
-  (`defer`, explicit `free`).
-- **No language runtime.** A pipeline compiles to a single statically linked
-  native executable; there is no interpreter or managed runtime to ship or
-  initialize before the first query.
-- **Explicit allocation.** Allocators are passed as parameters, so where memory
-  comes from is visible in the source.
-- **Errors are values.** Error sets are part of function signatures, so many
-  failure modes are caught by the compiler instead of at runtime.
+- no garbage collector
+- no managed runtime
+- explicit allocation
+- errors as part of the type system
 
-Whether these translate into smaller binaries, lower memory, or faster startup
-for *your* pipeline depends on the pipeline — measure it on your own runners. The
-Go SDK trades some of these properties for ecosystem maturity and GC convenience;
-the Python SDK trades them for rapid prototyping and data-science integration.
+Those are engineering properties, not automatic performance claims. If you care about startup, memory, or throughput for your own workload, measure them on your own runners.
+
+## Why that matters here
+
+The Dagger SDK is a client library that composes lots of short-lived queries. The design benefits from:
+
+- predictable memory behavior
+- compile-time validation of API shape
+- low ceremony around cross-compilation
+- a small, inspectable runtime footprint
+
+Go remains a better fit when your team wants GC and broad ecosystem familiarity. Python remains a better fit when you want scripting speed and notebook-driven iteration.
 
 ## Concurrency Model
 
-### Zig: std.Io.async
+### Zig: `std.Io.Group`
 
 ```zig
-// Fan out one task per item; runs in parallel under the multi-threaded
-// Io backend, cooperatively under -fsingle-threaded. Same code either way.
+// Fan out one task per item using a group. Each task gets its own branch.
 var group: std.Io.Group = .init;
 defer group.cancel(io);
 for (clients, outputs) |*c, *out| {
@@ -82,61 +81,54 @@ await asyncio.gather(
 - Heavy async overhead
 - Requires event loop management
 
-## When to Choose Each SDK
+## When to choose each SDK
 
 ### Choose dagger-zig when
 
-- Performance is critical
-- Binary size matters (embedded, edge)
-- You want zero dependencies
-- Memory efficiency is important
-- You prefer compile-time safety
+- you want a small, explicit client
+- you care about compile-time checks
+- you want the API surface to be easy to audit
 
 ### Choose dagger-go when
 
-- Team already knows Go
-- Ecosystem maturity is priority
-- You need maximum compatibility
-- Team prefers garbage collection
+- the team is already fluent in Go
+- you prefer GC-managed code
+- ecosystem compatibility is more important than explicit memory control
 
 ### Choose dagger-python when
 
-- Team already knows Python
-- Rapid prototyping
-- Data science integration
-- You accept runtime overhead
+- you want rapid scripting
+- you are integrating with Python-heavy workflows
+- runtime overhead is acceptable
 
 ## The Zig Philosophy in dagger-zig
 
-1. **No hidden costs**: What you write is what runs
-2. **Compile-time verification**: Catch errors before runtime
-3. **Manual memory management**: Explicit but safe with defer
-4. **Cross-compilation**: Build for any target from any host
+1. No hidden costs: what you write is what runs
+2. Compile-time verification: catch errors before runtime
+3. Manual memory management: explicit but safe with `defer`
+4. Cross-compilation: build for any target from any host
 
 ## Benchmarks
 
-The repository ships offline micro-benchmarks for the SDK's hot paths (GraphQL
-query construction and string serialization). They need no live engine:
+The repository ships offline micro-benchmarks for the SDK's hot paths (GraphQL query construction and string serialization). They need no live engine:
 
 ```bash
 zig build bench
 ```
 
-See [`benches/README.md`](../benches/README.md) for what is measured and how to
-read the output. There is no cross-language (Zig vs Go vs Python) benchmark suite
-in this repository.
+See [`benches/README.md`](../benches/README.md) for what is measured and how to read the output. There is no cross-language (Zig vs Go vs Python) benchmark suite in this repository.
 
 ## Summary
 
 **dagger-zig is for you if:**
 
-- You want a single static binary with zero runtime dependencies
-- You prefer explicit memory management over a garbage collector
-- You prefer compile-time safety and errors-as-values
-- You are comfortable working in Zig
+- you want a single static binary with zero runtime dependencies
+- you prefer explicit memory management over a garbage collector
+- you prefer compile-time safety and errors-as-values
+- you are comfortable working in Zig
 
 **dagger-zig may not be for you if:**
 
-- Team is unfamiliar with Zig
-- You need extensive ecosystem libraries
-- You prefer runtime flexibility over compile-time safety
+- the team is unfamiliar with Zig
+- you need extensive ecosystem libraries
+- you prefer runtime flexibility over compile-time safety

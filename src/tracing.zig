@@ -48,7 +48,7 @@ pub const Span = struct {
     /// Initialize a new span.
     pub fn init(allocator: std.mem.Allocator, name: []const u8, opts: SpanOptions) !Span {
         const count = span_counter.fetchAdd(1, .monotonic) + 1;
-        // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
+        // TODO(ckodex): use actual time API once Zig 0.16 exposes stable wall-clock helpers.
         const now = @as(i64, @intCast(count));
         return .{
             .name = name,
@@ -81,7 +81,7 @@ pub const Span = struct {
     pub fn end(self: *Span) void {
         if (self.end_time == null) {
             const count = span_counter.fetchAdd(1, .monotonic) + 1;
-            // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
+            // TODO(ckodex): use actual time API once Zig 0.16 exposes stable wall-clock helpers.
             self.end_time = @as(i64, @intCast(count));
         }
     }
@@ -114,7 +114,7 @@ pub const Span = struct {
     pub fn addEvent(self: *Span, name: []const u8, attrs: anytype) !void {
         _ = attrs;
         const count = span_counter.fetchAdd(1, .monotonic) + 1;
-        // TODO: v0.3.0 - use actual time API when stabilized in Zig 0.16+
+        // TODO(ckodex): use actual time API once Zig 0.16 exposes stable wall-clock helpers.
         const event = SpanEvent{
             .name = name,
             .timestamp = @as(i64, @intCast(count)),

@@ -4,8 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-| < 0.1   | :x:                |
+| 0.3.x   | :white_check_mark: |
+| < 0.3   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -14,7 +14,7 @@
 Instead, report security vulnerabilities via:
 
 1. **GitHub Security Advisories**: [Report privately](https://github.com/mchorfa/dagger-zig/security/advisories/new)
-2. **Email**: security@MChorfa.io (GPG key below)
+2. **Email**: security@MChorfa.io
 
 We will acknowledge receipt within 24 hours and provide a timeline for resolution within 72 hours.
 
@@ -22,7 +22,7 @@ We will acknowledge receipt within 24 hours and provide a timeline for resolutio
 
 ```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
-# TODO: Add security team GPG key here
+Public key publication is pending. Use GitHub Security Advisories or email for now.
 -----END PGP PUBLIC KEY BLOCK-----
 ```
 
@@ -30,7 +30,7 @@ We will acknowledge receipt within 24 hours and provide a timeline for resolutio
 
 ### Supply Chain Security
 
-- **SLSA Level 4** provenance attestations using in-toto
+- **SLSA Build Level 3** provenance attestations using in-toto
 - **Sigstore** keyless signing with OIDC
 - **SBOM** generation (SPDX + CycloneDX) for every release
 - **Reproducible builds** with locked dependencies
@@ -62,7 +62,7 @@ We will acknowledge receipt within 24 hours and provide a timeline for resolutio
 
 | Threat                        | Mitigation                            | Status |
 | ----------------------------- | ------------------------------------- | ------ |
-| Compromised build environment | Hermetic builds, SLSA L4              | ✅      |
+| Compromised build environment | Hermetic builds, SLSA Build L3        | ✅      |
 | Malicious dependency          | SBOM scanning, lock files             | ✅      |
 | Secret leakage                | GitLeaks, secret scanning             | ✅      |
 | Replay attacks                | Signed timestamps, nonces             | ✅      |
@@ -102,7 +102,7 @@ const verified = try dagger.verifyProvenance(.{
 | Framework        | Controls                | Evidence               |
 | ---------------- | ----------------------- | ---------------------- |
 | SOC 2 CC6.1      | Logical access controls | RBAC, mTLS             |
-| SOC 2 CC6.6      | Security infrastructure | SLSA L4, Sigstore      |
+| SOC 2 CC6.6      | Security infrastructure | SLSA Build L3, Sigstore|
 | SOC 2 CC7.1      | Security detection      | SAST, DAST, monitoring |
 | SOC 2 CC7.2      | Incident response       | Security advisories    |
 | ISO 27001 A.12.1 | Operational security    | Hermetic builds        |
