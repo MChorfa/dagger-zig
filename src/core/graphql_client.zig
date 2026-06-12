@@ -98,6 +98,37 @@ pub const GraphQLClient = struct {
         if (self.last_error) |*e| e.deinit(self.allocator);
     }
 
+    /// Create an independent client for a single concurrent fan-out task.
+    ///
+    /// The per-query mutable fields (`last_error`, `query_in_progress`, the
+    /// circuit breaker) are NOT synchronized, so sharing one client across
+    /// concurrent tasks races. A fork duplicates the (small, owned) connection
+    /// strings and starts with fresh mutable state, so forks can run on
+    /// different threads without racing. The caller owns the result and must
+    /// `deinit()` it.
+    pub fn fork(self: *const GraphQLClient) !GraphQLClient {
+        const endpoint = try self.allocator.dupe(u8, self.endpoint);
+        errdefer self.allocator.free(endpoint);
+        const auth_header = try self.allocator.dupe(u8, self.auth_header);
+        errdefer self.allocator.free(auth_header);
+        // Re-parse so the Uri's component slices view the fork's own endpoint
+        // copy, not the parent's.
+        const uri = try std.Uri.parse(endpoint);
+        return .{
+            .allocator = self.allocator,
+            .io = self.io,
+            .endpoint = endpoint,
+            .endpoint_uri = uri,
+            .auth_header = auth_header,
+            .connect_timeout_ms = self.connect_timeout_ms,
+            .execute_timeout_ms = self.execute_timeout_ms,
+            .last_error = null,
+            .query_in_progress = false,
+            .retry_policy = self.retry_policy,
+            .circuit_breaker = if (self.circuit_breaker != null) .{} else null,
+        };
+    }
+
     /// Execute a GraphQL query with resilience patterns (retry, circuit breaker).
     /// Returns the full response body. Caller owns the returned slice.
     pub fn query(self: *GraphQLClient, query_str: []const u8) errs.QueryError![]u8 {
@@ -383,4 +414,25 @@ test "basic auth header format" {
 test "hasTopLevelErrors detects the key" {
     try testing.expect(hasTopLevelErrors("{\"errors\":[]}"));
     try testing.expect(!hasTopLevelErrors("{\"data\":{\"foo\":1}}"));
+}
+
+test "fork yields an independent client with shared connection" {
+    var io_impl: std.Io.Threaded = .init(testing.allocator, .{});
+    defer io_impl.deinit();
+    const io = io_impl.io();
+
+    const params: ConnectParams = .{ .port = 1234, .session_token = "secret" };
+    var parent = try GraphQLClient.init(testing.allocator, io, params, .{});
+    defer parent.deinit();
+
+    var child = try parent.fork();
+    defer child.deinit();
+
+    // Same connection, but independently owned storage (no double-free, no
+    // shared mutable state).
+    try testing.expect(parent.endpoint.ptr != child.endpoint.ptr);
+    try testing.expectEqualStrings(parent.endpoint, child.endpoint);
+    try testing.expectEqualStrings(parent.auth_header, child.auth_header);
+    try testing.expect(child.last_error == null);
+    try testing.expect(!child.query_in_progress);
 }

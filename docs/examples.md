@@ -2,43 +2,38 @@
 
 ## Parallel Pipeline
 
-Build multiple platforms concurrently:
+Pull several base images concurrently. Each task takes its own `client.branch()`
+— sharing one client across concurrent tasks would race on its per-query state.
 
 ```zig
 const std = @import("std");
 const dagger = @import("dagger_sdk");
 
-fn buildPlatform(
-    client: *dagger.Client,
-    io: std.Io,
-    platform: []const u8,
-) !void {
-    const ctr = try client.dag()
-        .container(.{ .platform = platform })
-        .from("alpine");
-    _ = ctr;
+const images = [_][]const u8{ "alpine:3.20", "debian:bookworm-slim", "ubuntu:24.04" };
+
+fn pull(io: std.Io, parent: *dagger.Client, image: []const u8) std.Io.Cancelable!void {
+    _ = io;
+    var c = parent.branch() catch return error.Canceled; // own client per task
+    defer c.close();
+    const ctr = c.dag().container() catch return error.Canceled;
+    const based = ctr.from(image) catch return error.Canceled;
+    _ = based.id() catch return error.Canceled; // force the engine to resolve it
 }
 
-pub fn main() !void {
-    var gpa_state: std.heap.GeneralPurposeAllocator(.{}) = .{};
-    defer _ = gpa_state.deinit();
-    const gpa = gpa_state.allocator();
-
-    var io_impl: std.Io.Threaded = .init_single_threaded;
-    const io = io_impl.io();
-
-    var client = try dagger.connect(gpa, io, .{});
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    var client = try dagger.connect(init.gpa, io, .{});
     defer client.close();
 
-    const group = try io.group();
-    const f1 = try io.async(buildPlatform, .{ &client, io, "linux/amd64" });
-    const f2 = try io.async(buildPlatform, .{ &client, io, "linux/arm64" });
-    const f3 = try io.async(buildPlatform, .{ &client, io, "darwin/arm64" });
-    try group.join(.{ f1, f2, f3 });
+    // forEach fans out one task per image and waits for all of them.
+    try dagger.parallel.forEach(io, &images, &client, pull);
 }
 ```
 
-See `examples/parallel/main.zig` for the full example.
+See [`examples/parallel/main.zig`](../examples/parallel/main.zig) for the full,
+runnable example (collects each pipeline's output), and
+[docs/async-patterns.md](async-patterns.md) for `map`, raw `std.Io.Group`, and
+retries.
 
 ## C FFI Usage
 

@@ -15,7 +15,7 @@
 
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine — **zero external dependencies**, Zig stdlib only, built against Zig 0.16.
 
-> **Status — v0.3.1.** Synchronous client, module authoring, and tracing on Linux/macOS. Windows and broader async are planned ([what works](#what-works)).
+> **Status — v0.3.2.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, tracing, and offline benchmarks on Linux/macOS. Windows support is planned ([what works](#what-works)).
 >
 > **Self-hosting.** dagger-zig builds, tests, and releases *itself* — the CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this very SDK.
 >
@@ -25,6 +25,7 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine �
 
 - **Client API** — synchronous Dagger API for Linux/macOS: containers, directories, files, secrets, cache volumes, services, git. Chained the way you'd expect from any SDK.
 - **Module authoring** — write a Zig struct with methods, expose it with `dagger.module.serve(...)`. Comptime reflection maps Zig types to Dagger `TypeDef`s; unmappable signatures fail at `zig build`, not at engine dispatch.
+- **Concurrent fan-out** — run independent pipelines in parallel via `dagger.parallel` (`map`/`forEach`) over `std.Io.Group`; each task gets its own `Client.branch()`. See [examples/parallel](examples/parallel/main.zig).
 - **Tracing** — OpenTelemetry-compatible spans via `dagger.tracing`.
 - **CLI session lifecycle** — three-tier handshake (`dagger run --` env → `_EXPERIMENTAL_DAGGER_CLI_BIN` → `dagger` on `$PATH`). Never auto-downloads the CLI.
 - **SPIFFE/SPIRE (experimental)** — build with `-Dspiffe-experimental`; the `spire-agent` shellout backend works, the native Workload API is a typed skeleton. See [docs/spiffe.md](docs/spiffe.md).
@@ -32,7 +33,7 @@ A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine �
 
 ## Planned
 
-Async patterns (`dagger.async`), full Windows support, the C ABI (`zig build c-lib`), the native SPIFFE Workload API, and per-module codegen are typed or skeletoned but currently disabled to avoid `error.NotImplemented` paths. See [docs/roadmap.md](docs/roadmap.md).
+Full Windows support, the C ABI (`zig build c-lib`), the native SPIFFE Workload API, and per-module codegen are typed or skeletoned but currently disabled to avoid `error.NotImplemented` paths. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Quick start
 
@@ -45,7 +46,8 @@ pub fn main() !void {
     defer _ = gpa_state.deinit();
     const gpa = gpa_state.allocator();
 
-    var io_impl: std.Io.Threaded = .init_single_threaded;
+    var io_impl: std.Io.Threaded = .init(gpa, .{});
+    defer io_impl.deinit();
     const io = io_impl.io();
 
     var client = try dagger.connect(gpa, io, .{});
@@ -95,7 +97,7 @@ pub fn main(init: std.process.Init) !void {
 ```json
 {
   "name": "my-pipeline",
-  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.1",
+  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.2",
   "source": "."
 }
 ```
@@ -112,7 +114,7 @@ More examples: [parallel pipelines](examples/parallel/main.zig) (`Io.Group`), th
 Every tagged release is signed and carries SLSA Build L3 provenance:
 
 ```bash
-scripts/release-verify.sh v0.3.1     # slsa-verifier + gh attestation + cosign, all tarballs
+scripts/release-verify.sh v0.3.2     # slsa-verifier + gh attestation + cosign, all tarballs
 ```
 
 The individual `slsa-verifier` / `gh attestation verify` / `cosign verify-blob` commands are in [docs/compliance.md](docs/compliance.md).
@@ -123,8 +125,11 @@ The individual `slsa-verifier` / `gh attestation verify` / `cosign verify-blob` 
 zig build                          build the library module
 zig build -Dspiffe-experimental    enable experimental SPIFFE support
 zig build test                     offline unit tests
+zig build test-module              offline: verify module runtime comptime plumbing
 zig build test-suite               comprehensive suite (platform, telemetry, perf)
-zig build test-integration         live-engine tests (under `dagger run --`)
+zig build test-integration         live-engine tests (requires `dagger run --`)
+zig build bench                    offline performance benchmarks (query builder, serialization)
+zig build flamegraph               CPU flamegraph SVG via external profiler (see benches/README.md)
 zig build codegen                  regenerate src/gen.zig from engine schema
 zig build run-first-pipeline       example: alpine echo hello
 zig build run-parallel             example: Io.Group concurrent pipelines
@@ -133,7 +138,7 @@ zig build run-parallel             example: Io.Group concurrent pipelines
 ## Repository layout
 
 ```shell
-src/        Public surface, query builder, types, tracing, async, C FFI, module/, spiffe/
+src/        Public surface, query builder, types, tracing, parallel, C FFI, module/, spiffe/
 ci/         Self-hosting CI — a Zig Dagger module that builds dagger-zig with dagger-zig
 sdk/        Module SDK interface (Go shim — the bootstrap layer)
 codegen/    Introspection-based bindings emitter

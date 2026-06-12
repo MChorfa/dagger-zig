@@ -32,7 +32,7 @@ pub const Pipeline = struct {
         source: dagger.Directory,
         container_tag: []const u8,
     ) !dagger.Directory {
-        return Build.buildAndSign(ctx, source, container_tag);
+        return Build.buildAndSign(ctx, source, container_tag, null);
     }
 
     /// test runs conformance tests and benchmarks

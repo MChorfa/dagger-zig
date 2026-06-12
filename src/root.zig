@@ -71,10 +71,10 @@ pub const core = struct {
 /// TypeDef builder, server loop, and (de)serialization.
 pub const module = @import("module/mod.zig");
 
-/// Async patterns for concurrent Dagger operations.
-/// ⚠️ NOTE: v0.2.0 does not include async support. Coming in v0.3.0.
-/// The async module is temporarily disabled to prevent runtime NotImplemented errors.
-// pub const async = @import("async.zig");
+/// Parallelism helpers — concurrent fan-out over `std.Io.Group`. See
+/// `src/parallel.zig`. Pair with `Client.branch()` so each task has its own
+/// client (sharing a client across tasks races; see `Client`).
+pub const parallel = @import("parallel.zig");
 
 /// OpenTelemetry-compatible tracing for SDK operations.
 pub const tracing = @import("tracing.zig");
@@ -144,13 +144,12 @@ pub const SocketID = api.SocketID;
 ///   - the GraphQL HTTP client (carries the user's Io)
 ///   - an arena for the selection chain
 ///
-/// Thread-safety: each client is not internally synchronised, but because
-/// its operations go through `std.Io`, fan-out is done by the user via
-/// `io.async`/`Group` — not by sharing the client. If you need parallel
-/// queries, construct multiple clients OR share one client across tasks
-/// where each task uses the client sequentially (this works because the
-/// engine itself multiplexes concurrent requests over the same HTTP
-/// connection).
+/// Concurrency: a `Client` carries per-query mutable state (the last domain
+/// error, the circuit breaker, an in-progress flag) that is NOT synchronized.
+/// Do NOT share one client across concurrent tasks — under the multi-threaded
+/// `Io` backend that is a data race. To fan out, give each task its own
+/// `branch()` (cheap; shares the engine session, no new subprocess) and drive
+/// them with `io.async`/`std.Io.Group` or the `dagger.parallel` helpers.
 pub const Client = struct {
     allocator: std.mem.Allocator,
     io: std.Io,
@@ -158,6 +157,10 @@ pub const Client = struct {
     session: ?core.cli_session.SessionProc,
     gql: core.graphql_client.GraphQLClient,
     arena: std.heap.ArenaAllocator,
+    /// False for clients created via `branch()`: they borrow the parent's
+    /// connection params and never own the session, so `close()` must not
+    /// free those.
+    owns_connection: bool = true,
 
     /// Get the root `Query` for building pipelines.
     pub fn dag(self: *Client) Query {
@@ -169,7 +172,29 @@ pub const Client = struct {
         };
     }
 
-    /// Tear down the session. Idempotent.
+    /// Create an independent client for one concurrent fan-out task.
+    ///
+    /// The branch reuses the parent's engine session (same port and token — no
+    /// new subprocess) but has its own per-query mutable state and selection
+    /// arena, so branches can run on different threads without racing. A branch
+    /// borrows the parent's connection: it must not outlive the parent, and
+    /// `close()` on a branch frees only the branch's own gql + arena (it does
+    /// not shut down the session or free the shared connection params).
+    pub fn branch(self: *Client) !Client {
+        return .{
+            .allocator = self.allocator,
+            .io = self.io,
+            .params = self.params, // borrowed; freed by the parent only
+            .session = null, // a branch never owns the session
+            .gql = try self.gql.fork(),
+            .arena = std.heap.ArenaAllocator.init(self.allocator),
+            .owns_connection = false,
+        };
+    }
+
+    /// Tear down the client. Idempotent. On a `branch()` this frees only the
+    /// branch's own gql + arena; on a parent it also shuts down the session
+    /// and frees the connection params.
     pub fn close(self: *Client) void {
         if (self.session) |*s| {
             s.shutdown() catch |e| {
@@ -178,7 +203,7 @@ pub const Client = struct {
             self.session = null;
         }
         self.gql.deinit();
-        self.params.deinit(self.allocator);
+        if (self.owns_connection) self.params.deinit(self.allocator);
         self.arena.deinit();
     }
 

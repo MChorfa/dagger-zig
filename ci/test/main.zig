@@ -45,7 +45,8 @@ pub const Test = struct {
         return tester.file("/src/zig-out/test.log");
     }
 
-    /// benchmark runs perf benchmarks with caching
+    /// benchmark runs the offline `zig build bench` step (query-builder and
+    /// string serialization micro-benchmarks; no live engine required).
     pub fn benchmark(
         ctx: *dagger.Context,
         source: dagger.Directory,
@@ -54,13 +55,13 @@ pub const Test = struct {
         bencher = try bencher.withDirectory("/src", source);
         bencher = try bencher.withWorkdir("/src");
 
-        // There is no dedicated `benches` step; the comprehensive `test-suite`
-        // step covers performance. Capture output and tolerate failure so the
-        // returned directory always exists.
+        // Capture output and tolerate failure so the returned directory always
+        // exists even if the bench binary fails — the artifact upload is
+        // best-effort, not a gate.
         bencher = try bencher.withExec(&.{
             "sh",
             "-c",
-            "mkdir -p /src/zig-out/benches; zig build test-suite -Doptimize=ReleaseFast > /src/zig-out/benches/output.log 2>&1 || true",
+            "mkdir -p /src/zig-out/benches; zig build bench > /src/zig-out/benches/output.log 2>&1 || true",
         });
 
         return bencher.directory("/src/zig-out/benches");

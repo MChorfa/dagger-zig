@@ -1,104 +1,75 @@
-# Performance Benchmarks
+# Benchmarks
 
-This directory contains performance benchmarks for the dagger-zig SDK.
-
-## Running Benchmarks
-
-### Local Development
+Offline micro-benchmarks for dagger-zig hot paths that need no live engine.
 
 ```bash
-# Run all benchmarks
 zig build bench
-
-# Run specific benchmark
-zig build bench --container-ops
-
-# With Dagger engine (for real operation benchmarks)
-dagger run zig build bench
 ```
 
-### CI
+The step builds in `ReleaseFast` and runs `benches/querybuilder.zig`, which times
+two hot paths over 100,000 iterations each and reports min / avg / p95 / p99 / max
+in microseconds:
 
-Benchmarks run automatically on every PR and release via `.github/workflows/benchmark.yml`.
+| Benchmark              | What it measures                                                        |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `query build (4-deep)` | Building a 4-level GraphQL selection chain and rendering it to a string |
+| `serializeString`      | Escaping a string for inclusion in a GraphQL query                      |
 
-Results are tracked in `gh-pages` branch for trend analysis.
+It then prints a per-stage breakdown of the query-build pipeline as ASCII bars,
+so you can see where the time goes without an external profiler — all in the
+terminal. Example output:
 
-## Benchmark Categories
+```
+=== dagger-zig offline benchmarks (100000 iterations) ===
+  query build (4-deep)     min   0.208  avg   0.337  p95   0.459  p99   0.542  max  16.083  (us)
+  serializeString          min   0.791  avg   1.065  p95   1.625  p99   2.417  max  19.792  (us)
 
-| Category        | File                  | Description                                |
-| --------------- | --------------------- | ------------------------------------------ |
-| Container Ops   | `container_ops.zig`   | Image pulls, file operations, exec latency |
-| Module Dispatch | `module_dispatch.zig` | Comptime reflection, function routing      |
-| Serialization   | `serialization.zig`   | GraphQL query building, JSON parsing       |
-| Memory          | `memory.zig`          | Allocator performance, heap usage          |
+=== query build stage breakdown (instrumented avg ns/op) ===
+  select(container)  ####                            22 ns  (10.4%)
+  argStr(address)    #######                         37 ns  (17.5%)
+  select(withExec)   ##                              11 ns  ( 5.2%)
+  select(stdout)     ##                              10 ns  ( 4.7%)
+  build() -> string  ############################   131 ns  (62.1%)
+  total                                             211 ns
+```
 
-## Metrics
+The breakdown uses cumulative-prefix instrumented timing (time the chain up to N
+stages, subtract adjacent prefixes), so read it as a relative "where does the
+time go" view, not absolute per-op cost. Numbers are machine-dependent; use them
+for relative comparison across commits on the same host, not as absolute targets.
 
-All benchmarks report:
+## CI
 
-- **iterations**: Number of samples collected
-- **min/max**: Fastest and slowest execution
-- **avg**: Mean execution time
-- **p95/p99**: 95th and 99th percentiles (latency-sensitive)
-- **throughput**: Operations per second (where applicable)
+The `benchmark` function in `ci/test/main.zig` runs `zig build bench` inside the
+Dagger pipeline and captures the output as an artifact (see
+`.github/workflows/benchmark.yml`). It is informational — the run is not gated on
+benchmark numbers, and no automatic regression threshold is enforced.
 
-## Interpreting Results
+## Flamegraph / profiling
 
-### Target Performance (v0.1.0)
-
-| Operation           | Target Latency | Notes                |
-| ------------------- | -------------- | -------------------- |
-| Container.from()    | < 500ms        | Image already cached |
-| File.contents()     | < 50ms         | Small files (< 1MB)  |
-| Directory.entries() | < 100ms        | Standard directories |
-| Container.exec()    | < 200ms        | Simple commands      |
-| Module dispatch     | < 1μs          | Comptime overhead    |
-
-### Regression Detection
-
-CI compares benchmarks against `main` branch:
-
-- **PASS**: Within 10% of baseline
-- **WARN**: 10-25% slower (flagged for review)
-- **FAIL**: > 25% slower (blocks merge)
-
-## Profiling
+Zig has no built-in profiler, so there is no profiler flag on the `bench` step
+itself. A separate step drives an external sampling profiler:
 
 ```bash
-# CPU profiling
-zig build bench -- -p cpu
-
-# Memory profiling
-zig build bench -- -p heap
-
-# Export flamegraph
-zig build bench -- -f flamegraph.svg
+zig build flamegraph                 # writes flamegraph.svg
+zig build flamegraph -- out.svg      # custom output path
 ```
 
-## Adding New Benchmarks
+This requires [`flamegraph`](https://github.com/flamegraph-rs/flamegraph)
+(`cargo install flamegraph`), which renders an SVG directly — `perf` on Linux,
+`dtrace` on macOS (dtrace needs `sudo`). If it is not installed, the step fails
+with install instructions rather than producing nothing.
 
-1. Create new file in `benches/` directory
-2. Implement benchmark functions using `BenchResult` struct
-3. Register in `bench_runner.zig`
-4. Update this README
+For an interactive profile (no `sudo` on macOS, but not an `.svg` file) use
+[`samply`](https://github.com/mstange/samply):
 
-Example:
-
-```zig
-const std = @import("std");
-const dagger = @import("dagger_sdk");
-
-fn myBenchmark(allocator: std.mem.Allocator, ctx: *dagger.Context) !BenchResult {
-    var samples = try allocator.alloc(u64, 100);
-    defer allocator.free(samples);
-
-    for (0..100) |i| {
-        const start = std.time.nanoTimestamp();
-        // ... benchmark code ...
-        const end = std.time.nanoTimestamp();
-        samples[i] = @intCast(end - start);
-    }
-
-    return BenchResult.fromSamples("my.benchmark", samples);
-}
+```bash
+cargo install samply
+zig build bench
+samply record -- ./zig-out/bin/bench
 ```
+
+## Not implemented
+
+Engine-dependent benchmarks (image pulls, exec latency, file/directory operations)
+require a running Dagger engine and are not implemented.

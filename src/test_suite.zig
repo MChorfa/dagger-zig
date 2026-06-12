@@ -160,11 +160,11 @@ test "errors.ConnectError formatting" {
 
 test "errors.DaggerError set" {
     // Verify all error types can be constructed
-    const connect_err: errors.ConnectError = .ConnectionFailed;
-    const client_err: errors.ClientError = .QueryFailed;
+    const connect_err: errors.ConnectError = error.HandshakeFailed;
+    const query_err: errors.QueryError = error.TransportFailed;
 
-    try testing.expectEqual(errors.ConnectError.ConnectionFailed, connect_err);
-    try testing.expectEqual(errors.ClientError.QueryFailed, client_err);
+    try testing.expectEqual(error.HandshakeFailed, connect_err);
+    try testing.expectEqual(error.TransportFailed, query_err);
 }
 
 // ========================================
@@ -221,7 +221,7 @@ test "performance.query builder" {
     defer arena.deinit();
 
     const iterations = 1000;
-    const start = std.time.milliTimestamp();
+    const start: i64 = telemetry.nowMs();
 
     var i: usize = 0;
     while (i < iterations) : (i += 1) {
@@ -232,7 +232,7 @@ test "performance.query builder" {
         _ = arena.reset(.retain_capacity);
     }
 
-    const elapsed = std.time.milliTimestamp() - start;
+    const elapsed = telemetry.nowMs() - start;
     const per_op = @as(f64, @floatFromInt(elapsed)) / @as(f64, @floatFromInt(iterations));
 
     std.log.debug("Query builder: {d:.3}ms per operation", .{per_op});
@@ -245,7 +245,7 @@ test "performance.telemetry span creation" {
     const allocator = testing.allocator;
     const iterations = 10000;
 
-    const start = std.time.milliTimestamp();
+    const start: i64 = telemetry.nowMs();
 
     var i: usize = 0;
     while (i < iterations) : (i += 1) {
@@ -253,7 +253,7 @@ test "performance.telemetry span creation" {
         span.attributes.deinit();
     }
 
-    const elapsed = std.time.milliTimestamp() - start;
+    const elapsed = telemetry.nowMs() - start;
     const per_op = @as(f64, @floatFromInt(elapsed)) / @as(f64, @floatFromInt(iterations));
 
     std.log.debug("Span creation: {d:.3}ms per operation", .{per_op});
