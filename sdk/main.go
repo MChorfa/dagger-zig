@@ -6,11 +6,11 @@
 //
 //	{
 //	  "name": "my-pipeline",
-//	  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.0",
+//	  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.2",
 //	  "source": "."
 //	}
 //
-// the Dagger engine clones dagger-zig@v0.3.0, goes into the `sdk/`
+// the Dagger engine clones dagger-zig@v0.3.2, goes into the `sdk/`
 // directory, and invokes this module. This module implements two
 // functions the engine expects from any Module SDK:
 //

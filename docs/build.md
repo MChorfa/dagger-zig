@@ -1,55 +1,48 @@
-# Build Targets
+# Build Guide
 
-## Library
+The repo keeps build commands intentionally small and explicit. Use the slices
+below instead of memorizing every target.
 
-```shell
-zig build                    # build the library module
-```
-
-## Testing
+## Everyday commands
 
 ```shell
-zig build test               # offline unit tests (all subsystems)
-zig build test-module        # offline module-runtime comptime E2E
-zig build test-integration   # live engine tests
+zig build                 # build the library/module targets
+zig build test            # offline unit tests
+zig build test-module     # module-runtime integration check
+zig build codegen         # regenerate API from schema
 ```
 
-## C Library
+## Runtime and examples
 
 ```shell
-zig build c-lib              # libdagger.{a,so,dylib} + headers
-zig build c_smoke            # C client against live engine
+zig build run-first-pipeline
+zig build run-parallel
+zig build c_smoke
 ```
 
-## Cross Compilation
+## Release and supply chain
 
 ```shell
-zig build matrix             # cross-compile (5 targets)
+zig build sbom
+zig build slsa
+scripts/release-verify.sh v0.3.2
 ```
 
-## Supply Chain
+The release flow produces SBOMs, GitHub attestations, SLSA provenance, and
+cosign bundles at publish time. The build module can also emit provenance data
+locally, but those artifacts are not what gets published to GitHub releases.
+
+## Cross compilation
 
 ```shell
-zig build sbom               # CycloneDX via syft
-zig build slsa               # SLSA v1.0 provenance
+zig build matrix
 ```
 
-## CI Pipeline
-
-```shell
-zig build ci                 # full pipeline (lint->test->c_lib->c_smoke)
-```
-
-Or with Dagger:
+## Dagger-backed CI
 
 ```shell
 dagger call -m ./ci/pipeline run --arg-0 .
 ```
 
-## Development
-
-```shell
-zig build run-first-pipeline     # run basic example
-zig build run-parallel             # run parallel build example
-zig build codegen                # regenerate API from schema
-```
+Use `make ci-local` or `make workflow-lint` when you want repo-preserved
+operator flows instead of invoking the underlying command directly.

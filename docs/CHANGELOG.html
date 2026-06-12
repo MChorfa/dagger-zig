@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1d6e5e63.js";
+            window.path_to_searchindex_js = "searchindex-1739d377.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-4d4d875f.js"></script>
+        <script src="toc-bed31c54.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,29 +181,78 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="changelog"><a class="header" href="#changelog">Changelog</a></h1>
-<h2 id="021-2026-05-27"><a class="header" href="#021-2026-05-27">[0.2.1] (2026-05-27)</a></h2>
+<h2 id="032-2026-06-09"><a class="header" href="#032-2026-06-09"><a href="https://github.com/MChorfa/dagger-zig/compare/v0.3.1...v0.3.2">0.3.2</a> (2026-06-09)</a></h2>
+<h3 id="features"><a class="header" href="#features">Features</a></h3>
+<ul>
+<li><strong>bench:</strong> add real offline <code>zig build bench</code> step — query-builder and serialization throughput (<a href="https://github.com/MChorfa/dagger-zig/commit/28e1349dc10550c313dea4d26316ad761deacc61">28e1349</a>)</li>
+<li><strong>bench:</strong> print per-stage breakdown to the terminal (<a href="https://github.com/MChorfa/dagger-zig/commit/fbbf6a88d0783727229d1815b3acebac0dce7db5">fbbf6a8</a>)</li>
+<li><strong>bench:</strong> add <code>zig build flamegraph</code> target (external profiler, fails loud if tooling absent) (<a href="https://github.com/MChorfa/dagger-zig/commit/9d7413b2c2ddb0b02f151458617a98b9cd439963">9d7413b</a>)</li>
+<li><strong>parallel:</strong> real concurrency via <code>std.Io.Group</code> + <code>Client.branch()</code> (<a href="https://github.com/MChorfa/dagger-zig/commit/0565bec04c49a8d0c3ac0d02936f146ad11a8281">0565bec</a>)</li>
+<li><strong>ci:</strong> SLSA v1 provenance, Syft SBOM (CycloneDX + SPDX), Cosign keyless attestation, OPA/Rego governance gate (<a href="https://github.com/MChorfa/dagger-zig/commit/94b4b5de553385c0cb03c14451d58705374c5ba6">94b4b5d</a>)</li>
+</ul>
 <h3 id="bug-fixes"><a class="header" href="#bug-fixes">Bug Fixes</a></h3>
+<ul>
+<li><strong>zig-0.16:</strong> replace removed <code>std.time</code> timestamp APIs with <code>std.c.clock_gettime(CLOCK.MONOTONIC)</code> in telemetry and test suite (<a href="https://github.com/MChorfa/dagger-zig/commit/be80542a921512b147a510493b5cab7c4350e57f">be80542</a>)</li>
+<li><strong>zig-0.16:</strong> fix removed <code>std.Io.Threaded.init_single_threaded</code> → <code>.init(gpa, .{})</code> with <code>defer deinit()</code> in bench (<a href="https://github.com/MChorfa/dagger-zig/commit/be80542a921512b147a510493b5cab7c4350e57f">be80542</a>)</li>
+<li><strong>test-suite:</strong> fix phantom error types (<code>errors.ClientError</code>, <code>ConnectionFailed</code>, <code>QueryFailed</code>) → correct <code>errors.QueryError</code> / <code>HandshakeFailed</code> / <code>TransportFailed</code> members (<a href="https://github.com/MChorfa/dagger-zig/commit/be80542a921512b147a510493b5cab7c4350e57f">be80542</a>)</li>
+</ul>
+<h3 id="documentation"><a class="header" href="#documentation">Documentation</a></h3>
+<ul>
+<li><strong>why-zig:</strong> remove unverified comparative claims (<a href="https://github.com/MChorfa/dagger-zig/commit/29c86cf20f57a375beebaffcc5a788ab541b3633">29c86cf</a>)</li>
+</ul>
+<hr>
+<h2 id="021-2026-05-27"><a class="header" href="#021-2026-05-27">[0.2.1] (2026-05-27)</a></h2>
+<h3 id="bug-fixes-1"><a class="header" href="#bug-fixes-1">Bug Fixes</a></h3>
 <ul>
 <li><strong>compatibility:</strong> Fix type mismatch in SDK bootstrap layer - <code>dag.GeneratedCode()</code> now expects <code>*dagger.Directory</code> instead of <code>*dagger.Changeset</code> for Dagger CLI versions &gt; v0.12.5</li>
 <li><strong>sdk/main.go:</strong> Updated Codegen function to pass Directory directly to GeneratedCode constructor</li>
+<li><strong>repository:</strong> Fix all repository references from ckodex/dagger-zig to MChorfa/dagger-zig</li>
+<li><strong>docs:</strong> Fix Font Awesome icon and action version in documentation workflow</li>
+<li><strong>zig:</strong> Update server.zig for Zig 0.16 ArrayList and Writer compatibility</li>
 </ul>
 <h2 id="020-2026-05-02"><a class="header" href="#020-2026-05-02"><a href="https://github.com/MChorfa/dagger-zig/compare/v0.1.2...v0.2.0">0.2.0</a> (2026-05-02)</a></h2>
-<h3 id="features"><a class="header" href="#features">Features</a></h3>
+<h3 id="features-1"><a class="header" href="#features-1">Features</a></h3>
 <ul>
 <li>Address all SDK gaps - Phase 1 &amp; 2 (<a href="https://github.com/MChorfa/dagger-zig/commit/a7d28795b4c9fbffcf9491142cc0a1054a6b713e">a7d2879</a>)</li>
-<li><strong>SPIFFE:</strong> Experimental support now behind <code>-Dspiffe-experimental</code> build flag</li>
-<li><strong>Windows:</strong> Full cross-compilation support for Windows targets</li>
-<li><strong>CI:</strong> Multi-platform CI matrix (Linux, macOS, Windows)</li>
-<li><strong>Docs:</strong> Windows-specific build and usage guide</li>
+<li><strong>api:</strong> add comprehensive Container methods (<a href="https://github.com/MChorfa/dagger-zig/commit/7aa4e508d9d89e061eb9d2bb91858d4d2f4ed427">7aa4e50</a>)</li>
+<li><strong>api:</strong> add Service, GitRepository, GitRef, Host, Socket types (<a href="https://github.com/MChorfa/dagger-zig/commit/434f37d4524f97d3b976f390fcb433f2aa31d155">434f37d</a>)</li>
+<li><strong>dev:</strong> add VS Code IDE configuration (<a href="https://github.com/MChorfa/dagger-zig/commit/f4bca03a15d0ead9f96ad4d86888f56d8029a2f0">f4bca03</a>)</li>
+<li><strong>docs:</strong> Phase 1 - new examples, IDE setup, migration guide, why-zig doc (<a href="https://github.com/MChorfa/dagger-zig/commit/c25617c2b602e776aa139422ee1ecf69d10278b0">c25617c</a>)</li>
+<li><strong>phase3:</strong> add Windows support and observability (<a href="https://github.com/MChorfa/dagger-zig/commit/4657901494d2f84bdd716680a1a610aed6998c36">4657901</a>)</li>
+<li><strong>phase4:</strong> add comprehensive test suite (<a href="https://github.com/MChorfa/dagger-zig/commit/81a01b780cc173d00e6d3603d1ccade50c354b0e">81a01b7</a>)</li>
 </ul>
-<h3 id="bug-fixes-1"><a class="header" href="#bug-fixes-1">Bug Fixes</a></h3>
+<h3 id="bug-fixes-2"><a class="header" href="#bug-fixes-2">Bug Fixes</a></h3>
 <ul>
+<li><strong>build:</strong> add link_libc to all modules using dagger_sdk (<a href="https://github.com/MChorfa/dagger-zig/commit/3b7c55d220999167d90391f6a7d699613d87539a">3b7c55d</a>)</li>
+<li><strong>ci:</strong> correct security claims and add OpenSSF Scorecard (<a href="https://github.com/MChorfa/dagger-zig/commit/92e5000a08b12c9b8cb30f34c1e83d5be279ab4f">92e5000</a>)</li>
+<li><strong>ci:</strong> make workflows work without secrets (<a href="https://github.com/MChorfa/dagger-zig/commit/a6633f19417bc6389bae6dd675184003cad96eeb">a6633f1</a>)</li>
+<li><strong>ci:</strong> update all workflows to work without secrets (<a href="https://github.com/MChorfa/dagger-zig/commit/1f136f02401ceddd2efbc3952564cbcf390bad54">1f136f0</a>)</li>
+<li><strong>docs:</strong> correct book.toml configuration (<a href="https://github.com/MChorfa/dagger-zig/commit/2b0f3d9a36b27ade3cab4ebc9ce07768d8c4e8e0">2b0f3d9</a>)</li>
 <li><strong>examples:</strong> resolve error union chaining and add missing API methods (<a href="https://github.com/MChorfa/dagger-zig/commit/ea6a75f2f35f89228ef43b99887c4e4530d0c011">ea6a75f</a>)</li>
+<li><strong>release:</strong> add tag trigger support for manual releases (<a href="https://github.com/MChorfa/dagger-zig/commit/b9f3fbd1e08aa1d19789d7f85eb38b9654522486">b9f3fbd</a>)</li>
+<li><strong>release:</strong> add tag trigger support for manual releases (<a href="https://github.com/MChorfa/dagger-zig/commit/c1bc1f402743cd19be44f424cbd4c85ca6107134">c1bc1f4</a>)</li>
 <li><strong>release:</strong> address v0.2.0 critical blockers (<a href="https://github.com/MChorfa/dagger-zig/commit/0b4170b293a26e884ca81ff5c978e0b976f6a8a5">0b4170b</a>)</li>
+<li><strong>release:</strong> package binaries, libs, and headers with checksums (<a href="https://github.com/MChorfa/dagger-zig/commit/7c875a0f482077f684e934455575cedf33b6c48a">7c875a0</a>)</li>
+<li><strong>release:</strong> package binaries, libs, and headers with checksums (<a href="https://github.com/MChorfa/dagger-zig/commit/6e70fa343c76b0b42e213d0ed585a24cb574f015">6e70fa3</a>)</li>
 <li><strong>review:</strong> address all PR review comments (<a href="https://github.com/MChorfa/dagger-zig/commit/f33e1c8d6ab3827d648000eafa8f5d4c71369d9d">f33e1c8</a>)</li>
 <li><strong>review:</strong> address parallel_validation feedback in tracing.zig (<a href="https://github.com/MChorfa/dagger-zig/commit/ca1918888a9223c4f2ca7b6fc5174733f104fd9e">ca19188</a>)</li>
+<li><strong>scorecard:</strong> add continue-on-error to tolerate findings (<a href="https://github.com/MChorfa/dagger-zig/commit/30a20d3d9be943108e4a9f5c6239bb2cd974dfe3">30a20d3</a>)</li>
+<li><strong>scorecard:</strong> tolerate findings with continue-on-error (<a href="https://github.com/MChorfa/dagger-zig/commit/ec94664b8c78def97b7564689b1cbb1ab137cdbe">ec94664</a>)</li>
+<li><strong>security:</strong> only upload Grype SARIF on success (<a href="https://github.com/MChorfa/dagger-zig/commit/676550610e3bba90166f34516a6fdec441733a28">6765506</a>)</li>
+<li><strong>security:</strong> only upload Grype SARIF on success (<a href="https://github.com/MChorfa/dagger-zig/commit/204448bfa03d483f954c86ae8ad95406cd1f4c50">204448b</a>)</li>
+<li><strong>security:</strong> update CodeQL to use C language and refresh CI workflows (<a href="https://github.com/MChorfa/dagger-zig/commit/ef0a509106af8ab83d310f5db1038417633604da">ef0a509</a>)</li>
 <li><strong>slsa:</strong> update Zig version from 0.13.0 to 0.16.0 (<a href="https://github.com/MChorfa/dagger-zig/commit/285100224984920e3265cc7a25d68d10888b3360">2851002</a>)</li>
+<li>type mismatch in GeneratedCode constructor for CLI &gt; v0.12.5 (<a href="https://github.com/MChorfa/dagger-zig/issues/25">#25</a>) (<a href="https://github.com/MChorfa/dagger-zig/commit/77a4cffaeee485a3b69d5e3be19f99345e85403e">77a4cff</a>)</li>
 <li><strong>v0.2.0:</strong> address critical release blockers (<a href="https://github.com/MChorfa/dagger-zig/commit/868b5dd6e0ab889a61f4748113dd09f1d65dd8bc">868b5dd</a>)</li>
+<li><strong>workflows:</strong> add continue-on-error and fix security configs (<a href="https://github.com/MChorfa/dagger-zig/commit/619903d63f8792d07e833e026b7c11dfe91d130a">619903d</a>)</li>
+<li><strong>workflows:</strong> correct all GitHub Action SHAs (<a href="https://github.com/MChorfa/dagger-zig/commit/365727050af5244893d0ff7df7f87c263e916e50">3657270</a>)</li>
+<li><strong>workflows:</strong> correct remaining action SHAs (<a href="https://github.com/MChorfa/dagger-zig/commit/dcdab299530e32d36c94ac31b5f6dce4d57e1133">dcdab29</a>)</li>
+<li><strong>workflows:</strong> remove continue-on-error, add debug output (<a href="https://github.com/MChorfa/dagger-zig/commit/7dc34632271a717b5549b11a4176ba5d33e7d088">7dc3463</a>)</li>
+<li><strong>workflows:</strong> revert to Zig 0.16.0, fix benchmark step (<a href="https://github.com/MChorfa/dagger-zig/commit/29130f8eaed6795e1687c0dbcc31ea07860fab2a">29130f8</a>)</li>
+<li><strong>workflows:</strong> update to Zig 0.16.1, add verification steps (<a href="https://github.com/MChorfa/dagger-zig/commit/7f52a3d4495a0fcb3ae511bf9ef166c3f2ba61e7">7f52a3d</a>)</li>
+<li><strong>workflows:</strong> use dagger run instead of dagger call -m ci (<a href="https://github.com/MChorfa/dagger-zig/commit/a43465d91ffc0c3d7392851963e235170a20e49c">a43465d</a>)</li>
+<li><strong>workflows:</strong> use native Zig instead of Dagger (<a href="https://github.com/MChorfa/dagger-zig/commit/a4c026f8ec94bffa058ab81148f53400721f31b8">a4c026f</a>)</li>
+<li><strong>workflows:</strong> use Zig 0.17.0 (0.16.1 doesn’t exist) (<a href="https://github.com/MChorfa/dagger-zig/commit/b67c5f76011cd415103faaf64e1a1bba47945d2b">b67c5f7</a>)</li>
 </ul>
 <h3 id="changes"><a class="header" href="#changes">Changes</a></h3>
 <ul>
@@ -217,13 +266,13 @@
 <li>Verified supply chain security through GitHub Actions</li>
 </ul>
 <h2 id="012-2026-04-25"><a class="header" href="#012-2026-04-25"><a href="https://github.com/MChorfa/dagger-zig/compare/v0.1.1...v0.1.2">0.1.2</a> (2026-04-25)</a></h2>
-<h3 id="bug-fixes-2"><a class="header" href="#bug-fixes-2">Bug Fixes</a></h3>
+<h3 id="bug-fixes-3"><a class="header" href="#bug-fixes-3">Bug Fixes</a></h3>
 <ul>
 <li><strong>release:</strong> add tag trigger support for manual releases (<a href="https://github.com/MChorfa/dagger-zig/commit/b9f3fbd1e08aa1d19789d7f85eb38b9654522486">b9f3fbd</a>)</li>
 <li><strong>release:</strong> add tag trigger support for manual releases (<a href="https://github.com/MChorfa/dagger-zig/commit/c1bc1f402743cd19be44f424cbd4c85ca6107134">c1bc1f4</a>)</li>
 </ul>
 <h2 id="011-2026-04-25"><a class="header" href="#011-2026-04-25"><a href="https://github.com/MChorfa/dagger-zig/compare/v0.1.0...v0.1.1">0.1.1</a> (2026-04-25)</a></h2>
-<h3 id="bug-fixes-3"><a class="header" href="#bug-fixes-3">Bug Fixes</a></h3>
+<h3 id="bug-fixes-4"><a class="header" href="#bug-fixes-4">Bug Fixes</a></h3>
 <ul>
 <li><strong>release:</strong> package binaries, libs, and headers with checksums (<a href="https://github.com/MChorfa/dagger-zig/commit/7c875a0f482077f684e934455575cedf33b6c48a">7c875a0</a>)</li>
 <li><strong>release:</strong> package binaries, libs, and headers with checksums (<a href="https://github.com/MChorfa/dagger-zig/commit/6e70fa343c76b0b42e213d0ed585a24cb574f015">6e70fa3</a>)</li>

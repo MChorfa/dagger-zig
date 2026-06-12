@@ -1,160 +1,61 @@
-# v0.2.1 Release Checklist
+# Release Checklist
 
-Complete all items before tagging v0.2.1.
+Use this before cutting a tagged release.
 
-## Pre-Release Verification
+## Scope
 
-### Build & Test
+This checklist is for the current SDK line, not a historical version. The exact
+tag changes from release to release, but the required checks stay the same.
 
-- [ ] Clean build succeeds: `zig build`
-- [ ] Tests pass without SPIFFE: `zig build test`
-- [ ] Tests pass with SPIFFE: `zig build test -Dspiffe-experimental`
-- [ ] Module E2E tests pass: `zig build test-module`
-- [ ] All examples build: `zig build run-first-pipeline` (and others)
+## Before Tagging
 
-### Supported Platforms
+- `git status` is clean or only contains intentional release changes.
+- `zig build` succeeds.
+- `zig build test` succeeds.
+- `zig build test-module` succeeds.
+- `zig build bench` succeeds.
+- `zig build flamegraph` succeeds or is documented as optional if profiling is not available.
+- `zig build test-suite` succeeds when the platform allows it.
+- `docs/compliance.md` matches the current release pipeline.
+- `README.md` and `docs/README.md` describe the same shipped features.
+- Any deprecated claims have been removed from docs.
 
-- [ ] Linux x86_64 build: `zig build -Dtarget=x86_64-linux-gnu`
-- [ ] Linux aarch64 build: `zig build -Dtarget=aarch64-linux-gnu`
-- [ ] macOS x86_64 build: `zig build -Dtarget=x86_64-macos-none`
-- [ ] macOS aarch64 build: `zig build -Dtarget=aarch64-macos-none`
+## Version Alignment
 
-### Version Alignment
+- `build.zig.zon` version matches the intended tag.
+- `src/core/version.zig` matches the intended tag.
+- Release notes or changelog entries exist for the new tag.
 
-- [ ] `build.zig.zon` version is `0.2.1`
-- [ ] `src/core/version.zig` sdk_version is `0.2.1`
-- [ ] `src/core/version.zig` VERSION_MINOR is `2`
+## Supply Chain
 
-### Documentation
+- SBOM generation runs in CI.
+- SLSA provenance is attached to the release.
+- GitHub attestation is attached to the release.
+- Cosign signature and bundle are attached to the release.
+- Release assets are uploaded for every supported target.
 
-- [ ] README.md reflects v0.2.1 features
-- [ ] CHANGELOG.md has v0.2.1 entry
-- [ ] docs/spiffe.md has experimental warning
-- [ ] docs/windows.md exists and is accurate
-
-## Release Process
-
-### 1. Finalize Code
+## Tagging
 
 ```bash
-# Ensure clean working directory
-git status
+git tag -s v0.3.2 -m "Release v0.3.2"
+git push origin v0.3.2
+```
 
-# Run final tests
+Replace `v0.3.2` with the next release tag when you are preparing a new cut.
+
+## Post-Release
+
+- Verify the GitHub release page has every expected asset.
+- Verify provenance with `scripts/release-verify.sh <tag>`.
+- Verify the changelog entry is linked from the release page.
+- Confirm the docs landing page still matches the shipped behavior.
+
+## Verification Commands
+
+```bash
+zig build
 zig build test
 zig build test-module
-```
-
-### 2. Update Changelog
-
-Create CHANGELOG.md entry for v0.2.1:
-
-```markdown
-## [0.2.1] - YYYY-MM-DD
-
-### Added
-
-- Patch release validation for the POSIX Zig 0.16 SDK
-- Documentation alignment for the current release scope
-
-### Changed
-
-- SDK version bumped to 0.2.1
-- Release checklist and README aligned to the current supported feature set
-
-### Security
-
-- Supply chain: SLSA provenance attestation
-- Supply chain: Cosign signing of SBOM and artifacts
-```
-
-### 3. Create Signed Tag
-
-```bash
-# Create annotated and signed tag
-git tag -s v0.2.1 -m "Release v0.2.1 - POSIX production release"
-
-# Push tag (triggers release workflow)
-git push origin v0.2.1
-```
-
-### 4. Verify GitHub Release
-
-- [ ] Release workflow triggered automatically
-- [ ] All matrix builds completed successfully
-- [ ] Artifacts uploaded:
-  - [ ] `dagger-zig-x86_64-linux-gnu.tar.gz`
-  - [ ] `dagger-zig-aarch64-linux-gnu.tar.gz`
-  - [ ] `dagger-zig-x86_64-macos-none.tar.gz`
-  - [ ] `dagger-zig-aarch64-macos-none.tar.gz`
-- [ ] SBOM generated: `sbom.spdx.json`
-- [ ] SBOM signature: `sbom.spdx.json.sig`
-
-### 5. Verify SLSA Provenance
-
-```bash
-# Download attestation from GitHub release
-gh release download v0.2.1 -p '*.intoto.jsonl'
-
-# Verify using slsa-verifier (install from https://github.com/slsa-framework/slsa-verifier)
-slsa-verifier verify-artifact \
-  --provenance-path dagger-zig-x86_64-linux-gnu.intoto.jsonl \
-  --source-uri github.com/MChorfa/dagger-zig \
-  --source-tag v0.2.1 \
-  dagger-zig-x86_64-linux-gnu.tar.gz
-```
-
-### 6. Verify Cosign Signature
-
-```bash
-# Download signature and certificate from release
-gh release download v0.2.1 -p 'sbom.spdx.json.sig'
-gh release download v0.2.1 -p 'sbom.spdx.json.cert'
-
-# Verify with cosign
-cosign verify-blob \
-  --signature sbom.spdx.json.sig \
-  --certificate sbom.spdx.json.cert \
-  --certificate-identity-regexp 'MChorfa/dagger-zig' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  sbom.spdx.json
-```
-
-### 7. Post-Release
-
-- [ ] Close v0.2.1 milestone on GitHub
-- [ ] Announce on relevant channels
-- [ ] Update documentation site (if separate)
-
-## Rollback Procedure
-
-If critical issues are found:
-
-```bash
-# Delete tag locally and remotely (use with caution)
-git push --delete origin v0.2.1
-git tag --delete v0.2.1
-
-# Create v0.2.2 hotfix following same checklist
-```
-
-## Verification Commands Summary
-
-```bash
-# Build verification
-zig build -Doptimize=ReleaseSafe
-
-# Test verification
-zig build test
-zig build test-module
-
-# Cross-compilation verification
-for target in x86_64-linux-gnu aarch64-linux-gnu x86_64-macos-none aarch64-macos-none; do
-  echo "Building for $target..."
-  zig build -Dtarget=$target -Doptimize=ReleaseSafe || exit 1
-done
-
-# Version verification
-grep version build.zig.zon
-grep sdk_version src/core/version.zig
+zig build bench
+scripts/release-verify.sh v0.3.2
 ```

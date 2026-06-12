@@ -1,103 +1,66 @@
 <p align="center">
-  <img src="../assets/logo.svg" alt="dagger-zig logo" width="150" height="150">
+  <img src="assets/logo.svg" alt="dagger-zig logo" width="160" height="160">
 </p>
 
-# dagger-zig Documentation
+# dagger-zig Docs
 
-A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
+A practical guide to the Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
 
-> **🔗 Dagger Resources**: [Website](https://dagger.io) • [Docs](https://docs.dagger.io) • [GitHub](https://github.com/dagger/dagger) • [Discord](https://discord.gg/dagger)
+> **At a glance**
+> - Zero external dependencies in the SDK itself
+> - Zig 0.16 foundation
+> - Synchronous client API with `std.Io.Group` fan-out
+> - Offline benchmarks, release provenance, and SPIFFE support
 
-## Overview
+> **Dagger links**
+> [Website](https://dagger.io) · [Docs](https://docs.dagger.io) · [GitHub](https://github.com/dagger/dagger) · [Discord](https://discord.gg/dagger)
 
-Zero external dependencies — Zig stdlib only. Authored against Zig 0.16.0, with `std.Io.async` used for parallel container operations.
+## Read This First
 
-This is a single-maintainer SDK at **v0.3.2**: a POSIX synchronous client, module authoring, tracing, offline benchmarks, and experimental SPIFFE support. See [Current Status](#current-status) for what is and isn't done.
+This docs set is arranged in the order most people need it:
 
-## Documentation Structure
+| Path | Use it for |
+| --- | --- |
+| [Getting Started](getting-started.md) | First build, first client, local setup |
+| [Examples](examples.md) | Copyable end-to-end snippets |
+| [Build Guide](build.md) | Build flags, tests, and release commands |
+| [Client API](api-reference.md) | Core SDK surface area |
+| [Module Authoring](module-authoring.md) | Exposing Zig structs as Dagger modules |
+| [Async Patterns](async-patterns.md) | Parallel fan-out with `std.Io.Group` and `Client.branch()` |
+| [Compliance](compliance.md) | What the release pipeline actually ships |
+| [Observability](observability.md) | Tracing, logs, metrics, and health checks |
 
-### 🚀 Getting Started (Start Here)
+## Design Principles
 
-| Document                              | Description                                |
-| ------------------------------------- | ------------------------------------------ |
-| [Getting Started](getting-started.md) | Your first dagger-zig project in 5 minutes |
-| [Build Guide](build.md)               | Build options, targets, and configurations |
-| [Examples](examples.md)               | Code examples and common patterns          |
-| [IDE Setup](ide-setup.md)             | Zed, VS Code, Vim configuration            |
+| Principle | Meaning |
+| --- | --- |
+| Small surface | Keep the public API synchronous and predictable |
+| Explicit state | Branch per concurrent task instead of sharing mutable clients |
+| Honest docs | Mark experimental and deferred pieces clearly |
+| Build-proof releases | Separate build artifacts from release attestations |
+| Local-first validation | Prefer offline checks and reproducible commands |
 
-### 🏗️ Core Concepts
+## What Is Stable
 
-| Document                                  | Description                             |
-| ----------------------------------------- | --------------------------------------- |
-| [Architecture](architecture.md)           | Design rationale and internal mechanics |
-| [ARCHITECTURAL_MAP](ARCHITECTURAL_MAP.md) | Visual architecture overview            |
-| [Repository Layout](layout.md)            | Repository structure and conventions    |
-| [Why Zig?](why-zig.md)                    | Why we chose Zig for this SDK           |
+| Area | Status | Notes |
+| --- | --- | --- |
+| Client SDK | Ready | POSIX, synchronous, zero third-party runtime deps |
+| Module authoring | Ready | Compile-time type mapping with early failures |
+| Parallel fan-out | Ready | `dagger.parallel` + `Client.branch()` |
+| Tracing | Ready | OpenTelemetry-compatible spans |
+| Release provenance | Ready | SLSA L3 + GitHub attestation + cosign on tagged releases |
 
-### 🔧 API Reference
+## What Is Experimental
 
-| Document                                | Description                       |
-| --------------------------------------- | --------------------------------- |
-| [Client API](api-reference.md)          | Core API documentation            |
-| [Module Authoring](module-authoring.md) | Create Dagger modules in Zig      |
-| [Query Builder](query-builder.md)       | Building GraphQL queries          |
-| [Error Handling](errors.md)             | Error types and handling patterns |
-| [Type System](types.md)                 | Type definitions and conversions  |
+| Area | Status | Notes |
+| --- | --- | --- |
+| SPIFFE/SPIRE | Experimental | Shellout backend works; native workload API remains a skeleton |
+| Windows support | Planned | POSIX is the shipped baseline |
+| C ABI | Planned | Not yet promoted to the primary path |
 
-### ⚡ Advanced Topics (v0.2.x)
+## Where To Go Next
 
-| Document                            | Description                               |
-| ----------------------------------- | ----------------------------------------- |
-| [Async Patterns](async-patterns.md) | Concurrent operations with `dagger.async` |
-| [Tracing](tracing.md)               | OpenTelemetry-compatible tracing          |
-| [Windows Support](windows.md)       | Windows platform specifics                |
-| [Cache Volumes](cache.md)           | Persistent caching strategies             |
-| [Secret Management](secrets.md)     | Secure secret handling                    |
-
-### 🔒 Security & Identity
-
-| Document                                  | Description                |
-| ----------------------------------------- | -------------------------- |
-| [SPIFFE Integration](spiffe.md)           | Workload identity and mTLS |
-| [Workload Identity](workload-identity.md) | SPIFFE/SPIRE integration   |
-| [C FFI](c-api.md)                         | Foreign Function Interface |
-
-### 🏢 Enterprise & Operations
-
-| Document                                  | Description                       |
-| ----------------------------------------- | --------------------------------- |
-| [Compliance](compliance.md)               | Security practices (not a certification) |
-| [Observability](observability.md)         | OpenTelemetry, logging, metrics   |
-| [Incident Response](incident-response.md) | Runbooks and severity levels      |
-| [Resilience Patterns](resilience.md)      | Fault tolerance and recovery      |
-| [Local CI Testing](local-ci-testing.md)   | Test workflows locally            |
-
-### 📝 Contributing & Reference
-
-| Document                                  | Description                 |
-| ----------------------------------------- | --------------------------- |
-| [Contributing](contributing.md)           | Development guidelines      |
-| [Migration Guide](migration.md)           | Version migration notes     |
-| [Roadmap](roadmap.md)                     | Future plans and priorities |
-| [Release Checklist](RELEASE_CHECKLIST.md) | Release process             |
-| [Changelog](../CHANGELOG.md)              | Version history             |
-
-## Current Status
-
-**v0.3.2** — POSIX synchronous client SDK, module authoring, tracing, offline benchmarks (`zig build bench`), supply chain (SLSA v1 + Syft SBOM + Cosign attestation), and experimental SPIFFE shellout support
-
-## Feature Status
-
-| Feature           | Status | Notes                                                              |
-| ----------------- | ------ | ------------------------------------------------------------------ |
-| Client SDK        | ✅     | POSIX, synchronous; zero external dependencies                     |
-| Self-hosting CI   | ✅     | SDK builds itself via the `ci/pipeline` Dagger module             |
-| SBOM              | ✅     | CycloneDX + SPDX generated by Syft in the build pipeline           |
-| Security scanning | ✅     | Semgrep, GitLeaks, Grype run in CI                                 |
-| Observability     | 🟡     | OpenTelemetry tracing + structured logging in the SDK              |
-| SLSA provenance   | ✅     | SLSA Build **L3** (slsa-github-generator) + GitHub attestation, tagged releases |
-| Artifact signing  | ✅     | Keyless cosign signature (Sigstore bundle) on tagged releases       |
-| Async operations  | 🟡     | Experimental; broader support deferred to a future release         |
-| Windows support   | 🟡     | Planned for a future release; current release is POSIX-only         |
-
-See [Security & Compliance Notes](compliance.md) for what the project actually does — it is **not** a certified or audited product.
+1. [Getting Started](getting-started.md) if you want a first successful call.
+2. [Examples](examples.md) if you want copyable patterns.
+3. [Compliance](compliance.md) if you care about release provenance and signing.
+4. [Roadmap](roadmap.md) if you want to see what is still deferred.

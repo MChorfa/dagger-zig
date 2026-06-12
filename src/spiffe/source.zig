@@ -1,15 +1,15 @@
 //! SvidSource: the abstraction every SVID backend implements.
 //!
-//! Two backends ship with dagger-zig:
-//!   - ShelloutSource (v0.1.0): calls `spire-agent api fetch` in a subprocess.
+//! Two backends are modeled in the SPIFFE layer:
+//!   - ShelloutSource: calls `spire-agent api fetch` in a subprocess.
 //!     Works today, requires the binary.
-//!   - NativeWorkloadAPISource (v0.1.1): pure-Zig gRPC client. Streams, no
+//!   - NativeWorkloadAPISource: pure-Zig gRPC client. Streams, no
 //!     subprocess, zero external binary dep.
 //!
 //! Users code against the `SvidSource` vtable; swapping backends is a
 //! one-line change at construction.
 //!
-//! ## v0.1.0 surface
+//! ## Current surface
 //!
 //!   - `fetchX509SVID(allocator)` — one-shot X.509-SVID, caller owns.
 //!   - `fetchJWTSVID(allocator, audiences)` — one-shot JWT-SVID.
@@ -17,9 +17,9 @@
 //!   - `close()` — tear down.
 //!
 //! Rotation via streaming (`watchX509SVID` returning a `Future<X509SVID>`)
-//! is deferred to v0.1.1 alongside the native gRPC backend — it would
-//! require the Future-of-error-union pattern which needs more validation
-//! against the final 0.16 std.Io shape. For v0.1.0, callers poll.
+//! is deferred alongside the native gRPC backend — it would require the
+//! Future-of-error-union pattern which needs more validation against the
+//! final 0.16 std.Io shape. For now, callers poll.
 
 const std = @import("std");
 const SpiffeID = @import("spiffe_id.zig").SpiffeID;
@@ -109,19 +109,18 @@ pub const SvidSource = struct {
         fetch_jwt_svid: *const fn (ptr: *anyopaque, allocator: std.mem.Allocator, audiences: []const []const u8) errs.SpiffeError!JWTSVID,
 
         /// Fetch the X.509 trust bundle for our own trust domain.
-        /// Multi-domain (federation) trust bundles are v0.2.
+        /// Multi-domain (federation) trust bundles are a future extension.
         fetch_x509_bundle: *const fn (ptr: *anyopaque, allocator: std.mem.Allocator) errs.SpiffeError!TrustBundle,
 
         /// Tear down. After close, all other calls return `error.AlreadyClosed`.
         close: *const fn (ptr: *anyopaque) void,
     };
 
-    // NOTE (v0.1.0): `watchX509SVID` — streaming rotation — is deferred to
-    // v0.1.1 alongside the native gRPC backend. Until then, callers who
-    // want rotation poll `fetchX509SVID` at their preferred interval.
-    // The streaming API will land as `Future(X509SVID)` (non-erroring;
-    // stream errors surface via a separate status channel) to avoid the
-    // Future-of-error-union ambiguity.
+    // Streaming rotation is deferred alongside the native gRPC backend.
+    // Until then, callers who want rotation poll `fetchX509SVID` at their
+    // preferred interval. The streaming API will land as `Future(X509SVID)`
+    // (non-erroring; stream errors surface via a separate status channel)
+    // to avoid the Future-of-error-union ambiguity.
 
     pub fn fetchX509SVID(self: SvidSource, allocator: std.mem.Allocator) errs.SpiffeError!X509SVID {
         return self.vtable.fetch_x509_svid(self.ptr, allocator);

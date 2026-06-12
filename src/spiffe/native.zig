@@ -1,4 +1,4 @@
-//! NativeWorkloadAPISource — v0.1.1 target, v0.1.0 skeleton.
+//! NativeWorkloadAPISource — native SPIFFE Workload API skeleton.
 //!
 //! Will be a pure-Zig SPIFFE Workload API client over Unix domain socket:
 //!   - Minimal HTTP/2 framing (SETTINGS, HEADERS, DATA, GOAWAY, WINDOW_UPDATE)
@@ -7,9 +7,9 @@
 //!   - Streaming FetchX509SVID/FetchJWTBundles; unary FetchJWTSVID
 //!   - X.509 cert chain + PKCS#8 key parsing via std.crypto.Certificate
 //!
-//! **v0.1.0 status:** the types and vtable are fully defined so callers can
-//! write code against this API today. Every network operation returns
-//! `error.NotImplementedInV010`. In v0.1.1 the bodies become real.
+//! The types and vtable are fully defined so callers can write code against
+//! this API today. Every network operation currently returns
+//! `error.NotImplementedInV010`.
 //!
 //! User-visible migration path: no code changes. Bump dependency, rebuild.
 //!
@@ -34,9 +34,8 @@ pub const NativeWorkloadAPISource = struct {
     socket_path: []const u8,
     closed: bool = false,
 
-    /// Placeholder for the gRPC connection state in v0.1.1.
-    /// Intentionally absent in v0.1.0 — we don't want the binary size cost
-    /// of an HTTP/2 state machine that's never used.
+    /// Placeholder for the gRPC connection state.
+    /// Intentionally absent until the native client is implemented.
     _unused_conn: ?*anyopaque = null,
 
     pub fn init(
@@ -105,7 +104,7 @@ pub const NativeWorkloadAPISource = struct {
 
 const testing = std.testing;
 
-test "v0.1.0: all network ops return NotImplementedInV010" {
+test "all network ops return NotImplementedInV010" {
     var io_impl: std.Io.Threaded = .init(std.testing.allocator);
     defer io_impl.deinit();
     const io = io_impl.io();

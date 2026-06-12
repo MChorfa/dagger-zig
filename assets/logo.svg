@@ -143,7 +143,7 @@
     <path d="M 472 472 L 442 472 L 442 462 L 462 462 L 462 442 L 472 442 Z" fill="#FF6B35"/>
   </g>
 
-  <!-- Shield badge for SLSA L4 -->
+  <!-- Shield badge for SLSA L3 -->
   <g transform="translate(430, 430)" filter="url(#shadow)">
     <path d="M 0 -25 L 22 -15 L 22 10 Q 22 25 0 35 Q -22 25 -22 10 L -22 -15 Z" 
           fill="#1a1a2e" 
@@ -163,7 +163,7 @@
           font-weight="700" 
           fill="#FFFFFF" 
           text-anchor="middle">
-      L4
+      L3
     </text>
   </g>
 </svg>

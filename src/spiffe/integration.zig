@@ -94,13 +94,13 @@ pub const Credentials = struct {
 /// Exchange a SPIFFE X.509-SVID for short-lived registry credentials via
 /// HashiCorp Vault's `cert` auth method + the Docker secrets engine.
 ///
-/// ## v0.1 status
+/// ## Current status
 ///
 /// The Vault HTTP integration itself is deferred: Vault's API is simple but
 /// correct implementation requires TLS + JSON plumbing + error-code mapping
-/// that we deliberately don't gold-plate until the native SPIFFE client
-/// lands in v0.1.1 (they share the TLS layer). For v0.1.0, `issueCredentials`
-/// returns `error.NotImplementedInV010`. Interface is stable.
+/// that we deliberately don't gold-plate until the native SPIFFE client is
+/// ready. It shares the TLS layer with the SPIFFE client. For now,
+/// `issueCredentials` returns `error.NotImplementedInV010`.
 pub const VaultCertAuthProvider = struct {
     allocator: std.mem.Allocator,
     vault_addr: []const u8,
@@ -177,9 +177,10 @@ pub fn spiffeRegistryAuth(
     var svid = try source.fetchX509SVID(client.allocator);
     defer svid.deinit();
 
-    // v0.1.0 can't proceed past here because VaultCertAuthProvider.issue
-    // returns NotImplementedInV010. We surface the same error through the
-    // integration layer so callers get a consistent signal.
+    // The current path can't proceed past here because
+    // VaultCertAuthProvider.issue returns NotImplementedInV010. We surface
+    // the same error through the integration layer so callers get a
+    // consistent signal.
     return error.NotImplementedInV010;
 }
 

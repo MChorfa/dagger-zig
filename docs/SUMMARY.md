@@ -1,21 +1,21 @@
 # Summary
 
-## 🚀 Getting Started
+## Start Here
 
 - [Overview](README.md)
 - [Getting Started](getting-started.md)
-- [Quick Examples](examples.md)
-- [IDE Setup](ide-setup.md)
+- [Examples](examples.md)
 - [Build Guide](build.md)
+- [IDE Setup](ide-setup.md)
 
-## 🏗️ Core Concepts
+## Core Design
 
 - [Architecture](architecture.md)
 - [Architectural Map](ARCHITECTURAL_MAP.md)
 - [Repository Layout](layout.md)
 - [Why Zig?](why-zig.md)
 
-## 🔧 API Reference
+## API Surface
 
 - [Client API](api-reference.md)
 - [Module Authoring](module-authoring.md)
@@ -24,30 +24,30 @@
 - [Type System](types.md)
 - [Comptime Dispatch](dispatch.md)
 
-## ⚡ Advanced Features (v0.2.0)
+## Concurrency and Runtime
 
-- [Async Patterns](async-patterns.md) (deferred to v0.3.0)
+- [Async Patterns](async-patterns.md)
 - [Distributed Tracing](tracing.md)
 - [Windows Support](windows.md)
 - [Cache Volumes](cache.md)
 - [Secret Management](secrets.md)
 
-## 🔒 Security & Identity
+## Identity and Security
 
-- [SPIFFE Integration](spiffe.md) (experimental, behind flag)
+- [SPIFFE Integration](spiffe.md)
 - [Workload Identity](workload-identity.md)
 - [C FFI](c-api.md)
 - [Security Policy](../SECURITY.md)
-
-## 🏢 Enterprise & Operations
-
 - [Compliance](compliance.md)
+
+## Operations
+
 - [Observability](observability.md)
 - [Resilience Patterns](resilience.md)
 - [Incident Response](incident-response.md)
 - [Local CI Testing](local-ci-testing.md)
 
-## 📝 Contributing & Reference
+## Reference
 
 - [Contributing](contributing.md)
 - [Migration Guide](migration.md)

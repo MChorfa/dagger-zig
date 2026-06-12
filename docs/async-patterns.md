@@ -1,106 +1,93 @@
 # Concurrency & Parallelism
 
-dagger-zig fans out concurrent engine queries with Zig 0.16's `std.Io` — no
-threading boilerplate. Under the multi-threaded `Io` backend tasks run in
-parallel; under `-fsingle-threaded` they schedule cooperatively. The same user
-code works either way.
+`dagger-zig` uses Zig 0.16 `std.Io.Group` for fan-out. The API stays
+synchronous at the call site, but independent tasks can run in parallel when
+the backend supports it.
 
-## The one rule: a client per task
+## The Rule
 
-A `dagger.Client` carries per-query mutable state (the last domain error, the
-circuit breaker, an in-progress flag) that is **not** synchronized. Sharing one
-client across concurrent tasks is a data race. Give each task its own
-`client.branch()` — it reuses the parent's engine session (same port and token,
-no new subprocess) but has independent state and its own arena. Close each
-branch when done; do not let a branch outlive its parent.
+Give each concurrent task its own `Client.branch()`.
+
+`Client` carries mutable per-query state such as the last error and circuit
+breaker. Sharing one client across concurrent tasks is not safe. A branch
+reuses the same engine session and connection parameters, but owns its own
+mutable state and arena.
 
 ## `dagger.parallel.map`
 
-Apply an operation to each input concurrently, writing results into disjoint
-slots. The op returns `std.Io.Cancelable!void` and reports its result through an
-output pointer (this is the `std.Io.Group` model — `await` surfaces only
-cancellation).
+Use `map` when every item produces a result:
 
 ```zig
 const dagger = @import("dagger_sdk");
 
-const Image = []const u8;
-
-fn fetchOS(io: std.Io, parent: *dagger.Client, image: Image, out: *[]u8) std.Io.Cancelable!void {
+fn fetchOS(io: std.Io, parent: *dagger.Client, image: []const u8, out: *[]u8) std.Io.Cancelable!void {
     _ = io;
-    var c = parent.branch() catch return error.Canceled;
-    defer c.close();
-    const ctr = c.dag().container() catch return error.Canceled;
+    var client = parent.branch() catch return error.Canceled;
+    defer client.close();
+
+    const ctr = client.dag().container() catch return error.Canceled;
     const based = ctr.from(image) catch return error.Canceled;
     const run = based.withExec(&.{ "cat", "/etc/os-release" }) catch return error.Canceled;
     out.* = run.stdout() catch return error.Canceled;
 }
-
-pub fn main(init: std.process.Init) !void {
-    const io = init.io;
-    var client = try dagger.connect(init.gpa, io, .{});
-    defer client.close();
-
-    const images = [_]Image{ "alpine:3.20", "debian:bookworm-slim", "ubuntu:24.04" };
-    var results: [images.len][]u8 = undefined;
-
-    try dagger.parallel.map(io, &images, &results, &client, fetchOS);
-
-    for (&results) |*r| init.gpa.free(r.*);
-}
 ```
+
+The task function returns `std.Io.Cancelable!void`; actual per-item data is
+written into the output slot.
 
 ## `dagger.parallel.forEach`
 
-When you only need side effects (no per-item result), `forEach` runs the op over
-every item concurrently:
+Use `forEach` for side effects:
 
 ```zig
 try dagger.parallel.forEach(io, &images, &client, struct {
     fn run(io_: std.Io, parent: *dagger.Client, image: []const u8) std.Io.Cancelable!void {
         _ = io_;
-        var c = parent.branch() catch return error.Canceled;
-        defer c.close();
-        // … do work with `c` …
+        var client = parent.branch() catch return error.Canceled;
+        defer client.close();
+        _ = image;
+        // do work
     }
 }.run);
 ```
 
 ## Raw `std.Io.Group`
 
-The helpers are thin wrappers; you can drive `std.Io.Group` directly when you
-want more control (mixed task shapes, early `await`, etc.). See
-[`examples/parallel/main.zig`](../examples/parallel/main.zig) for a complete,
-runnable example:
+The helpers are thin wrappers. Use `std.Io.Group` directly when you need
+explicit control over task lifetime:
 
 ```zig
 var group: std.Io.Group = .init;
-defer group.cancel(io); // cancel any outstanding task on early return
+defer group.cancel(io);
 
 for (images, 0..) |image, i| {
     group.async(io, fetchOS, .{ io, &branches[i], image, &results[i] });
 }
-try group.await(io); // surfaces the first cancellation; rest are cancelled
+
+try group.await(io);
 ```
 
-## Retries and circuit breaking
+## Retry and Circuit Breaking
 
-Retry with backoff and the circuit breaker are **client configuration**, not a
-separate async helper — they apply to every query automatically:
+Retry and circuit-breaker behavior is configured on the client:
 
 ```zig
 var client = try dagger.connect(gpa, io, .{
     .enable_circuit_breaker = true,
-    // .retry_policy = .{ .max_retries = 3, .initial_backoff_ms = 100, ... },
+    .retry_policy = .{},
 });
 ```
 
-See [`src/core/resilience.zig`](../src/core/resilience.zig) for the policy fields.
+See [Resilience Patterns](resilience.md) for the underlying policy.
 
 ## Notes
 
-- `std.Io.Group.await` returns `Cancelable!void`. Task functions return
-  `std.Io.Cancelable!void` and surface real errors through their output slot
-  (e.g. make `Out` an error union), not through `await`.
-- Branch up front (one per task) so the concurrent hot path does no extra
-  connection work.
+- `std.Io.Group.await` returns `Cancelable!void`.
+- Branch once per task so the hot path does not do extra connection work.
+- Keep fan-out bounded; parallelism only helps when tasks are independent.
+
+## Related Pages
+
+- [Examples](examples.md)
+- [Resilience Patterns](resilience.md)
+- [Architecture](architecture.md)

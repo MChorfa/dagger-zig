@@ -1,69 +1,34 @@
 # Repository Layout
 
-```
-dagger.zig/
-├── src/
-│   ├── root.zig            Public surface — dagger.connect, Client, types
-│   ├── querybuilder.zig    Lazy Selection chain → GraphQL serializer
-│   ├── gen_sample.zig      Hand-written Container/Directory/File API
-│   ├── c_api.zig           C FFI (libdagger.{a,so,dylib})
-│   └── core/
-│       ├── engine.zig        CLI session lifecycle, env parsing
-│       ├── cli_session.zig   Subprocess spawn, handshake read
-│       ├── graphql_client.zig HTTP transport, JSON serialize
-│       ├── config.zig        Timeouts, feature flags
-│       ├── resilience.zig    Retry policy, circuit breaker, jitter
-│       ├── cache_safe.zig    CacheFailSafe policies
-│       └── secrets.zig       Secret registry + scrubber
-│
-├── src/module/
-│   ├── dispatch.zig        Comptime method table + invoker shims
-│   ├── typedef.zig         Zig type → Dagger TypeDef mapping
-│   ├── server.zig          JSON-RPC stdin/stdout loop
-│   └── serde.zig           Arg/return serialize for call framing
-│
-├── src/spiffe/
-│   ├── id.zig              SPIFFE ID parser
-│   ├── svid.zig            X509SVID / JWTSVID types
-│   ├── source.zig          SvidSource vtable interface
-│   ├── shellout.zig        ShelloutSource (v0.1.0 working backend)
-│   └── native.zig          NativeWorkloadAPISource (v0.1.1)
-│
-├── ci/
-│   └── main.zig            Self-hosting CI pipeline (Zig Dagger module)
-│
-├── sdk/
-│   ├── main.go             Go bootstrap for Dagger engine integration
-│   ├── runtime/
-│   │   └── README.md       Container contract for module runtime
-│   └── codegen/
-│       └── README.md       Per-module codegen plan
-│
-├── codegen/
-│   └── src/
-│       └── emit.zig        Standalone emitter (full schema → gen.zig)
-│
-├── examples/
-│   ├── first-pipeline/
-│   ├── parallel/
-│   └── c-client/
-│
-├── include/
-│   └── dagger.h            C header for libdagger
-│
-└── docs/                     GitBook documentation
-    ├── README.md
-    ├── SUMMARY.md
-    └── ...
-```
+This repo is easiest to think about in four clusters:
 
-## Key Files for Contributors
+| Cluster | What lives here |
+| --- | --- |
+| Public SDK | `src/root.zig`, `src/querybuilder.zig`, `src/gen_sample.zig`, `src/c_api.zig` |
+| Runtime core | `src/core/` for engine session handling, transport, resilience, cache safety, and secrets |
+| Module + SPIFFE | `src/module/` and `src/spiffe/` for codegen/runtime dispatch and workload identity |
+| Tooling + docs | `ci/`, `sdk/`, `codegen/`, `examples/`, `docs/` |
 
-| File                      | Purpose                        |
-| ------------------------- | ------------------------------ |
-| `src/root.zig`            | Public API surface             |
-| `src/core/resilience.zig` | Production resilience patterns |
-| `src/core/cache_safe.zig` | Cache fail-safe                |
-| `src/core/secrets.zig`    | Security architecture          |
-| `ci/main.zig`             | Self-hosting proof             |
-| `src/c_api.zig`           | FFI safety                     |
+## Source of truth by area
+
+| Area | Primary files |
+| --- | --- |
+| SDK entrypoint | `src/root.zig` |
+| Query serialization | `src/querybuilder.zig` |
+| Transport and session lifecycle | `src/core/engine.zig`, `src/core/cli_session.zig`, `src/core/graphql_client.zig` |
+| Retry and breaker logic | `src/core/resilience.zig` |
+| Cache safety | `src/core/cache_safe.zig` |
+| Secrets and redaction | `src/core/secrets.zig` |
+| Module dispatch | `src/module/dispatch.zig`, `src/module/typedef.zig`, `src/module/server.zig` |
+| SPIFFE support | `src/spiffe/shellout.zig`, `src/spiffe/native.zig` |
+| Self-hosting CI | `ci/main.zig` and the `ci/` module tree |
+| SDK bootstrap | `sdk/main.go` |
+
+## Contributor map
+
+- `src/root.zig` for API surface changes
+- `src/core/resilience.zig` for reliability changes
+- `src/core/cache_safe.zig` for cache policy changes
+- `src/core/secrets.zig` for secret handling changes
+- `ci/main.zig` for self-hosting validation
+- `src/c_api.zig` for FFI changes

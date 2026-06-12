@@ -34,6 +34,11 @@ Tagged releases carry SLSA build provenance and a keyless signature, wired in `r
 - **Keyless signature** — each tarball is signed with cosign (Sigstore bundle, OIDC; no
   long-term keys), and the `.bundle` is published with the release.
 
+> The Dagger build module also emits `provenance.json` and, when given an OIDC
+> token, `attestation.bundle`. The current CI path passes `null` for that token,
+> so the publish-time release workflow is the source of the user-facing release
+> attestations and bundles.
+
 > The older `ci/attest` / `ci/sign` Zig modules (a `provenance/v0.2` predicate generator
 > and cosign blob helpers) are not used by the release flow — it uses the workflow-level
 > generators above instead.

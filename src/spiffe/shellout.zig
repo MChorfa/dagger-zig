@@ -1,14 +1,13 @@
-//! ShelloutSource — v0.1.0 SvidSource backend that invokes `spire-agent api fetch`.
+//! ShelloutSource — SvidSource backend that invokes `spire-agent api fetch`.
 //!
-//! Pragmatic and correct. Has two limitations we accept for v0.1.0:
+//! Pragmatic and correct. Has two limitations we accept today:
 //!   1. Requires the `spire-agent` binary in PATH (or an explicit path).
 //!   2. Each fetch forks a subprocess (~10ms overhead). Fine for one-shot;
 //!      suboptimal for rotation polling at sub-minute intervals.
 //!
-//! Rotation via `watchX509SVID` (streaming) is not part of the v0.1.0
-//! vtable — it lands in v0.1.1 alongside the native gRPC backend. Users
-//! who need rotation today poll `fetchX509SVID` at their preferred
-//! interval.
+//! Rotation via `watchX509SVID` (streaming) is not part of the current
+//! vtable — it lands alongside the native gRPC backend. Users who need
+//! rotation today poll `fetchX509SVID` at their preferred interval.
 //!
 //! The interface contract stays stable — when native lands, `ShelloutSource`
 //! and `NativeWorkloadAPISource` both implement the same `SvidSource`
@@ -132,7 +131,7 @@ pub const ShelloutSource = struct {
             else => return error.TransportError,
         }
 
-        // Parse the output files. For the v0.1.0 shellout, we keep this
+        // Parse the output files. For the shellout backend, we keep this
         // minimal — we know the filenames spire-agent writes.
         return parseX509FromDir(allocator, self.io, tmpdir, self.options.expected_trust_domain);
     }
@@ -143,8 +142,8 @@ pub const ShelloutSource = struct {
         _ = audiences;
         _ = allocator;
         // Shellout for JWT: spire-agent api fetch jwt -audience X -socketPath ...
-        // Implementation deferred — v0.1.0 shellout supports X509 only, native
-        // (v0.1.1) supports both.
+        // Implementation deferred — shellout currently supports X509 only;
+        // the native backend is intended to support both.
         return error.NotImplementedInV010;
     }
 
@@ -177,9 +176,9 @@ fn parseX509FromDir(
     // Full parser deferred — the Zig stdlib's std.crypto.Certificate covers most
     // of what we need but PEM decoding is manual.
     //
-    // For v0.1.0 shellout, this is the one legitimate unfinished piece; it
-    // lands in the same PR as the v0.1.1 native backend because both need the
-    // same X.509 parsing utilities.
+    // This remains the unfinished piece for the shellout backend; it lands
+    // together with the native backend because both need the same X.509
+    // parsing utilities.
     return error.NotImplementedInV010;
 }
 

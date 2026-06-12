@@ -103,7 +103,7 @@ pub const Span = struct {
             }
         }
 
-        // TODO: OTLP export
+        // OTLP export is deferred until a backend and schema contract are wired.
         // if (config.otlp_endpoint) |endpoint| {
         //     exportToOTLP(self, endpoint);
         // }

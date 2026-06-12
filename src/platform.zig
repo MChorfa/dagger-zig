@@ -180,21 +180,18 @@ pub const Socket = struct {
     }
 
     fn connectWindowsSocket(path: []const u8) !Socket {
-        // v0.2.0: Windows socket support not yet implemented
-        // Windows 10 1803+ has AF_UNIX support, or use named pipes
-        // v0.3.0: Will implement using Windows named pipes or AF_UNIX
+        // Windows socket support is still a planned compatibility path.
+        // Windows 10 1803+ has AF_UNIX support, or use named pipes.
         _ = path;
 
-        // Provide helpful error message about limitation
-        std.log.warn("Windows socket support not yet implemented in v0.2.0. " ++
-            "Use WSL2 or wait for v0.3.0.", .{});
+        std.log.warn("Windows socket support is not yet implemented. Use WSL2 or a supported Unix-like host.", .{});
         return error.NotSupported;
     }
 
     /// Read from socket
     pub fn read(self: Socket, buffer: []u8) !usize {
         if (is_windows) {
-            std.log.warn("Socket.read(fd={}, buf_len={}) not supported on Windows in v0.2.0", .{ self.fd, buffer.len });
+            std.log.warn("Socket.read(fd={}, buf_len={}) is not supported on Windows yet", .{ self.fd, buffer.len });
             return error.NotSupported;
         } else {
             return std.posix.read(self.fd, buffer);
@@ -204,7 +201,7 @@ pub const Socket = struct {
     /// Write to socket
     pub fn write(self: Socket, data: []const u8) !void {
         if (is_windows) {
-            std.log.warn("Socket.write(fd={}, data_len={}) not supported on Windows in v0.2.0", .{ self.fd, data.len });
+            std.log.warn("Socket.write(fd={}, data_len={}) is not supported on Windows yet", .{ self.fd, data.len });
             return error.NotSupported;
         } else {
             const n = try std.posix.write(self.fd, data);
@@ -215,9 +212,7 @@ pub const Socket = struct {
     /// Close socket
     pub fn close(self: Socket) void {
         if (is_windows) {
-            // v0.2.0: Not implemented
-            // v0.3.0: Will use closesocket() on Windows
-            std.log.warn("Socket.close(fd={}) not implemented on Windows in v0.2.0", .{self.fd});
+            std.log.warn("Socket.close(fd={}) is not implemented on Windows yet", .{self.fd});
         } else {
             std.posix.close(self.fd);
         }
@@ -230,17 +225,16 @@ pub const Socket = struct {
 pub const AsyncIo = struct {
     /// Check if the platform supports true async I/O
     ///
-    /// v0.2.0: Linux/macOS supported, Windows uses fallback
-    /// v0.3.0: Windows IOCP support planned
+    /// Linux/macOS are the primary supported paths; Windows remains a
+    /// planned compatibility target and may return `error.NotSupported`.
     pub fn supportsAsync() bool {
-        return !is_windows; // Windows support planned for v0.3.0
+        return !is_windows; // Windows support is still a planned path
     }
 
     /// Get the optimal async strategy for the platform
     pub fn strategy() AsyncStrategy {
         if (is_windows) {
-            // v0.2.0: Threaded fallback on Windows
-            // v0.3.0: Will use IOCP on Windows
+            // Windows currently uses the threaded fallback.
             return .threaded;
         } else if (@import("builtin").os.tag == .linux) {
             return .io_uring;
@@ -255,22 +249,18 @@ pub const AsyncStrategy = enum {
     io_uring, // Linux native
     kqueue, // macOS/BSD
     threaded, // Fallback using std.Thread
-    io_completion, // Windows IOCP (TODO)
+    io_completion, // Reserved for future Windows IOCP support.
 };
 
 // ─────────────────────────── Process Management ───────────────────────────
 
-/// Platform-specific process signal handling
-///
-/// v0.2.0: POSIX signals supported, Windows uses fallback
-/// v0.3.0: Windows GenerateConsoleCtrlEvent planned
+    /// Platform-specific process signal handling.
+    ///
+    /// POSIX signals are supported; Windows signal handling remains a
+    /// compatibility gap.
 pub fn sendTermSignal(pid: i32) void {
     if (is_windows) {
-        // v0.2.0: Windows signal handling not implemented
-        // Workaround: Use taskkill or terminate via other means
-        std.log.warn("sendTermSignal() not implemented on Windows in v0.2.0. " ++
-            "PID {} not signaled.", .{pid});
-        // v0.3.0: Will use GenerateConsoleCtrlEvent or TerminateProcess
+        std.log.warn("sendTermSignal() is not implemented on Windows yet. PID {} not signaled.", .{pid});
     } else {
         // POSIX: SIGTERM
         std.posix.kill(@intCast(pid), std.posix.SIG.TERM) catch |err| {

@@ -1,240 +1,82 @@
-# Incident Response Runbook
+# Incident Response
 
-## Severity Levels
+This runbook covers the practical responses for the issues this repository can
+actually hit: failing workflows, broken releases, security advisories, and
+unexpected runtime regressions.
 
-| Level             | Criteria                                         | Response Time | Notification                    |
-| ----------------- | ------------------------------------------------ | ------------- | ------------------------------- |
-| **P0 (Critical)** | Security breach, data loss, complete outage      | 15 min        | Page on-call + Slack #incidents |
-| **P1 (High)**     | Major feature degraded, potential security issue | 1 hour        | Slack #incidents + email        |
-| **P2 (Medium)**   | Partial degradation, minor security concern      | 4 hours       | Slack #incidents                |
-| **P3 (Low)**      | Cosmetic issues, documentation gaps              | 24 hours      | GitHub issue                    |
+## Severity
 
-## Incident Commander
+| Level | Meaning | Examples |
+| --- | --- | --- |
+| P0 | Release or security integrity is at risk | Compromised signing, exposed secret, broken provenance |
+| P1 | Mainline CI is blocked | Workflow failure, reproducible build breakage |
+| P2 | Feature or docs quality is degraded | API drift, flaky test, broken examples |
+| P3 | Low-impact cleanup | Broken links, stale wording, formatting issues |
 
-First responder becomes Incident Commander (IC) and:
+## First Response
 
-1. Acknowledges incident in PagerDuty/Opsgenie
-2. Creates incident channel: `#inc-YYYY-MM-DD-brief-description`
-3. Notifies stakeholders per severity level
-4. Appoints roles:
-   - **Scribe**: Documents timeline in incident doc
-   - **Comms**: External communications (if needed)
-   - **Engineer**: Technical investigation
+1. Freeze the scope.
+2. Identify the last known good commit or release tag.
+3. Capture the failing workflow run, log snippet, or repro command.
+4. Decide whether the fix belongs in code, docs, CI, or release plumbing.
 
-## Runbooks
+## CI Failure
 
-### P0: Security Breach
+When a GitHub Actions job fails:
 
-**Symptoms**: Unauthorized access detected, secret exposed, unexpected privilege escalation
+1. Open the failing run and read the first error, not the last one.
+2. Check whether the failure is in Dagger steps or workflow wiring.
+3. Re-run the equivalent local command if the failure is reproducible.
+4. Patch the smallest layer that owns the problem.
 
-1. **Immediate (0-15 min)**
-
-   ```bash
-   # 1. Isolate affected systems
-   dagger call -m ci disable-module --name=<affected-module>
-
-   # 2. Rotate exposed secrets
-   gh secret set API_KEY --body="$(openssl rand -hex 32)"
-
-   # 3. Revoke signing keys if compromised
-   cosign clean --force <key-id>
-   ```
-
-2. **Assessment (15-60 min)**
-   - Review audit logs: `dagger call audit-logs --since=24h`
-   - Identify scope of exposure
-   - Check for lateral movement
-
-3. **Recovery (1-4 hours)**
-   - Patch vulnerability
-   - Redeploy with rotated credentials
-   - Verify no backdoors remain
-
-4. **Post-Incident**
-   - File security advisory
-   - Complete post-mortem within 24h
-   - Update security controls
-
-### P1: Build Pipeline Failure
-
-**Symptoms**: CI failing, builds not producing artifacts, SLSA violations
-
-1. **Immediate**
-
-   ```bash
-   # Check Dagger engine status
-   dagger call -m ci health-check
-
-   # Verify SLSA provenance
-   slsa-verifier verify-artifact --provenance-path ...
-   ```
-
-2. **Common Causes**
-
-   | Error                | Solution                        |
-   | -------------------- | ------------------------------- |
-   | `timeout`            | Increase `DAGGER_CLOUD_TIMEOUT` |
-   | `permission denied`  | Check `DAGGER_CLOUD_TOKEN`      |
-   | `provenance invalid` | Re-run SLSA workflow            |
-   | `signature failed`   | Check Sigstore availability     |
-
-### P2: Performance Degradation
-
-**Symptoms**: Slow operations, high latency, cache misses
-
-1. **Diagnosis**
-
-   ```bash
-   # Check cache hit rate
-   dagger call -m ci metrics --metric=cache_hit_rate
-
-   # Review traces in Jaeger
-   open http://jaeger.localhost:16686
-   ```
-
-2. **Mitigation**
-   - Scale Dagger engine horizontally
-   - Warm caches with `dagger call -m ci warm-cache`
-   - Enable distributed caching
-
-### P3: Documentation Issue
-
-**Symptoms**: Broken links, outdated examples, unclear API
-
-1. Fix in branch: `docs/fix-<issue>`
-2. Preview: `mdbook serve docs/`
-3. PR with `docs:` prefix
-
-## Communication Templates
-
-### Internal (Slack)
-
-```
-:rotating_light: **INCIDENT DECLARED** :rotating_light:
-
-**Severity**: P{0-3}
-**System**: {dagger-zig/sdk/ci}
-**Impact**: {description}
-**Started**: {timestamp}
-**Channel**: #inc-{date}-{brief}
-**IC**: @{handler}
-
-**Current Status**: {investigating/identified/mitigating/resolved}
-```
-
-### External (Status Page)
-
-```
-**Status**: Degraded Performance
-**Component**: Dagger Zig SDK
-**Duration**: 45 minutes
-**Impact**: Schema validation delays
-**Resolution**: Cache layer restored, monitoring improvements deployed
-```
-
-## Tooling
-
-| Tool      | Purpose                 | Command                               |
-| --------- | ----------------------- | ------------------------------------- |
-| PagerDuty | On-call paging          | `pd incident:create --title="..."`    |
-| Slack     | Communication           | `/incident declare`                   |
-| Dagger    | Diagnostics             | `dagger call -m ci incident-diagnose` |
-| Sigstore  | Signature verification  | `cosign verify ...`                   |
-| SLSA      | Provenance verification | `slsa-verifier verify-artifact ...`   |
-
-## Recovery Procedures
-
-### Rollback Release
+Useful commands:
 
 ```bash
-# 1. Identify last known good
-gh release list --limit=5
-
-# 2. Mark bad release
-cosign sign --tlog-upload=false \
-  --yes \
-  --annotation "revoked=true" \
-  ghcr.io/mchorfa/dagger-zig:v0.1.1
-
-# 3. Update latest tag
-crane tag ghcr.io/mchorfa/dagger-zig:v0.1.0 latest
+gh run list --limit 5
+gh run view <run-id> --log
+zig build test
+zig build bench
+scripts/release-verify.sh v0.3.2
 ```
 
-### Restore from Backup
+## Security Advisory
 
-```bash
-# Source code (Git)
-git revert --no-commit HEAD~{n}
+If a dependency or workflow advisory lands:
 
-# Artifacts (if needed)
-gh run download --repo=mchorfa/dagger-zig <run-id>
-```
+1. Confirm whether the vulnerable path is actually used.
+2. Update the pinned dependency or workflow action.
+3. Re-run the security workflow and release verification.
+4. Update the changelog or security notes if the fix changes the public story.
 
-## Post-Mortem Template
+## Broken Release
 
-```markdown
-# INCIDENT-XXX: [Brief Title]
+If a tagged release is missing provenance, signatures, or assets:
 
-## Metadata
+1. Verify the release workflow completed successfully.
+2. Check the release assets and attestation attachments.
+3. Re-run the verification script locally.
+4. If the release is genuinely bad, cut a follow-up tag with a clear note.
 
-- Date: YYYY-MM-DD
-- Duration: XX minutes
-- Severity: P{0-3}
-- IC: @name
-- Participants: @names
+## Documentation Regression
 
-## Summary
+If the docs start describing behavior the code does not have:
 
-One paragraph describing what happened and impact.
+1. Treat the docs as a bug.
+2. Fix the docs to match the implementation or remove the claim.
+3. Verify the README, docs hub, and reference page all agree.
 
-## Timeline
+## Post-Incident Note
 
-- 09:00 UTC - Issue detected via alert
-- 09:15 UTC - IC paged, incident declared
-- 09:30 UTC - Root cause identified
-- 10:00 UTC - Mitigation deployed
-- 10:30 UTC - Service fully recovered
-- 11:00 UTC - Incident resolved
+Keep the postmortem short and operational:
 
-## Root Cause
+- What failed
+- What was affected
+- What fixed it
+- What should be automated next
 
-Detailed explanation of why the incident occurred.
+## Related Pages
 
-## Impact
-
-- Users affected: XX%
-- Data lost: none/YY records
-- Services degraded: list
-
-## Lessons Learned
-
-1.
-2.
-
-## Action Items
-
-| ID  | Task | Owner | Due |
-| --- | ---- | ----- | --- |
-| 1   |      |       |     |
-
-## Follow-Up
-
-- [ ] Action items completed
-- [ ] Monitoring improvements deployed
-- [ ] Runbook updated
-- [ ] Team retro scheduled
-```
-
-## Contact Information
-
-| Role             | Primary             | Backup               |
-| ---------------- | ------------------- | -------------------- |
-| Security Lead    | security@MChorfa.io | pagerduty escalation |
-| Engineering Lead | mchorfa@MChorfa.io  | pagerduty escalation |
-| On-Call Engineer | PagerDuty rotation  | secondary rotation   |
-
-## Revision History
-
-| Date       | Author  | Changes         |
-| ---------- | ------- | --------------- |
-| 2024-06-15 | mchorfa | Initial version |
+- [Compliance](compliance.md)
+- [Build Guide](build.md)
+- [Local CI Testing](local-ci-testing.md)
+- [Observability](observability.md)
