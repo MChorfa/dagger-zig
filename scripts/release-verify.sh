@@ -32,6 +32,48 @@ echo
 CERT_IDENTITY="https://github.com/${REPO}/.github/workflows/release.yml@refs/tags/${TAG}"
 fail=0
 
+if [ -f checksums.sha256 ]; then
+  if sha256sum -c checksums.sha256 >/dev/null 2>&1; then
+    echo "   ✅ aggregate checksums"
+  else
+    echo "   ❌ aggregate checksums FAILED"
+    fail=1
+  fi
+else
+  echo "   ❌ missing checksums.sha256"
+  fail=1
+fi
+
+if [ -f release-manifest.sha256 ]; then
+  sbom_sha="$(sha256sum sbom.spdx.json | awk '{print $1}')"
+  manifest_sha="$(tr -d ' \t\r\n' < release-manifest.sha256)"
+  if [ "${sbom_sha}" = "${manifest_sha}" ]; then
+    echo "   ✅ release manifest checksum"
+  else
+    echo "   ❌ release manifest checksum FAILED"
+    fail=1
+  fi
+
+  if [ -f release-manifest.sha256.bundle ] && need cosign; then
+    if cosign verify-blob \
+        --bundle release-manifest.sha256.bundle \
+        --certificate-identity "${CERT_IDENTITY}" \
+        --certificate-oidc-issuer "${OIDC_ISSUER}" \
+        release-manifest.sha256 >/dev/null 2>&1; then
+      echo "   ✅ release manifest bundle"
+    else
+      echo "   ❌ release manifest bundle FAILED"
+      fail=1
+    fi
+  else
+    echo "   ❌ missing release-manifest.sha256.bundle"
+    fail=1
+  fi
+else
+  echo "   ❌ missing release-manifest.sha256"
+  fail=1
+fi
+
 for f in *.tar.gz; do
   [ -e "${f}" ] || { echo "no tarballs found in release ${TAG}"; exit 1; }
   echo "── ${f}"
