@@ -1,12 +1,10 @@
 # Examples
 
-These examples are intentionally small and opinionated: one client per task,
-branch when you fan out, and keep the code close to what actually runs.
+These examples are intentionally small and opinionated: one client per task, branch when you fan out, and keep the code close to what actually runs.
 
 ## Parallel fan-out
 
-Pull several base images concurrently. Each task gets its own branch so the
-client state stays isolated.
+Pull several base images concurrently. Each task gets its own branch so the client state stays isolated.
 
 ```zig
 const std = @import("std");
