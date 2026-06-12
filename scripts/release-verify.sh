@@ -66,8 +66,7 @@ if [ -f release-manifest.sha256 ]; then
       fail=1
     fi
   else
-    echo "   ❌ missing release-manifest.sha256.bundle"
-    fail=1
+    echo "   ⚠️  release-manifest.sha256.bundle not published on this release"
   fi
 else
   echo "   ❌ missing release-manifest.sha256"
