@@ -4,12 +4,11 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const dagger_sdk = b.createModule(.{
-        .root_source_file = b.path("../../sdk/lib/src/root.zig"),
+    const dagger_dep = b.dependency("dagger_sdk", .{
         .target = target,
         .optimize = optimize,
-        .link_libc = true,
     });
+    const dagger_sdk = dagger_dep.module("dagger_sdk");
 
     // The orchestration submodules live in sibling directories outside this
     // module's root, so Zig file imports cannot reach them. Wire each as a

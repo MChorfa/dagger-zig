@@ -1,0 +1,16 @@
+.{
+    .fingerprint = 0x3a76e678a87180d8,
+    .name = .ci_pipeline,
+    .version = "0.0.0",
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .dagger_sdk = .{
+            .path = ".dagger-sdk-lib",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "main.zig",
+    },
+}
