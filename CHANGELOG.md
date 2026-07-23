@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.4](https://github.com/MChorfa/dagger-zig/compare/v0.3.3...v0.3.4) (2026-07-23)
+
+
+### Bug Fixes
+
+* allow grype sarif uploads ([995bc49](https://github.com/MChorfa/dagger-zig/commit/995bc494edec67fdf4333e78080c8231deef0a3a))
+* ship Zig SDK library inside the SDK module so runtime resolves dagger_sdk import ([#42](https://github.com/MChorfa/dagger-zig/issues/42)) ([c81e59c](https://github.com/MChorfa/dagger-zig/commit/c81e59c1bfdff1dc1ca7fbd95a78592bfad56b1e))
+
 ## [0.3.3](https://github.com/MChorfa/dagger-zig/compare/v0.3.2...v0.3.3) (2026-06-12)
 
 
