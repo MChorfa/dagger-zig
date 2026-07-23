@@ -54,3 +54,7 @@
 - [Release Checklist](RELEASE_CHECKLIST.md)
 - [Changelog](../CHANGELOG.md)
 - [License](../LICENSE)
+
+## Blog
+
+- [v0.3.4 Community Update](blog/v0.3.4-community-update.md)
