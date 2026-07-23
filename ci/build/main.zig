@@ -164,12 +164,11 @@ pub const Build = struct {
             signer = try signer.withNewFile("/provenance.json", provenance_json);
             signer = try signer.withSecretVariable("SIGSTORE_ID_TOKEN", token);
             signer = try signer.withExec(&.{
-                "cosign",          "attest",
-                "--yes",
-                "--predicate",     "/provenance.json",
-                "--type",          "slsaprovenance1",
-                "--output-bundle", "/output.bundle",
-                "/sbom/sbom.spdx.json",
+                "cosign",           "attest",
+                "--yes",            "--predicate",
+                "/provenance.json", "--type",
+                "slsaprovenance1",  "--output-bundle",
+                "/output.bundle",   "/sbom/sbom.spdx.json",
             });
             artifacts = try artifacts.withFile(
                 "/attestation.bundle",

@@ -10,16 +10,16 @@ pub const SarifReporter = struct {
         level: []const u8,
     ) !dagger.File {
         const template = "{\"version\":\"2.1.0\",\"runs\":[{\"tool\":{\"driver\":{\"name\":\"{s}\"}},\"results\":[{\"ruleId\":\"{s}\",\"message\":{\"text\":\"{s}\"},\"level\":\"{s}\"}]}]}";
-        
+
         const content = try std.fmt.allocPrint(ctx.allocator(), template, .{
             tool_name, rule_id, message, level,
         });
-        
+
         const container = try ctx.dag()
             .container()
             .from("alpine:latest")
             .withNewFile("/report.sarif", content);
-        
+
         return try container.file("/report.sarif");
     }
 };

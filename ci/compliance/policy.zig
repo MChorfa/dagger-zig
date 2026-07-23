@@ -47,10 +47,10 @@ pub const PolicyGate = struct {
         gate = try gate.withFile("/provenance.json", provenance);
         gate = try gate.withNewFile("/policy.rego", policy_rego);
         gate = try gate.withExec(&.{
-            "/opa",     "eval",
-            "--input",  "/provenance.json",
-            "--data",   "/policy.rego",
-            "--format", "raw",
+            "/opa",                               "eval",
+            "--input",                            "/provenance.json",
+            "--data",                             "/policy.rego",
+            "--format",                           "raw",
             "data.supply_chain.governance.allow",
         });
         const result_raw = try gate.stdout();
