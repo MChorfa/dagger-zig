@@ -6,7 +6,7 @@ import (
 )
 
 func TestModuleBuildScriptChecksSourceSubpathBeforeRoot(t *testing.T) {
-	script := ModuleBuildScript("/user-module", "ci")
+	script := ModuleBuildScript("/user-module", "ci", "/sdk-lib", ".dagger-sdk-lib")
 
 	first := strings.Index(script, `"/user-module/ci"`)
 	second := strings.Index(script, `"/user-module"`)
@@ -25,10 +25,20 @@ func TestModuleBuildScriptChecksSourceSubpathBeforeRoot(t *testing.T) {
 	if !strings.Contains(script, `zig build -Doptimize=ReleaseSafe --prefix /out`) {
 		t.Fatalf("expected script to run zig build: %s", script)
 	}
+	// The symlink step must reference both the mount path and the link name.
+	if !strings.Contains(script, `/sdk-lib`) {
+		t.Fatalf("expected script to reference the SDK lib mount path: %s", script)
+	}
+	if !strings.Contains(script, `.dagger-sdk-lib`) {
+		t.Fatalf("expected script to create the .dagger-sdk-lib symlink: %s", script)
+	}
+	if !strings.Contains(script, `ln -sfn`) {
+		t.Fatalf("expected script to create a symlink: %s", script)
+	}
 }
 
 func TestModuleBuildScriptOmitsDuplicateSourceRootCandidate(t *testing.T) {
-	script := ModuleBuildScript("/user-module", ".")
+	script := ModuleBuildScript("/user-module", ".", "/sdk-lib", ".dagger-sdk-lib")
 
 	if strings.Count(script, `"/user-module"`) != 1 {
 		t.Fatalf("expected only one root candidate when source subpath is root: %s", script)

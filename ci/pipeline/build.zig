@@ -5,7 +5,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const dagger_sdk = b.createModule(.{
-        .root_source_file = b.path("../../src/root.zig"),
+        .root_source_file = b.path("../../sdk/lib/src/root.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,

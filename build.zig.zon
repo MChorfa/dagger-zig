@@ -19,7 +19,9 @@
     .paths = .{
         "build.zig",
         "build.zig.zon",
-        "src",
+        "sdk/lib/src",
+        "sdk/lib/build.zig",
+        "sdk/lib/build.zig.zon",
         "codegen",
         "examples",
         "LICENSE",
