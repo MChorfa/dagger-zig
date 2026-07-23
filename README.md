@@ -79,7 +79,7 @@ const MyModule = struct {
         source: dagger.Directory,
     ) !dagger.Container {
         _ = self;
-        const ctr = try ctx.dag().container();
+        const ctr = try ctx.container();
         const based = try ctr.from("golang:1.23-alpine");
         const sourced = try based.withDirectory("/src", source);
         const workdir = try sourced.withWorkdir("/src");
@@ -101,11 +101,11 @@ pub fn main(init: std.process.Init) !void {
 ```
 
 ```bash
-dagger develop                 # codegen → internal/dagger/dagger.gen.zig
-dagger call build --arg-0 .
+dagger develop                 # codegen → build.zig + build.zig.zon + internal/dagger/dagger.gen.zig
+dagger call build --source=.
 ```
 
-More examples: [parallel pipelines](examples/parallel/main.zig) (`Io.Group`), the [C/Python FFI](examples/c-client/), and [SPIFFE registry auth](docs/spiffe.md).
+More examples: [parallel pipelines](examples/parallel/main.zig) (`Io.Group`), the [C/Python FFI](examples/c-client/), [SPIFFE registry auth](docs/spiffe.md), and the [e2e module](examples/e2e-module/) (a standalone Dagger module that exercises the full `ModuleRuntime` path).
 
 ## Verifying a release
 

@@ -93,9 +93,9 @@ pub const Pipeline = struct {
         sbom_runner = try sbom_runner.withDirectory("/src", source);
         sbom_runner = try sbom_runner.withNewFile("/results/.keep", "");
         sbom_runner = try sbom_runner.withExec(&.{
-            "/syft",   "dir:/src",
-            "-o",      "cyclonedx-json=/results/sbom.cdx.json",
-            "-o",      "spdx-json=/results/sbom.spdx.json",
+            "/syft", "dir:/src",
+            "-o",    "cyclonedx-json=/results/sbom.cdx.json",
+            "-o",    "spdx-json=/results/sbom.spdx.json",
         });
         const sbom_results = try sbom_runner.directory("/results");
 

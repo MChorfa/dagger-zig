@@ -254,10 +254,10 @@ pub const AsyncStrategy = enum {
 
 // ─────────────────────────── Process Management ───────────────────────────
 
-    /// Platform-specific process signal handling.
-    ///
-    /// POSIX signals are supported; Windows signal handling remains a
-    /// compatibility gap.
+/// Platform-specific process signal handling.
+///
+/// POSIX signals are supported; Windows signal handling remains a
+/// compatibility gap.
 pub fn sendTermSignal(pid: i32) void {
     if (is_windows) {
         std.log.warn("sendTermSignal() is not implemented on Windows yet. PID {} not signaled.", .{pid});

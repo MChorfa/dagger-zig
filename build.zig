@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
 
     // ── library module (the public import: `@import("dagger_sdk")`) ─────
     const dagger_mod = b.addModule("dagger_sdk", .{
-        .root_source_file = b.path("src/root.zig"),
+        .root_source_file = b.path("sdk/lib/src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -54,7 +54,7 @@ pub fn build(b: *std.Build) void {
 
     // ── unit tests ──────────────────────────────────────────────────────
     const unit_mod = b.createModule(.{
-        .root_source_file = b.path("src/root.zig"),
+        .root_source_file = b.path("sdk/lib/src/root.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
@@ -121,7 +121,7 @@ pub fn build(b: *std.Build) void {
 
     // ── comprehensive test suite ───────────────────────────────────────
     const test_suite_mod = b.createModule(.{
-        .root_source_file = b.path("src/test_suite.zig"),
+        .root_source_file = b.path("sdk/lib/src/test_suite.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
@@ -175,7 +175,7 @@ pub fn build(b: *std.Build) void {
     // ready to be shipped and documented end-to-end.
     //
     // const c_api_mod = b.createModule(.{
-    //     .root_source_file = b.path("src/c_api.zig"),
+    //     .root_source_file = b.path("sdk/lib/src/c_api.zig"),
     //     .target = target,
     //     .optimize = optimize,
     //     .link_libc = true,

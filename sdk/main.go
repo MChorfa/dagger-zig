@@ -21,8 +21,7 @@
 //
 //   - Codegen(modSource, introspectionJson) → GeneratedCode
 //     Returns the changeset that `dagger develop` applies to the user's
-//     source: the internal/dagger/dagger.gen.zig that lets them call
-//     dag.Container() etc. from inside their module.
+//     source: build.zig, build.zig.zon, and internal/dagger/dagger.gen.zig.
 //
 // # Why Go and not Zig?
 //
@@ -46,15 +45,22 @@ import (
 	runtimeutil "dagger/dagger-zig-sdk/runtimeutil"
 )
 
-// The Zig toolchain image we use for every module build. Pinned — bumping
-// it is a coordinated release because every module built by this SDK
-// inherits the Zig version.
-const zigImage = "kassany/ziglang:0.16.0"
+// The Zig toolchain version. Pinned — bumping it is a coordinated release
+// because every module built by this SDK inherits the Zig version.
+//
+// We install from the official ziglang.org tarball rather than a Docker
+// image because no multi-arch (amd64 + arm64) Zig 0.16 image exists on
+// Docker Hub as of 2026-07. The tarball approach works on both x86_64
+// and aarch64 Linux runners.
+const zigVersion = "0.16.0"
 
-// Path inside the runtime container where we stage user module source.
-const userSrcPath = "/user-module"
-const sdkLibPath = "/sdk-lib"
-const schemaPath = "/schema.json"
+// Paths inside the runtime container.
+const (
+	userSrcPath   = "/user-module" // user's module source (workdir)
+	sdkLibPath    = "/sdk-lib"     // vendored dagger_sdk Zig library
+	schemaPath    = "/schema.json" // introspection JSON (mounted if provided)
+	sdkLibLinkDir = ".dagger-sdk-lib" // relative symlink name inside build dir
+)
 
 type DaggerZigSdk struct{}
 
@@ -71,14 +77,16 @@ func (m *DaggerZigSdk) ModuleRuntime(
 	modSource *dagger.ModuleSource,
 	introspectionJson *dagger.File,
 ) (*dagger.Container, error) {
-	// Walk inputs:
-	//   modSource.ContextDirectory() — user's module source, rooted at their repo
-	//   modSource.SourceSubpath()    — the sub-dir inside that root
 	userDir := modSource.ContextDirectory()
 	subpath, err := modSource.SourceSubpath(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("resolve source subpath: %w", err)
 	}
+
+	// dag.CurrentModule().Source() is the SDK module's own source directory
+	// (sdk/). The Zig library lives under sdk/lib/ — that's what we mount
+	// so the user's build.zig.zon can resolve @import("dagger_sdk").
+	sdkLibDir := dag.CurrentModule().Source().Directory("lib")
 
 	ctr := dag.Container().
 		From("alpine:3.20").
@@ -92,24 +100,28 @@ func (m *DaggerZigSdk) ModuleRuntime(
 			else
 				echo "Unsupported architecture: $ARCH" && exit 1
 			fi
-			curl -L https://ziglang.org/download/0.16.0/zig-${ZIG_ARCH}-linux-0.16.0.tar.xz | tar -xJ -C /usr/local
-			ln -s /usr/local/zig-${ZIG_ARCH}-linux-0.16.0/zig /usr/local/bin/zig
+			curl -L https://ziglang.org/download/` + zigVersion + `/zig-${ZIG_ARCH}-linux-` + zigVersion + `.tar.xz | tar -xJ -C /usr/local
+			ln -s /usr/local/zig-${ZIG_ARCH}-linux-` + zigVersion + `/zig /usr/local/bin/zig
 		`}).
-		WithMountedCache("/root/.cache/zig", dag.CacheVolume("dagger-zig-build-v1")).
+		WithMountedCache("/root/.cache/zig", dag.CacheVolume("dagger-zig-build-v2")).
 		WithDirectory(userSrcPath, userDir).
-		WithMountedDirectory(sdkLibPath, dag.CurrentModule().Source()).
+		WithMountedDirectory(sdkLibPath, sdkLibDir).
 		WithWorkdir(userSrcPath)
 
 	if introspectionJson != nil {
 		ctr = ctr.WithMountedFile(schemaPath, introspectionJson)
 	}
 
-	// The user's module is an executable that imports `dagger_sdk` and
-	// calls `dagger.module.serve(init, UserModule{})`. We generate a
-	// minimal build.zig.zon if the user didn't provide one, then build.
+	// The build script:
+	//   1. Finds the build directory (source subpath or root).
+	//   2. Symlinks /sdk-lib into the build dir as .dagger-sdk-lib so the
+	//      generated build.zig.zon's relative .path = ".dagger-sdk-lib"
+	//      resolves correctly regardless of the source subpath.
+	//   3. Runs `zig build module-runtime` (or plain `zig build` fallback)
+	//      with --prefix /out so the binary lands at /out/bin/module.
 	ctr = ctr.WithExec([]string{
 		"sh", "-c",
-		runtimeutil.ModuleBuildScript(userSrcPath, subpath),
+		runtimeutil.ModuleBuildScript(userSrcPath, subpath, sdkLibPath, sdkLibLinkDir),
 	}).
 		WithEntrypoint([]string{"/out/bin/module"})
 
@@ -117,13 +129,20 @@ func (m *DaggerZigSdk) ModuleRuntime(
 }
 
 // Codegen returns the generated-code changeset that `dagger develop`
-// applies to the user's source tree. For Zig, we emit
-// `internal/dagger/dagger.gen.zig` with the typed client bindings.
+// applies to the user's source tree. We emit three files:
 //
-// In v0.1 this is minimal — we copy a pre-generated stub. The real
-// codegen (invoking our `dagger-codegen` binary against the introspection
-// JSON) lands in v0.1.1, at which point Zig-native module authoring is
-// as ergonomic as Go/TS.
+//   - build.zig      — wires dagger_sdk as a dependency and installs a
+//                      `module` executable via the `module-runtime` step.
+//   - build.zig.zon  — declares the dagger_sdk path dependency pointing
+//                      at .dagger-sdk-lib (symlinked to /sdk-lib at
+//                      runtime by ModuleBuildScript).
+//   - internal/dagger/dagger.gen.zig — re-export shim so users can also
+//                      `@import("dagger").Container` etc.
+//
+// If the user already has a build.zig or build.zig.zon, Codegen still
+// overwrites them — the SDK owns the build graph. Users customise their
+// module by editing main.zig, not the build files. (A future version can
+// detect existing build files and merge.)
 func (m *DaggerZigSdk) Codegen(
 	ctx context.Context,
 	modSource *dagger.ModuleSource,
@@ -132,16 +151,23 @@ func (m *DaggerZigSdk) Codegen(
 	_ = ctx
 	_ = introspectionJson
 
-	// For v0.1 we produce a fixed skeleton; the user's module then imports
-	// `dagger_sdk` directly (which we mount into their container via
-	// ModuleRuntime), so this generated file is small.
 	userDir := modSource.ContextDirectory()
 
 	withGen := userDir.
+		WithNewFile("build.zig", zigcodegen.UserModuleBuildZig()).
+		WithNewFile("build.zig.zon", zigcodegen.UserModuleBuildZigZon()).
 		WithNewFile("internal/dagger/dagger.gen.zig", zigcodegen.GeneratedModuleBindings())
 
-	// GeneratedCode expects a Directory, not a Changeset (API changed after CLI v0.12.5)
 	return dag.GeneratedCode(withGen).
-		WithVCSGeneratedPaths([]string{"internal/dagger/dagger.gen.zig"}).
-		WithVCSIgnoredPaths([]string{"zig-cache", "zig-out", ".zig-cache"}), nil
+		WithVCSGeneratedPaths([]string{
+			"build.zig",
+			"build.zig.zon",
+			"internal/dagger/dagger.gen.zig",
+		}).
+		WithVCSIgnoredPaths([]string{
+			"zig-cache",
+			"zig-out",
+			".zig-cache",
+			".dagger-sdk-lib",
+		}), nil
 }

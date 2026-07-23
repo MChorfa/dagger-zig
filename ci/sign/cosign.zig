@@ -109,11 +109,10 @@ pub const CosignSigner = struct {
         signer = try signer.withSecretVariable("SIGSTORE_ID_TOKEN", oidc_token);
         signer = try signer.withExec(&.{
             "cosign",          "attest",
-            "--yes",
-            "--predicate",     "/predicate.json",
-            "--type",          "slsaprovenance1",
-            "--output-bundle", "/output.bundle",
-            "/subject",
+            "--yes",           "--predicate",
+            "/predicate.json", "--type",
+            "slsaprovenance1", "--output-bundle",
+            "/output.bundle",  "/subject",
         });
         return signer.file("/output.bundle");
     }

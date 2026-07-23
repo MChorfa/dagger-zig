@@ -26,4 +26,6 @@ rm -f "${SDK_DIR}/LICENSE" "${SDK_DIR}/README.md"
 
 copy_file "build.zig"
 copy_file "build.zig.zon"
-copy_tree "src"
+copy_tree "sdk/lib/src"
+copy_file "sdk/lib/build.zig"
+copy_file "sdk/lib/build.zig.zon"

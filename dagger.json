@@ -9,6 +9,6 @@
     "build.zig",
     "build.zig.zon",
     "schema",
-    "src"
+    "sdk/lib/src"
   ]
 }

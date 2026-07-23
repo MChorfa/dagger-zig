@@ -7,7 +7,7 @@
   "source": ".",
   "include": [
     "build.zig",
-    "../src",
+    "../sdk/lib/src",
     "full_main.zig",
     "!docs_main.zig"
   ]
