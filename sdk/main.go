@@ -6,11 +6,11 @@
 //
 //	{
 //	  "name": "my-pipeline",
-//	  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.2",
+//	  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.4",
 //	  "source": "."
 //	}
 //
-// the Dagger engine clones dagger-zig@v0.3.2, goes into the `sdk/`
+// the Dagger engine clones dagger-zig@v0.3.4, goes into the `sdk/`
 // directory, and invokes this module. This module implements two
 // functions the engine expects from any Module SDK:
 //
@@ -39,6 +39,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	zigcodegen "dagger/dagger-zig-sdk/codegen"
 	"dagger/dagger-zig-sdk/internal/dagger"
@@ -148,15 +149,28 @@ func (m *DaggerZigSdk) Codegen(
 	modSource *dagger.ModuleSource,
 	introspectionJson *dagger.File,
 ) (*dagger.GeneratedCode, error) {
-	_ = ctx
 	_ = introspectionJson
 
 	userDir := modSource.ContextDirectory()
 
+	// Resolve the source subpath so generated files land inside the
+	// module's source directory, not at the context directory root.
+	// When the module is nested (e.g. examples/e2e-module/ within a
+	// repo), ContextDirectory() returns the repo root and we need to
+	// prepend the subpath to each WithNewFile path.
+	subpath, err := modSource.SourceSubpath(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("resolve source subpath: %w", err)
+	}
+
+	buildZigPath := filepath.Join(subpath, "build.zig")
+	buildZigZonPath := filepath.Join(subpath, "build.zig.zon")
+	genZigPath := filepath.Join(subpath, "internal/dagger/dagger.gen.zig")
+
 	withGen := userDir.
-		WithNewFile("build.zig", zigcodegen.UserModuleBuildZig()).
-		WithNewFile("build.zig.zon", zigcodegen.UserModuleBuildZigZon()).
-		WithNewFile("internal/dagger/dagger.gen.zig", zigcodegen.GeneratedModuleBindings())
+		WithNewFile(buildZigPath, zigcodegen.UserModuleBuildZig()).
+		WithNewFile(buildZigZonPath, zigcodegen.UserModuleBuildZigZon()).
+		WithNewFile(genZigPath, zigcodegen.GeneratedModuleBindings())
 
 	return dag.GeneratedCode(withGen).
 		WithVCSGeneratedPaths([]string{
