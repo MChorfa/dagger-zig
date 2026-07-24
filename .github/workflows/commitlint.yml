@@ -24,7 +24,7 @@ jobs:
           BRANCH_NAME: ${{ github.ref_name }}
           IS_FORK: ${{ github.event.repository.fork }}
         with:
-          version: "v0.21.0" # match ci/pipeline/dagger.json engineVersion
+          version: "v0.21.7" # match ci/pipeline/dagger.json engineVersion
           verb: call
           module: ./ci/pipeline
           args: compliance --arg-0=. --arg-1=${{ env.REPO_URL }} --arg-2=${{ env.BRANCH_NAME }} --arg-3=${{ env.IS_FORK }} export --path=/tmp/dagger-artifacts/compliance

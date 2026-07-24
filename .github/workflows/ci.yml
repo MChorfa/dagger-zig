@@ -21,7 +21,7 @@ jobs:
       - name: Run CI pipeline
         uses: dagger/dagger-for-github@496f1b3d8b0d823834c13e67cf8a8e08ca3b9602 # v8.4.0
         with:
-          version: "v0.21.0" # match ci/pipeline/dagger.json engineVersion
+          version: "v0.21.7" # match ci/pipeline/dagger.json engineVersion
           verb: call
           module: ./ci/pipeline
           args: run --arg-0=.
