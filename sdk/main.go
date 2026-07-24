@@ -39,6 +39,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	zigcodegen "dagger/dagger-zig-sdk/codegen"
 	"dagger/dagger-zig-sdk/internal/dagger"
@@ -150,6 +151,20 @@ func (m *DaggerZigSdk) Codegen(
 ) (*dagger.GeneratedCode, error) {
 	userDir := modSource.ContextDirectory()
 
+	// Resolve the source subpath so generated files land inside the
+	// module's source directory, not at the context directory root.
+	// When the module is nested (e.g. examples/e2e-module/ within a
+	// repo), ContextDirectory() returns the repo root and we need to
+	// prepend the subpath to each WithNewFile path.
+	subpath, err := modSource.SourceSubpath(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("resolve source subpath: %w", err)
+	}
+
+	buildZigPath := filepath.Join(subpath, "build.zig")
+	buildZigZonPath := filepath.Join(subpath, "build.zig.zon")
+	genZigPath := filepath.Join(subpath, "internal/dagger/dagger.gen.zig")
+
 	// Generate the dagger.gen.zig bindings from the introspection JSON.
 	// If introspection is unavailable (e.g. offline), fall back to the
 	// static stub so codegen still produces a valid changeset.
@@ -167,9 +182,9 @@ func (m *DaggerZigSdk) Codegen(
 	}
 
 	withGen := userDir.
-		WithNewFile("build.zig", zigcodegen.UserModuleBuildZig()).
-		WithNewFile("build.zig.zon", zigcodegen.UserModuleBuildZigZon()).
-		WithNewFile("internal/dagger/dagger.gen.zig", genZig)
+		WithNewFile(buildZigPath, zigcodegen.UserModuleBuildZig()).
+		WithNewFile(buildZigZonPath, zigcodegen.UserModuleBuildZigZon()).
+		WithNewFile(genZigPath, genZig)
 
 	return dag.GeneratedCode(withGen).
 		WithVCSGeneratedPaths([]string{

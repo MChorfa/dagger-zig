@@ -92,7 +92,7 @@ pub fn build(b: *std.Build) void {
     const bench_install = b.addInstallArtifact(bench_exe, .{});
     const run_bench = b.addRunArtifact(bench_exe);
     run_bench.step.dependOn(&bench_install.step);
-    if (b.args) |args| run_bench.addArgs(args);
+    run_bench.addPassthruArgs();
     const bench_step = b.step("bench", "Run offline performance benchmarks (query builder, serialization)");
     bench_step.dependOn(&run_bench.step);
 
@@ -102,7 +102,7 @@ pub fn build(b: *std.Build) void {
     // Fails loudly with install instructions if no profiler is present.
     const flamegraph = b.addSystemCommand(&.{ "bash", "scripts/bench-flamegraph.sh" });
     flamegraph.step.dependOn(&bench_install.step); // ensure zig-out/bin/bench exists first
-    if (b.args) |args| flamegraph.addArgs(args);
+    flamegraph.addPassthruArgs();
     const flamegraph_step = b.step("flamegraph", "Render a CPU flamegraph SVG of the benchmarks (requires `flamegraph`; see benches/README.md)");
     flamegraph_step.dependOn(&flamegraph.step);
 
@@ -156,7 +156,7 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(codegen_exe);
     const run_codegen = b.addRunArtifact(codegen_exe);
-    if (b.args) |args| run_codegen.addArgs(args);
+    run_codegen.addPassthruArgs();
     const codegen_step = b.step("codegen", "Regenerate src/gen.zig from the live engine schema");
     codegen_step.dependOn(&run_codegen.step);
 
