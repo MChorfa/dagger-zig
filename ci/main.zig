@@ -18,7 +18,7 @@ pub const CiPipeline = struct {
         _ = self;
         const pipeline_ctx = try ctx.pipeline("code-quality-lint");
         var runner = try pipeline_ctx.container();
-        runner = try runner.from("alpine:latest");
+        runner = try runner.from("alpine:latest", null);
         runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
@@ -109,7 +109,7 @@ pub const CiPipeline = struct {
         _ = self;
         const pipeline_ctx = try ctx.pipeline("functional-verification-tests");
         var runner = try pipeline_ctx.container();
-        runner = try runner.from("alpine:latest");
+        runner = try runner.from("alpine:latest", null);
         runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
@@ -249,7 +249,7 @@ pub const CiPipeline = struct {
         // Generate release metadata
         const metadata_container = try ctx
             .container()
-            .from("alpine:latest")
+            .from("alpine:latest", null)
             .withNewFile("/metadata.txt", version);
         const metadata = try metadata_container.file("/metadata.txt");
         artifacts = try artifacts.withFile("version.txt", metadata);

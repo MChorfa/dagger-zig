@@ -55,7 +55,7 @@ pub const Docs = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var results = try ctx.container();
-        results = try results.from("alpine:latest");
+        results = try results.from("alpine:latest", null);
 
         // Validate markdown
         const lint_output = try validateMarkdown(ctx, source);

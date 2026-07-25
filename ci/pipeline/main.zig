@@ -102,7 +102,7 @@ pub const Pipeline = struct {
 
         // Aggregate all artifacts
         var artifacts = try ctx.container();
-        artifacts = try artifacts.from("alpine:latest");
+        artifacts = try artifacts.from("alpine:latest", null);
 
         artifacts = try artifacts.withDirectory("/security", security_results);
         artifacts = try artifacts.withDirectory("/build", build_results);

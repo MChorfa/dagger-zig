@@ -52,7 +52,7 @@ pub const MarkdownLinter = struct {
         const format_output = try self.checkFormat(ctx, source);
 
         var reports = try ctx.container();
-        reports = try reports.from("alpine:latest");
+        reports = try reports.from("alpine:latest", null);
         reports = try reports.withFile("/markdown-lint.txt", lint_output);
         reports = try reports.withFile("/prettier-check.txt", format_output);
 

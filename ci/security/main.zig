@@ -109,7 +109,7 @@ pub const Security = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var results = try ctx.container();
-        results = try results.from("alpine:latest");
+        results = try results.from("alpine:latest", null);
 
         // Each scanner is an independent Dagger pipeline; the engine evaluates
         // these graph branches concurrently at execution time (no goroutines here).

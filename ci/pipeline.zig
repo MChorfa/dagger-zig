@@ -23,7 +23,7 @@ pub const Pipeline = struct {
     ) !dagger.File {
         _ = self;
         var runner = try ctx.container();
-        runner = try runner.from("alpine:latest");
+        runner = try runner.from("alpine:latest", null);
         runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
@@ -40,7 +40,7 @@ pub const Pipeline = struct {
     ) !dagger.File {
         _ = self;
         var runner = try ctx.container();
-        runner = try runner.from("alpine:latest");
+        runner = try runner.from("alpine:latest", null);
         runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
         runner = try runner.withDirectory("/src", source);
         runner = try runner.withWorkdir("/src");
@@ -71,7 +71,7 @@ pub const Pipeline = struct {
     ) !dagger.Container {
         _ = self;
         var builder = try ctx.container();
-        builder = try builder.from("alpine:latest");
+        builder = try builder.from("alpine:latest", null);
         builder = try builder.withExec(&.{ "apk", "add", "--no-cache", "zig" });
         builder = try builder.withDirectory("/src", source);
         builder = try builder.withWorkdir("/src");
@@ -100,7 +100,7 @@ pub const Pipeline = struct {
         const sbom_results = try sbom_runner.directory("/results");
 
         var hasher = try ctx.container();
-        hasher = try hasher.from("alpine:latest");
+        hasher = try hasher.from("alpine:latest", null);
         hasher = try hasher.withDirectory("/sbom", sbom_results);
         hasher = try hasher.withExec(&.{
             "sh", "-c", "sha256sum /sbom/sbom.spdx.json | awk '{print $1}'",
@@ -119,7 +119,7 @@ pub const Pipeline = struct {
         const git_commit = std.mem.trim(u8, git_commit_raw, " \t\r\n");
 
         var ts_runner = try ctx.container();
-        ts_runner = try ts_runner.from("alpine:latest");
+        ts_runner = try ts_runner.from("alpine:latest", null);
         ts_runner = try ts_runner.withExec(&.{ "date", "-u", "+%Y-%m-%dT%H:%M:%SZ" });
         const timestamp_raw = try ts_runner.stdout();
         const timestamp = std.mem.trim(u8, timestamp_raw, " \t\r\n");
@@ -146,7 +146,7 @@ pub const Pipeline = struct {
         });
 
         var out = try ctx.container();
-        out = try out.from("alpine:latest");
+        out = try out.from("alpine:latest", null);
         out = try out.withDirectory("/sbom", sbom_results);
         out = try out.withNewFile("/provenance.json", provenance_json);
         return try out.directory("/");

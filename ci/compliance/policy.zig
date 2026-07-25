@@ -55,7 +55,7 @@ pub const PolicyGate = struct {
         });
         const result_raw = try gate.stdout();
         var out = try ctx.container();
-        out = try out.from("alpine:latest");
+        out = try out.from("alpine:latest", null);
         out = try out.withNewFile("/policy-result.txt", result_raw);
         return out.file("/policy-result.txt");
     }

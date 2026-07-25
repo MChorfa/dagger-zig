@@ -188,7 +188,7 @@ fn serializeJsonValue(comptime T: type, value: T, w: *std.Io.Writer) !void {
 
 fn serializeStruct(comptime T: type, value: T, w: *std.Io.Writer) !void {
     // Dagger handle types: emit their ID.
-    if (isDaggerHandle(T)) {
+    if (comptime isDaggerHandle(T)) {
         var v = value;
         const id = try v.id();
         try std.json.Stringify.value(id.value, .{}, w);

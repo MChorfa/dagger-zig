@@ -72,7 +72,7 @@ pub const Build = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var results = try ctx.container();
-        results = try results.from("alpine:latest");
+        results = try results.from("alpine:latest", null);
 
         inline for (Platforms) |platform| {
             const artifact = try buildSingleTarget(ctx, source, platform);
@@ -118,7 +118,7 @@ pub const Build = struct {
         oidc_token: ?dagger.Secret,
     ) !dagger.Directory {
         var artifacts = try ctx.container();
-        artifacts = try artifacts.from("alpine:latest");
+        artifacts = try artifacts.from("alpine:latest", null);
 
         const multi_arch = try buildMultiArch(ctx, source);
         artifacts = try artifacts.withDirectory("/builds", multi_arch);
@@ -127,7 +127,7 @@ pub const Build = struct {
         artifacts = try artifacts.withDirectory("/sbom", sbom_dir);
 
         var hasher = try ctx.container();
-        hasher = try hasher.from("alpine:latest");
+        hasher = try hasher.from("alpine:latest", null);
         hasher = try hasher.withDirectory("/sbom", sbom_dir);
         hasher = try hasher.withExec(&.{
             "sh", "-c", "sha256sum /sbom/sbom.spdx.json | awk '{print $1}'",

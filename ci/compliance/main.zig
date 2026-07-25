@@ -28,7 +28,7 @@ pub const Compliance = struct {
         // ("1 item required; only 0 were supplied"), so one run is required.
         const empty_sarif = "{\"version\":\"2.1.0\",\"$schema\":\"https://json.schemastore.org/sarif-2.1.0.json\",\"runs\":[{\"tool\":{\"driver\":{\"name\":\"scorecard-stub\",\"informationUri\":\"https://github.com/ossf/scorecard\",\"version\":\"0.0.0\",\"rules\":[]}},\"results\":[]}]}";
         var stub = try ctx.container();
-        stub = try stub.from("alpine:latest");
+        stub = try stub.from("alpine:latest", null);
         stub = try stub.withNewFile("/scorecard.sarif", empty_sarif);
         return stub.file("/scorecard.sarif");
     }
@@ -93,7 +93,7 @@ pub const Compliance = struct {
         is_fork: bool,
     ) !dagger.Directory {
         var results = try ctx.container();
-        results = try results.from("alpine:latest");
+        results = try results.from("alpine:latest", null);
 
         const scorecard_result = try scorecard(ctx, repo_url, branch, is_fork);
         const commitlint_result = try commitlint(ctx, source);

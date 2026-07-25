@@ -74,7 +74,7 @@ pub const Test = struct {
         source: dagger.Directory,
     ) !dagger.Directory {
         var results = try ctx.container();
-        results = try results.from("alpine:latest");
+        results = try results.from("alpine:latest", null);
 
         const test_output = try nativeZigBuild(ctx, source);
         const bench_output = try benchmark(ctx, source);

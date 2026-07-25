@@ -87,7 +87,7 @@ pub const MarkdownLinter = struct {
 
         // Combine reports into a directory
         var reports = try ctx.container();
-        reports = try reports.from("alpine:latest");
+        reports = try reports.from("alpine:latest", null);
         reports = try reports.withFile("/markdown-lint.txt", lint_output);
         reports = try reports.withFile("/prettier-check.txt", format_output);
 
