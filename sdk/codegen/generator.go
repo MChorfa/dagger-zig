@@ -147,6 +147,8 @@ func (r introspectionRef) zigReturnType() string {
 					return "[][]u8"
 				case "Int":
 					return "[]i64"
+				case "Float":
+					return "[]f64"
 				case "Boolean":
 					return "[]bool"
 				default:
@@ -189,6 +191,8 @@ func (r introspectionRef) zigArgType() string {
 					return "[]const []const u8"
 				case "Int":
 					return "[]const i64"
+				case "Float":
+					return "[]const f64"
 				case "Boolean":
 					return "[]const bool"
 				default:
@@ -548,6 +552,8 @@ func (g *zigGenerator) writeMethod(b *strings.Builder, t *introspectionType, f i
 					fmt.Fprintf(b, "        return executeScalarStringList(self.allocator, cur, self.gql);\n")
 				case "Int":
 					fmt.Fprintf(b, "        return executeScalarIntList(self.allocator, cur, self.gql);\n")
+				case "Float":
+					fmt.Fprintf(b, "        return executeScalarFloatList(self.allocator, cur, self.gql);\n")
 				case "Boolean":
 					fmt.Fprintf(b, "        return executeScalarBoolList(self.allocator, cur, self.gql);\n")
 				default:
@@ -644,6 +650,18 @@ func (g *zigGenerator) writeArgBindingInner(
 				fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_list.items });\n", *gqlName, *gqlName)
 				return
 			}
+			if elemKind == "SCALAR" && elemName == "Float" {
+				fmt.Fprintf(b, "            var %s_list = std.ArrayList(u8).initCapacity(self.arena, 64) catch return error.OutOfMemory;\n", *gqlName)
+				fmt.Fprintf(b, "            %s_list.append(self.arena, '[') catch return error.OutOfMemory;\n", *gqlName)
+				fmt.Fprintf(b, "            for (%s, 0..) |item, i| {\n", zigName)
+				fmt.Fprintf(b, "                if (i > 0) %s_list.append(self.arena, ',') catch return error.OutOfMemory;\n", *gqlName)
+				fmt.Fprintf(b, "                const num_str = std.fmt.allocPrint(self.arena, \"{d}\", .{item}) catch return error.OutOfMemory;\n")
+				fmt.Fprintf(b, "                %s_list.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", *gqlName)
+				fmt.Fprintf(b, "            }\n")
+				fmt.Fprintf(b, "            %s_list.append(self.arena, ']') catch return error.OutOfMemory;\n", *gqlName)
+				fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_list.items });\n", *gqlName, *gqlName)
+				return
+			}
 		}
 		fmt.Fprintf(b, "            const %s_lit = try qb.serializeStringList(self.arena, %s);\n", *gqlName, zigName)
 		fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_lit });\n", *gqlName, *gqlName)
@@ -697,6 +715,11 @@ func (g *zigGenerator) writeArgBindingInner(
 						fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, q) catch return error.OutOfMemory;\n", *gqlName)
 						fmt.Fprintf(b, "            }\n")
 					case "Int":
+						fmt.Fprintf(b, "            {\n")
+						fmt.Fprintf(b, "                const num_str = std.fmt.allocPrint(self.arena, \"{{d}}\", .{%s.%s}) catch return error.OutOfMemory;\n", zigName, f.Name)
+						fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", *gqlName)
+						fmt.Fprintf(b, "            }\n")
+					case "Float":
 						fmt.Fprintf(b, "            {\n")
 						fmt.Fprintf(b, "                const num_str = std.fmt.allocPrint(self.arena, \"{{d}}\", .{%s.%s}) catch return error.OutOfMemory;\n", zigName, f.Name)
 						fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", *gqlName)
@@ -888,6 +911,40 @@ func (g *zigGenerator) writeExecuteHelpers(b *strings.Builder) {
         out[i] = switch (item) {
             .bool => |b| b,
             .string => |s| std.mem.eql(u8, s, "true"),
+            else => return error.InvalidEnvelope,
+        };
+    }
+    return out;
+}
+
+`)
+
+	// executeScalarFloatList
+	b.WriteString(`fn executeScalarFloatList(
+    allocator: std.mem.Allocator,
+    sel: *const Selection,
+    client: *GraphQLClient,
+) ![]f64 {
+    const query_str = try sel.build(allocator);
+    defer allocator.free(query_str);
+
+    const body = try client.query(query_str);
+    defer allocator.free(body);
+
+    const parsed = std.json.parseFromSlice(std.json.Value, allocator, body, .{}) catch
+        return error.MalformedResponse;
+    defer parsed.deinit();
+
+    const root = parsed.value.object.get("data") orelse return error.InvalidEnvelope;
+    const arr = walkToArrayLeaf(root) orelse return error.InvalidEnvelope;
+
+    var out = try allocator.alloc(f64, arr.items.len);
+    errdefer allocator.free(out);
+    for (arr.items, 0..) |item, i| {
+        out[i] = switch (item) {
+            .float => |f| f,
+            .integer => |n| @as(f64, @floatFromInt(n)),
+            .string => |s| std.fmt.parseFloat(f64, s) catch return error.MalformedResponse,
             else => return error.InvalidEnvelope,
         };
     }

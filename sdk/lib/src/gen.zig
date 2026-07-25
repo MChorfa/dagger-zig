@@ -9175,6 +9175,37 @@ fn executeScalarBoolList(
     return out;
 }
 
+fn executeScalarFloatList(
+    allocator: std.mem.Allocator,
+    sel: *const Selection,
+    client: *GraphQLClient,
+) ![]f64 {
+    const query_str = try sel.build(allocator);
+    defer allocator.free(query_str);
+
+    const body = try client.query(query_str);
+    defer allocator.free(body);
+
+    const parsed = std.json.parseFromSlice(std.json.Value, allocator, body, .{}) catch
+        return error.MalformedResponse;
+    defer parsed.deinit();
+
+    const root = parsed.value.object.get("data") orelse return error.InvalidEnvelope;
+    const arr = walkToArrayLeaf(root) orelse return error.InvalidEnvelope;
+
+    var out = try allocator.alloc(f64, arr.items.len);
+    errdefer allocator.free(out);
+    for (arr.items, 0..) |item, i| {
+        out[i] = switch (item) {
+            .float => |f| f,
+            .integer => |n| @as(f64, @floatFromInt(n)),
+            .string => |s| std.fmt.parseFloat(f64, s) catch return error.MalformedResponse,
+            else => return error.InvalidEnvelope,
+        };
+    }
+    return out;
+}
+
 fn executeObjectList(
     comptime Handle: type,
     allocator: std.mem.Allocator,
