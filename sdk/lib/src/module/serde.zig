@@ -12,7 +12,7 @@
 const std = @import("std");
 const context_mod = @import("context.zig");
 const Context = context_mod.Context;
-const api = @import("../gen_sample.zig");
+const api = @import("../gen.zig");
 const module_api = @import("../module_api.zig");
 
 /// Deserialise argument `arg_name` from `args_json` into a value of type T.
@@ -93,6 +93,11 @@ fn deserializeStruct(comptime T: type, ctx: *Context, v: std.json.Value) !T {
     if (T == api.File) return hydrateHandle(api.File, ctx, v);
     if (T == api.Secret) return hydrateHandle(api.Secret, ctx, v);
     if (T == api.CacheVolume) return hydrateHandle(api.CacheVolume, ctx, v);
+    if (T == api.Service) return hydrateHandle(api.Service, ctx, v);
+    if (T == api.Socket) return hydrateHandle(api.Socket, ctx, v);
+    if (T == api.GitRef) return hydrateHandle(api.GitRef, ctx, v);
+    if (T == api.GitRepository) return hydrateHandle(api.GitRepository, ctx, v);
+    if (T == api.Host) return hydrateHandle(api.Host, ctx, v);
 
     // User struct: recurse per field.
     const info = @typeInfo(T).@"struct";
@@ -138,6 +143,11 @@ fn hydrateHandle(comptime Handle: type, ctx: *Context, v: std.json.Value) !Handl
     if (Handle == api.File) return mq.loadFileFromID(id_str);
     if (Handle == api.Secret) return mq.loadSecretFromID(id_str);
     if (Handle == api.CacheVolume) return mq.loadCacheVolumeFromID(id_str);
+    if (Handle == api.Service) return mq.loadServiceFromID(id_str);
+    if (Handle == api.Socket) return mq.loadSocketFromID(id_str);
+    if (Handle == api.GitRef) return mq.loadGitRefFromID(id_str);
+    if (Handle == api.GitRepository) return mq.loadGitRepositoryFromID(id_str);
+    if (Handle == api.Host) return mq.loadHostFromID(id_str);
 
     @compileError("dagger-zig: unknown handle type " ++ @typeName(Handle));
 }
@@ -178,31 +188,7 @@ fn serializeJsonValue(comptime T: type, value: T, w: *std.Io.Writer) !void {
 
 fn serializeStruct(comptime T: type, value: T, w: *std.Io.Writer) !void {
     // Dagger handle types: emit their ID.
-    if (T == api.Container) {
-        var v = value;
-        const id = try v.id();
-        try std.json.Stringify.value(id.value, .{}, w);
-        return;
-    }
-    if (T == api.Directory) {
-        var v = value;
-        const id = try v.id();
-        try std.json.Stringify.value(id.value, .{}, w);
-        return;
-    }
-    if (T == api.File) {
-        var v = value;
-        const id = try v.id();
-        try std.json.Stringify.value(id.value, .{}, w);
-        return;
-    }
-    if (T == api.Secret) {
-        var v = value;
-        const id = try v.id();
-        try std.json.Stringify.value(id.value, .{}, w);
-        return;
-    }
-    if (T == api.CacheVolume) {
+    if (isDaggerHandle(T)) {
         var v = value;
         const id = try v.id();
         try std.json.Stringify.value(id.value, .{}, w);
@@ -219,6 +205,20 @@ fn serializeStruct(comptime T: type, value: T, w: *std.Io.Writer) !void {
         try serializeJsonValue(f.type, @field(value, f.name), w);
     }
     try w.writeAll("}");
+}
+
+/// Returns true if T is one of the Dagger API handle structs.
+fn isDaggerHandle(comptime T: type) bool {
+    return T == api.Container or
+        T == api.Directory or
+        T == api.File or
+        T == api.Secret or
+        T == api.CacheVolume or
+        T == api.Service or
+        T == api.Socket or
+        T == api.GitRef or
+        T == api.GitRepository or
+        T == api.Host;
 }
 
 // ─────────────────────────── tests ──────────────────────────────────────

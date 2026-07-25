@@ -28,7 +28,7 @@
 //! a comptime error with a clear message pointing at the offending field.
 
 const std = @import("std");
-const api = @import("../gen_sample.zig");
+const api = @import("../gen.zig");
 
 /// Tag matching Dagger's GraphQL TypeDefKind enum.
 pub const Kind = enum {
@@ -67,12 +67,20 @@ pub const TypeDef = struct {
     element: ?*const TypeDef = null,
     /// Set for .object — the Dagger object name (e.g. "Container").
     object_name: ?[]const u8 = null,
+    /// Set for .object when it's a user-defined object (not a Dagger-native
+    /// handle). Carries the field definitions the engine needs to register.
+    object_def: ?ObjectDef = null,
     /// Set for .input — the user struct's name + field list.
     input: ?InputDef = null,
     /// Set for .enum_kind — enum name + values.
     enum_def: ?EnumDef = null,
 
     pub const InputDef = struct {
+        name: []const u8,
+        fields: []const FieldDef,
+    };
+
+    pub const ObjectDef = struct {
         name: []const u8,
         fields: []const FieldDef,
     };
@@ -93,6 +101,19 @@ pub const TypeDef = struct {
 /// Comptime: map a Zig type to a Dagger TypeDef.
 /// Fails at comptime with a clear @compileError on unmapped types.
 pub fn ofZig(comptime T: type) TypeDef {
+    return ofZigInContext(T, .asArg);
+}
+
+/// Like ofZig, but maps user structs as OBJECT_KIND (with fields) instead
+/// of INPUT_KIND. Use this for function return types so the engine
+/// registers the struct as a queryable object.
+pub fn ofZigAsReturn(comptime T: type) TypeDef {
+    return ofZigInContext(T, .asReturn);
+}
+
+const StructContext = enum { asArg, asReturn };
+
+fn ofZigInContext(comptime T: type, comptime ctx: StructContext) TypeDef {
     const info = @typeInfo(T);
     return switch (info) {
         .void => .{ .kind = .void_kind },
@@ -102,7 +123,7 @@ pub fn ofZig(comptime T: type) TypeDef {
         .int => .{ .kind = .integer },
 
         .optional => |opt| blk: {
-            var inner = ofZig(opt.child);
+            var inner = ofZigInContext(opt.child, ctx);
             inner.optional = true;
             break :blk inner;
         },
@@ -113,7 +134,7 @@ pub fn ofZig(comptime T: type) TypeDef {
 
         .array => |arr| blk: {
             const elem_def = comptime blk2: {
-                const ed = ofZig(arr.child);
+                const ed = ofZigInContext(arr.child, ctx);
                 break :blk2 ed;
             };
             break :blk .{
@@ -122,11 +143,11 @@ pub fn ofZig(comptime T: type) TypeDef {
             };
         },
 
-        .@"struct" => mapStruct(T),
+        .@"struct" => mapStruct(T, ctx),
 
         .@"enum" => mapEnum(T),
 
-        .error_union => |eu| ofZig(eu.payload),
+        .error_union => |eu| ofZigInContext(eu.payload, ctx),
 
         else => @compileError("dagger-zig: cannot map Zig type `" ++ @typeName(T) ++
             "` to a Dagger TypeDef. Supported: void, bool, integers, []const u8, " ++
@@ -153,31 +174,51 @@ fn pointerMapping(comptime T: type, comptime ptr: std.builtin.Type.Pointer) Type
         "` is not supported as a module argument. Pass by value.");
 }
 
-fn mapStruct(comptime T: type) TypeDef {
+fn mapStruct(comptime T: type, comptime ctx: StructContext) TypeDef {
     // Is this one of the Dagger API handles? If so, it's an OBJECT_KIND.
     if (T == api.Container) return .{ .kind = .object, .object_name = "Container" };
     if (T == api.Directory) return .{ .kind = .object, .object_name = "Directory" };
     if (T == api.File) return .{ .kind = .object, .object_name = "File" };
     if (T == api.Secret) return .{ .kind = .object, .object_name = "Secret" };
     if (T == api.CacheVolume) return .{ .kind = .object, .object_name = "CacheVolume" };
+    if (T == api.Service) return .{ .kind = .object, .object_name = "Service" };
+    if (T == api.Socket) return .{ .kind = .object, .object_name = "Socket" };
+    if (T == api.GitRef) return .{ .kind = .object, .object_name = "GitRef" };
+    if (T == api.GitRepository) return .{ .kind = .object, .object_name = "GitRepository" };
+    if (T == api.Host) return .{ .kind = .object, .object_name = "Host" };
 
-    // Otherwise it's a user-defined struct → INPUT_KIND with field list.
+    // User-defined struct. When used as a return type, register it as
+    // OBJECT_KIND so the engine creates a queryable GraphQL object. When
+    // used as an argument, register it as INPUT_KIND.
     const info = @typeInfo(T).@"struct";
     comptime var fields: [info.fields.len]TypeDef.FieldDef = undefined;
     comptime {
         for (info.fields, 0..) |f, i| {
             fields[i] = .{
                 .name = f.name,
-                .type_def = ofZig(f.type),
+                .type_def = ofZigInContext(f.type, ctx),
                 .default_json = extractDefaultJson(T, f),
             };
         }
     }
     const fields_const = fields;
+    const name = shortTypeName(T);
+
+    if (ctx == .asReturn) {
+        return .{
+            .kind = .object,
+            .object_name = name,
+            .object_def = .{
+                .name = name,
+                .fields = &fields_const,
+            },
+        };
+    }
+
     return .{
         .kind = .input,
         .input = .{
-            .name = shortTypeName(T),
+            .name = name,
             .fields = &fields_const,
         },
     };
@@ -302,7 +343,7 @@ pub fn functionOfMethod(
 
     const ret_type = fn_info.return_type orelse
         @compileError("dagger-zig: method `" ++ method_name ++ "` has no declared return type");
-    const ret_def = ofZig(ret_type);
+    const ret_def = ofZigAsReturn(ret_type);
 
     return .{
         .name = method_name,
@@ -360,6 +401,23 @@ test "user struct becomes input with field list" {
     // Default_json extracted where possible.
     try testing.expectEqualStrings("false", td.input.?.fields[1].default_json.?);
     try testing.expectEqualStrings("4", td.input.?.fields[2].default_json.?);
+}
+
+test "user struct as return becomes object with field list" {
+    const BuildResult = struct {
+        image: []const u8,
+        digest: []const u8,
+        size: u64,
+    };
+    const td = ofZigAsReturn(BuildResult);
+    try testing.expectEqual(@as(Kind, .object), td.kind);
+    try testing.expect(td.object_name != null);
+    try testing.expectEqualStrings("BuildResult", td.object_name.?);
+    try testing.expect(td.object_def != null);
+    try testing.expectEqual(@as(usize, 3), td.object_def.?.fields.len);
+    try testing.expectEqualStrings("image", td.object_def.?.fields[0].name);
+    try testing.expectEqualStrings("digest", td.object_def.?.fields[1].name);
+    try testing.expectEqualStrings("size", td.object_def.?.fields[2].name);
 }
 
 test "user enum becomes enum_kind" {

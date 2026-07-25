@@ -108,8 +108,8 @@ pub const Config = core.config.Config;
 pub const Logger = core.config.Logger;
 pub const StdLogger = core.config.StdLogger;
 
-// Re-export the generated (hand-written for now) API.
-pub const api = @import("gen_sample.zig");
+// Re-export the introspection-generated API.
+pub const api = @import("gen.zig");
 
 /// Engine-side API used by the module runtime: `currentFunctionCall`,
 /// handle loaders (`loadContainerFromID`, etc.). Advanced users can call

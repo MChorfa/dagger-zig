@@ -189,6 +189,14 @@ fn buildTypeDefID(
         },
         .object => {
             type_sel = try withObjectSelection(type_sel, ctx.arena, def.object_name.?);
+            // User-defined objects carry field definitions that the engine
+            // needs to register so callers can query individual fields.
+            if (def.object_def) |obj_def| {
+                for (obj_def.fields) |f| {
+                    const field_type_id = try buildTypeDefID(ctx, f.type_def);
+                    type_sel = try withFieldSelection(type_sel, ctx.arena, f.name, field_type_id);
+                }
+            }
         },
         .input => {
             type_sel = try withInputSelection(type_sel, ctx.arena, def.input.?.name);

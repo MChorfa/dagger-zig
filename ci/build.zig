@@ -15,12 +15,22 @@ pub fn build(b: *std.Build) void {
     });
     dagger_sdk.addOptions("spiffe_options", spiffe_options);
 
+    const dagger_schema = b.createModule(.{
+        .root_source_file = b.path("dagger_schema.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "dagger_sdk", .module = dagger_sdk }},
+    });
+
     const ci_mod = b.createModule(.{
-        .root_source_file = b.path("full_main.zig"),
+        .root_source_file = b.path("main.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
-        .imports = &.{.{ .name = "dagger_sdk", .module = dagger_sdk }},
+        .imports = &.{
+            .{ .name = "dagger_sdk", .module = dagger_sdk },
+            .{ .name = "dagger_schema", .module = dagger_schema },
+        },
     });
 
     const ci_exe = b.addExecutable(.{

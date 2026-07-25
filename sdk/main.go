@@ -148,15 +148,28 @@ func (m *DaggerZigSdk) Codegen(
 	modSource *dagger.ModuleSource,
 	introspectionJson *dagger.File,
 ) (*dagger.GeneratedCode, error) {
-	_ = ctx
-	_ = introspectionJson
-
 	userDir := modSource.ContextDirectory()
+
+	// Generate the dagger.gen.zig bindings from the introspection JSON.
+	// If introspection is unavailable (e.g. offline), fall back to the
+	// static stub so codegen still produces a valid changeset.
+	genZig := zigcodegen.GeneratedModuleBindings()
+	if introspectionJson != nil {
+		content, err := introspectionJson.Contents(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("read introspection: %w", err)
+		}
+		generated, err := zigcodegen.GenerateZigTypes([]byte(content))
+		if err != nil {
+			return nil, fmt.Errorf("generate zig types: %w", err)
+		}
+		genZig = generated
+	}
 
 	withGen := userDir.
 		WithNewFile("build.zig", zigcodegen.UserModuleBuildZig()).
 		WithNewFile("build.zig.zon", zigcodegen.UserModuleBuildZigZon()).
-		WithNewFile("internal/dagger/dagger.gen.zig", zigcodegen.GeneratedModuleBindings())
+		WithNewFile("internal/dagger/dagger.gen.zig", genZig)
 
 	return dag.GeneratedCode(withGen).
 		WithVCSGeneratedPaths([]string{
