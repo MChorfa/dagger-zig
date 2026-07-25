@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/MChorfa/dagger-zig/compare/v0.3.4...v0.3.5) (2026-07-25)
+
+
+### Bug Fixes
+
+* codegen Float scalars, compilation errors, and API signature updates ([#48](https://github.com/MChorfa/dagger-zig/issues/48)) ([3ff9d82](https://github.com/MChorfa/dagger-zig/commit/3ff9d82f8794dd964c41ce08993b2be5ac37b273))
+
 ## [0.3.3](https://github.com/MChorfa/dagger-zig/compare/v0.3.2...v0.3.3) (2026-06-12)
 
 
