@@ -18,9 +18,9 @@ pub fn main(init: std.process.Init) !void {
     var client = try dagger.connect(gpa, io, .{});
     defer client.close();
 
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
-    const ctr2 = try ctr1.withExec(&.{ "echo", "hello from zig" });
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
+    const ctr2 = try ctr1.withExec(&.{ "echo", "hello from zig" }, null, null, null, null, null, null, null, null, null, null);
 
     const out = try ctr2.stdout();
     defer gpa.free(out);

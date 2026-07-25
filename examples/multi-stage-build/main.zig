@@ -21,43 +21,45 @@ pub fn main(init: std.process.Init) !void {
     defer client.close();
 
     // Stage 1: Build environment
-    const build_ctr_raw = try client.dag().container();
-    const build_ctr = try build_ctr_raw.from("golang:1.22-alpine");
+    const build_ctr_raw = try client.dag().container(null);
+    const build_ctr = try build_ctr_raw.from("golang:1.22-alpine", null);
 
     // Add build dependencies
     const build_with_deps = try build_ctr
-        .withExec(&.{ "apk", "add", "--no-cache", "git" });
+        .withExec(&.{ "apk", "add", "--no-cache", "git" }, null, null, null, null, null, null, null, null, null, null);
 
     // Simulate a Go build (creating a simple binary)
     const build_with_code = try build_with_deps
-        .withExec(&.{ "sh", "-c", "mkdir -p /src && echo 'package main; import \"fmt\"; func main() { fmt.Println(\"Hello from multi-stage!\") }' > /src/main.go" });
+        .withExec(&.{ "sh", "-c", "mkdir -p /src && echo 'package main; import \"fmt\"; func main() { fmt.Println(\"Hello from multi-stage!\") }' > /src/main.go" }, null, null, null, null, null, null, null, null, null, null);
 
     // Build the binary
-    const build_wd = try build_with_code.withWorkdir("/src");
-    const build_output = try build_wd.withExec(&.{ "go", "build", "-o", "app", "main.go" });
+    const build_wd = try build_with_code.withWorkdir("/src", null);
+    const build_output = try build_wd.withExec(&.{ "go", "build", "-o", "app", "main.go" }, null, null, null, null, null, null, null, null, null, null);
 
     // Export the binary
-    const binary = try build_output.file("/src/app");
+    const binary = try build_output.file("/src/app", null);
+    var binary_id = try binary.id();
+    defer binary_id.deinit(gpa);
 
     // Stage 2: Runtime environment (minimal)
-    const runtime_ctr_raw = try client.dag().container();
-    const runtime_ctr = try runtime_ctr_raw.from("alpine:latest");
+    const runtime_ctr_raw = try client.dag().container(null);
+    const runtime_ctr = try runtime_ctr_raw.from("alpine:latest", null);
 
     // Only copy the binary, not the full Go toolchain
     const runtime_with_app = try runtime_ctr
-        .withFile("/app", binary);
+        .withFile("/app", binary_id.value, null, null, null);
 
     // Make it executable and run
     const final = try runtime_with_app
-        .withExec(&.{ "chmod", "+x", "/app" });
+        .withExec(&.{ "chmod", "+x", "/app" }, null, null, null, null, null, null, null, null, null, null);
 
     // Test the application
-    const final_test = try final.withExec(&.{"/app"});
+    const final_test = try final.withExec(&.{"/app"}, null, null, null, null, null, null, null, null, null, null);
     const out = try final_test.stdout();
     defer gpa.free(out);
 
     // Show size comparison
-    const size_check = try final.withExec(&.{ "sh", "-c", "echo 'Final image size:' && du -sh / | tail -1" });
+    const size_check = try final.withExec(&.{ "sh", "-c", "echo 'Final image size:' && du -sh / | tail -1" }, null, null, null, null, null, null, null, null, null, null);
     const size_info = try size_check.stdout();
     defer gpa.free(size_info);
 

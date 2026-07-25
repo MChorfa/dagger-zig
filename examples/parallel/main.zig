@@ -41,9 +41,9 @@ fn fetchVersion(
 ) std.Io.Cancelable!void {
     _ = io;
     out.image = image;
-    const ctr = client.dag().container() catch return error.Canceled;
-    const ctr2 = ctr.from(image) catch return error.Canceled;
-    const ctr3 = ctr2.withExec(&.{ "sh", "-c", "cat /etc/os-release | grep -E '^PRETTY_NAME' || uname -a" }) catch return error.Canceled;
+    const ctr = client.dag().container(null) catch return error.Canceled;
+    const ctr2 = ctr.from(image, null) catch return error.Canceled;
+    const ctr3 = ctr2.withExec(&.{ "sh", "-c", "cat /etc/os-release | grep -E '^PRETTY_NAME' || uname -a" }, null, null, null, null, null, null, null, null, null, null) catch return error.Canceled;
     out.output = ctr3.stdout() catch return error.Canceled;
 }
 

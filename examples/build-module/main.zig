@@ -35,17 +35,17 @@ const BuildModule = struct {
         // Install build dependencies.
         const with_deps = try ctr.withExec(&.{
             "apk", "add", "--no-cache", "zig", "git", "curl",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
 
         // Mount the source directory.
         const with_src = try with_deps
             .withMountedDirectory("/src", src)
-            .withWorkdir("/src");
+            .withWorkdir("/src", null);
 
         // Run the build.
         const built = try with_src.withExec(&.{
             "zig", "build",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
 
         return built;
     }
@@ -64,12 +64,12 @@ const BuildModule = struct {
         const base = try ctr.from("alpine:3.20");
         const with_deps = try base.withExec(&.{
             "apk", "add", "--no-cache", "zig",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const with_src = try with_deps
             .withMountedDirectory("/src", src)
-            .withWorkdir("/src");
+            .withWorkdir("/src", null);
 
-        const built = try with_src.withExec(&.{ "zig", "build" });
+        const built = try with_src.withExec(&.{ "zig", "build" }, null, null, null, null, null, null, null, null, null, null);
         return try built.stdout();
     }
 };

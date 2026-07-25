@@ -44,12 +44,12 @@ const ObjectModule = struct {
         const base = try ctr.from("alpine:3.20");
         const with_deps = try base.withExec(&.{
             "apk", "add", "--no-cache", "zig",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const with_src = try with_deps
             .withMountedDirectory("/src", src)
-            .withWorkdir("/src");
+            .withWorkdir("/src", null);
 
-        const built = try with_src.withExec(&.{ "zig", "build" });
+        const built = try with_src.withExec(&.{ "zig", "build" }, null, null, null, null, null, null, null, null, null, null);
 
         // Gather metadata.
         const image_ref = try base.id();
@@ -79,12 +79,12 @@ const ObjectModule = struct {
         const base = try ctr.from("alpine:3.20");
         const with_deps = try base.withExec(&.{
             "apk", "add", "--no-cache", "zig",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const with_src = try with_deps
             .withMountedDirectory("/src", src)
-            .withWorkdir("/src");
+            .withWorkdir("/src", null);
 
-        const built = try with_src.withExec(&.{ "zig", "build" });
+        const built = try with_src.withExec(&.{ "zig", "build" }, null, null, null, null, null, null, null, null, null, null);
         const output = try built.stdout();
 
         // Return a list with a single entry for demonstration.

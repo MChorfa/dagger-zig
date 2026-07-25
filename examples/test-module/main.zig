@@ -31,15 +31,15 @@ const TestModule = struct {
         const base = try ctr.from("alpine:3.20");
         const with_deps = try base.withExec(&.{
             "apk", "add", "--no-cache", "zig",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const with_src = try with_deps
             .withMountedDirectory("/src", src)
-            .withWorkdir("/src");
+            .withWorkdir("/src", null);
 
         // Run the test suite and capture stdout.
         const tested = try with_src.withExec(&.{
             "zig", "build", "test",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const output = try tested.stdout();
 
         // Write the test output to a file in a new directory.
@@ -68,14 +68,14 @@ const TestModule = struct {
         const base = try ctr.from("alpine:3.20");
         const with_deps = try base.withExec(&.{
             "apk", "add", "--no-cache", "zig",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const with_src = try with_deps
             .withMountedDirectory("/src", src)
-            .withWorkdir("/src");
+            .withWorkdir("/src", null);
 
         const tested = try with_src.withExec(&.{
             "zig", "build", "test",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const code = try tested.exitCode();
         return code == 0;
     }

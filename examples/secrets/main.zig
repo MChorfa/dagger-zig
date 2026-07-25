@@ -26,18 +26,20 @@ pub fn main(init: std.process.Init) !void {
 
     // Set the secret in Dagger
     const secret = try client.dag().setSecret("api-key", api_key);
+    var secret_id = try secret.id();
+    defer secret_id.deinit(gpa);
 
     // Build a container that uses the secret
-    const ctr_raw = try client.dag().container();
-    const ctr = try ctr_raw.from("alpine:latest");
+    const ctr_raw = try client.dag().container(null);
+    const ctr = try ctr_raw.from("alpine:latest", null);
 
-    // Mount the secret and use it (safely - doesn't leak in logs)
+    // Mount the secret as an env var (safely - doesn't leak in logs)
     const ctr_with_secret = try ctr
-        .withSecret("/run/secrets/api-key", secret);
+        .withSecretVariable("API_KEY", secret_id.value);
 
     // Verify secret is accessible but masked in output
     const ctr_verified = try ctr_with_secret
-        .withExec(&.{ "sh", "-c", "echo 'Secret exists:' && test -f /run/secrets/api-key && echo 'YES' || echo 'NO'" });
+        .withExec(&.{ "sh", "-c", "echo 'Secret exists:' && test -n \"$API_KEY\" && echo 'YES' || echo 'NO'" }, null, null, null, null, null, null, null, null, null, null);
 
     const out = try ctr_verified.stdout();
     defer gpa.free(out);

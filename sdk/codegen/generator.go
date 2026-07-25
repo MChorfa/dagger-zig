@@ -78,18 +78,6 @@ func (r introspectionRef) unwrap() (kind, name string, isList, isNonNull bool, e
 	return ref.Kind, ref.Name, false, nonNull, nil
 }
 
-// Deep unwrap to get the base type name (for nested NON_NULL/LIST).
-func (r introspectionRef) baseTypeName() string {
-	ref := &r
-	for ref != nil {
-		if ref.Kind == "SCALAR" || ref.Kind == "OBJECT" || ref.Kind == "ENUM" || ref.Kind == "INPUT_OBJECT" {
-			return ref.Name
-		}
-		ref = ref.OfType
-	}
-	return ""
-}
-
 // ─────────────────────────── Zig type mapping ───────────────────────────
 
 // Map a GraphQL scalar name to its Zig type.
@@ -224,12 +212,6 @@ func (r introspectionRef) zigArgType() string {
 		return name
 	}
 	return "[]const u8"
-}
-
-// Check if a type ref is a Dagger object handle (needs ID resolution for args).
-func (r introspectionRef) isObjectArg() bool {
-	kind, name, isList, _, _ := r.unwrap()
-	return !isList && (kind == "OBJECT" || kind == "INTERFACE") && !strings.HasSuffix(name, "ID")
 }
 
 // Check if a type ref is a scalar that returns a value (needs query execution).
@@ -650,7 +632,7 @@ func (g *zigGenerator) writeOptionalArg(
 	argType introspectionRef,
 ) {
 	fmt.Fprintf(b, "        if (%s) |%s_val| {\n", zigName, zigName)
-	g.writeArgBindingInner(b, gqlName, zigName+"_val", argType)
+	g.writeArgBindingInner(b, gqlName, zigName+"_val", argType, "            ")
 	b.WriteString("        }\n")
 }
 
@@ -661,16 +643,18 @@ func (g *zigGenerator) writeArgBinding(
 	zigName string,
 	argType introspectionRef,
 ) {
-	g.writeArgBindingInner(b, gqlName, zigName, argType)
+	g.writeArgBindingInner(b, gqlName, zigName, argType, "        ")
 }
 
 // writeArgBindingInner writes the actual arg binding code, using `cur` as the
-// mutable selection chain variable.
+// mutable selection chain variable. The indent parameter controls the leading
+// whitespace (8 spaces for required args, 12 for optional args inside an if).
 func (g *zigGenerator) writeArgBindingInner(
 	b *strings.Builder,
 	gqlName *string,
 	zigName string,
 	argType introspectionRef,
+	indent string,
 ) {
 	kind, name, isList, _, elem := argType.unwrap()
 
@@ -678,37 +662,37 @@ func (g *zigGenerator) writeArgBindingInner(
 		if elem != nil {
 			elemKind, elemName, _, _, _ := elem.unwrap()
 			if elemKind == "SCALAR" && (elemName == "String" || elemName == "ID" || elemName == "Platform" || elemName == "JSON" || strings.HasSuffix(elemName, "ID")) {
-				fmt.Fprintf(b, "            const %s_lit = try qb.serializeStringList(self.arena, %s);\n", *gqlName, zigName)
-				fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_lit });\n", *gqlName, *gqlName)
+				fmt.Fprintf(b, "%sconst %s_lit = try qb.serializeStringList(self.arena, %s);\n", indent, *gqlName, zigName)
+				fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_lit });\n", indent, *gqlName, *gqlName)
 				return
 			}
 			if elemKind == "SCALAR" && elemName == "Int" {
-				fmt.Fprintf(b, "            var %s_list = std.ArrayList(u8).initCapacity(self.arena, 64) catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            %s_list.append(self.arena, '[') catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            for (%s, 0..) |item, i| {\n", zigName)
-				fmt.Fprintf(b, "                if (i > 0) %s_list.append(self.arena, ',') catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "                const num_str = std.fmt.allocPrint(self.arena, \"{d}\", .{item}) catch return error.OutOfMemory;\n")
-				fmt.Fprintf(b, "                %s_list.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            }\n")
-				fmt.Fprintf(b, "            %s_list.append(self.arena, ']') catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_list.items });\n", *gqlName, *gqlName)
+				fmt.Fprintf(b, "%svar %s_list = std.ArrayList(u8).initCapacity(self.arena, 64) catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%s%s_list.append(self.arena, '[') catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%sfor (%s, 0..) |item, i| {\n", indent, zigName)
+				fmt.Fprintf(b, "%s    if (i > 0) %s_list.append(self.arena, ',') catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%s    const num_str = std.fmt.allocPrint(self.arena, \"{d}\", .{item}) catch return error.OutOfMemory;\n", indent)
+				fmt.Fprintf(b, "%s    %s_list.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%s}\n", indent)
+				fmt.Fprintf(b, "%s%s_list.append(self.arena, ']') catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_list.items });\n", indent, *gqlName, *gqlName)
 				return
 			}
 			if elemKind == "SCALAR" && elemName == "Float" {
-				fmt.Fprintf(b, "            var %s_list = std.ArrayList(u8).initCapacity(self.arena, 64) catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            %s_list.append(self.arena, '[') catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            for (%s, 0..) |item, i| {\n", zigName)
-				fmt.Fprintf(b, "                if (i > 0) %s_list.append(self.arena, ',') catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "                const num_str = std.fmt.allocPrint(self.arena, \"{d}\", .{item}) catch return error.OutOfMemory;\n")
-				fmt.Fprintf(b, "                %s_list.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            }\n")
-				fmt.Fprintf(b, "            %s_list.append(self.arena, ']') catch return error.OutOfMemory;\n", *gqlName)
-				fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_list.items });\n", *gqlName, *gqlName)
+				fmt.Fprintf(b, "%svar %s_list = std.ArrayList(u8).initCapacity(self.arena, 64) catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%s%s_list.append(self.arena, '[') catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%sfor (%s, 0..) |item, i| {\n", indent, zigName)
+				fmt.Fprintf(b, "%s    if (i > 0) %s_list.append(self.arena, ',') catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%s    const num_str = std.fmt.allocPrint(self.arena, \"{d}\", .{item}) catch return error.OutOfMemory;\n", indent)
+				fmt.Fprintf(b, "%s    %s_list.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%s}\n", indent)
+				fmt.Fprintf(b, "%s%s_list.append(self.arena, ']') catch return error.OutOfMemory;\n", indent, *gqlName)
+				fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_list.items });\n", indent, *gqlName, *gqlName)
 				return
 			}
 		}
-		fmt.Fprintf(b, "            const %s_lit = try qb.serializeStringList(self.arena, %s);\n", *gqlName, zigName)
-		fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_lit });\n", *gqlName, *gqlName)
+		fmt.Fprintf(b, "%sconst %s_lit = try qb.serializeStringList(self.arena, %s);\n", indent, *gqlName, zigName)
+		fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_lit });\n", indent, *gqlName, *gqlName)
 		return
 	}
 
@@ -716,81 +700,81 @@ func (g *zigGenerator) writeArgBindingInner(
 	case "SCALAR":
 		switch name {
 		case "String", "ID", "Platform", "JSON":
-			fmt.Fprintf(b, "            cur = try cur.argStr(self.arena, \"%s\", %s);\n", *gqlName, zigName)
+			fmt.Fprintf(b, "%scur = try cur.argStr(self.arena, \"%s\", %s);\n", indent, *gqlName, zigName)
 		case "Int":
-			fmt.Fprintf(b, "            const %s_str = try std.fmt.allocPrint(self.arena, \"{d}\", .{%s});\n", *gqlName, zigName)
-			fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", *gqlName, *gqlName)
+			fmt.Fprintf(b, "%sconst %s_str = try std.fmt.allocPrint(self.arena, \"{d}\", .{%s});\n", indent, *gqlName, zigName)
+			fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", indent, *gqlName, *gqlName)
 		case "Boolean":
-			fmt.Fprintf(b, "            const %s_str = if (%s) \"true\" else \"false\";\n", *gqlName, zigName)
-			fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", *gqlName, *gqlName)
+			fmt.Fprintf(b, "%sconst %s_str = if (%s) \"true\" else \"false\";\n", indent, *gqlName, zigName)
+			fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", indent, *gqlName, *gqlName)
 		case "Float":
-			fmt.Fprintf(b, "            const %s_str = try std.fmt.allocPrint(self.arena, \"{d}\", .{%s});\n", *gqlName, zigName)
-			fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", *gqlName, *gqlName)
+			fmt.Fprintf(b, "%sconst %s_str = try std.fmt.allocPrint(self.arena, \"{d}\", .{%s});\n", indent, *gqlName, zigName)
+			fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", indent, *gqlName, *gqlName)
 		default:
-			fmt.Fprintf(b, "            cur = try cur.argStr(self.arena, \"%s\", %s);\n", *gqlName, zigName)
+			fmt.Fprintf(b, "%scur = try cur.argStr(self.arena, \"%s\", %s);\n", indent, *gqlName, zigName)
 		}
 
 	case "OBJECT", "INTERFACE":
-		fmt.Fprintf(b, "            var %s_id = try %s.id();\n", *gqlName, zigName)
-		fmt.Fprintf(b, "            defer %s_id.deinit(self.allocator);\n", *gqlName)
-		fmt.Fprintf(b, "            const %s_id_lit = try qb.serializeString(self.arena, %s_id.value);\n", *gqlName, *gqlName)
-		fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_id_lit });\n", *gqlName, *gqlName)
+		fmt.Fprintf(b, "%svar %s_id = try %s.id();\n", indent, *gqlName, zigName)
+		fmt.Fprintf(b, "%sdefer %s_id.deinit(self.allocator);\n", indent, *gqlName)
+		fmt.Fprintf(b, "%sconst %s_id_lit = try qb.serializeString(self.arena, %s_id.value);\n", indent, *gqlName, *gqlName)
+		fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_id_lit });\n", indent, *gqlName, *gqlName)
 
 	case "ENUM":
-		fmt.Fprintf(b, "            const %s_str = try qb.serializeEnum(self.arena, @tagName(%s));\n", *gqlName, zigName)
-		fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", *gqlName, *gqlName)
+		fmt.Fprintf(b, "%sconst %s_str = try qb.serializeEnum(self.arena, @tagName(%s));\n", indent, *gqlName, zigName)
+		fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_str });\n", indent, *gqlName, *gqlName)
 
 	case "INPUT_OBJECT":
-		fmt.Fprintf(b, "            var %s_buf = std.ArrayList(u8).initCapacity(self.arena, 128) catch return error.OutOfMemory;\n", *gqlName)
-		fmt.Fprintf(b, "            %s_buf.append(self.arena, '{') catch return error.OutOfMemory;\n", *gqlName)
+		fmt.Fprintf(b, "%svar %s_buf = std.ArrayList(u8).initCapacity(self.arena, 128) catch return error.OutOfMemory;\n", indent, *gqlName)
+		fmt.Fprintf(b, "%s%s_buf.append(self.arena, '{') catch return error.OutOfMemory;\n", indent, *gqlName)
 		if t, ok := g.types[name]; ok {
 			for i, f := range t.InputFields {
 				if i > 0 {
-					fmt.Fprintf(b, "            %s_buf.append(self.arena, ',') catch return error.OutOfMemory;\n", *gqlName)
+					fmt.Fprintf(b, "%s%s_buf.append(self.arena, ',') catch return error.OutOfMemory;\n", indent, *gqlName)
 				}
 				fKind, fName, _, _, _ := f.Type.unwrap()
-				fmt.Fprintf(b, "            %s_buf.appendSlice(self.arena, \"%s:\") catch return error.OutOfMemory;\n", *gqlName, f.Name)
+				fmt.Fprintf(b, "%s%s_buf.appendSlice(self.arena, \"%s:\") catch return error.OutOfMemory;\n", indent, *gqlName, f.Name)
 				switch fKind {
 				case "SCALAR":
 					switch fName {
 					case "String", "ID", "Platform", "JSON":
-						fmt.Fprintf(b, "            {\n")
-						fmt.Fprintf(b, "                const q = try qb.serializeString(self.arena, %s.%s);\n", zigName, f.Name)
-						fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, q) catch return error.OutOfMemory;\n", *gqlName)
-						fmt.Fprintf(b, "            }\n")
+						fmt.Fprintf(b, "%s{\n", indent)
+						fmt.Fprintf(b, "%s    const q = try qb.serializeString(self.arena, %s.%s);\n", indent, zigName, f.Name)
+						fmt.Fprintf(b, "%s    %s_buf.appendSlice(self.arena, q) catch return error.OutOfMemory;\n", indent, *gqlName)
+						fmt.Fprintf(b, "%s}\n", indent)
 					case "Int":
-						fmt.Fprintf(b, "            {\n")
-						fmt.Fprintf(b, "                const num_str = std.fmt.allocPrint(self.arena, \"{{d}}\", .{%s.%s}) catch return error.OutOfMemory;\n", zigName, f.Name)
-						fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", *gqlName)
-						fmt.Fprintf(b, "            }\n")
+						fmt.Fprintf(b, "%s{\n", indent)
+						fmt.Fprintf(b, "%s    const num_str = std.fmt.allocPrint(self.arena, \"{{d}}\", .{%s.%s}) catch return error.OutOfMemory;\n", indent, zigName, f.Name)
+						fmt.Fprintf(b, "%s    %s_buf.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", indent, *gqlName)
+						fmt.Fprintf(b, "%s}\n", indent)
 					case "Float":
-						fmt.Fprintf(b, "            {\n")
-						fmt.Fprintf(b, "                const num_str = std.fmt.allocPrint(self.arena, \"{{d}}\", .{%s.%s}) catch return error.OutOfMemory;\n", zigName, f.Name)
-						fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", *gqlName)
-						fmt.Fprintf(b, "            }\n")
+						fmt.Fprintf(b, "%s{\n", indent)
+						fmt.Fprintf(b, "%s    const num_str = std.fmt.allocPrint(self.arena, \"{{d}}\", .{%s.%s}) catch return error.OutOfMemory;\n", indent, zigName, f.Name)
+						fmt.Fprintf(b, "%s    %s_buf.appendSlice(self.arena, num_str) catch return error.OutOfMemory;\n", indent, *gqlName)
+						fmt.Fprintf(b, "%s}\n", indent)
 					case "Boolean":
-						fmt.Fprintf(b, "            %s_buf.appendSlice(self.arena, if (%s.%s) \"true\" else \"false\") catch return error.OutOfMemory;\n", *gqlName, zigName, f.Name)
+						fmt.Fprintf(b, "%s%s_buf.appendSlice(self.arena, if (%s.%s) \"true\" else \"false\") catch return error.OutOfMemory;\n", indent, *gqlName, zigName, f.Name)
 					default:
-						fmt.Fprintf(b, "            {\n")
-						fmt.Fprintf(b, "                const q = try qb.serializeString(self.arena, %s.%s);\n", zigName, f.Name)
-						fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, q) catch return error.OutOfMemory;\n", *gqlName)
-						fmt.Fprintf(b, "            }\n")
+						fmt.Fprintf(b, "%s{\n", indent)
+						fmt.Fprintf(b, "%s    const q = try qb.serializeString(self.arena, %s.%s);\n", indent, zigName, f.Name)
+						fmt.Fprintf(b, "%s    %s_buf.appendSlice(self.arena, q) catch return error.OutOfMemory;\n", indent, *gqlName)
+						fmt.Fprintf(b, "%s}\n", indent)
 					}
 				case "ENUM":
-					fmt.Fprintf(b, "            %s_buf.appendSlice(self.arena, @tagName(%s.%s)) catch return error.OutOfMemory;\n", *gqlName, zigName, f.Name)
+					fmt.Fprintf(b, "%s%s_buf.appendSlice(self.arena, @tagName(%s.%s)) catch return error.OutOfMemory;\n", indent, *gqlName, zigName, f.Name)
 				default:
-					fmt.Fprintf(b, "            {\n")
-					fmt.Fprintf(b, "                const q = try qb.serializeString(self.arena, %s.%s);\n", zigName, f.Name)
-					fmt.Fprintf(b, "                %s_buf.appendSlice(self.arena, q) catch return error.OutOfMemory;\n", *gqlName)
-					fmt.Fprintf(b, "            }\n")
+					fmt.Fprintf(b, "%s{\n", indent)
+					fmt.Fprintf(b, "%s    const q = try qb.serializeString(self.arena, %s.%s);\n", indent, zigName, f.Name)
+					fmt.Fprintf(b, "%s    %s_buf.appendSlice(self.arena, q) catch return error.OutOfMemory;\n", indent, *gqlName)
+					fmt.Fprintf(b, "%s}\n", indent)
 				}
 			}
 		}
-		fmt.Fprintf(b, "            %s_buf.append(self.arena, '}') catch return error.OutOfMemory;\n", *gqlName)
-		fmt.Fprintf(b, "            cur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_buf.items });\n", *gqlName, *gqlName)
+		fmt.Fprintf(b, "%s%s_buf.append(self.arena, '}') catch return error.OutOfMemory;\n", indent, *gqlName)
+		fmt.Fprintf(b, "%scur = try cur.arg(self.arena, \"%s\", .{ .eager = %s_buf.items });\n", indent, *gqlName, *gqlName)
 
 	default:
-		fmt.Fprintf(b, "            cur = try cur.argStr(self.arena, \"%s\", %s);\n", *gqlName, zigName)
+		fmt.Fprintf(b, "%scur = try cur.argStr(self.arena, \"%s\", %s);\n", indent, *gqlName, zigName)
 	}
 }
 
