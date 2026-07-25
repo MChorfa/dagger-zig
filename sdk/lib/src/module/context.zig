@@ -55,7 +55,7 @@ pub const Context = struct {
 
     /// Convenience helper mirroring the documented module authoring API.
     pub fn container(self: *Context) !dagger.Container {
-        return self.dag().container();
+        return self.dag().container(null);
     }
 
     /// Convenience helper mirroring the documented module authoring API.
