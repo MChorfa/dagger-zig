@@ -698,7 +698,7 @@ pub const Address = struct {
     gql: *GraphQLClient,
 
     pub fn container(self: Address) !Container {
-        var cur = try self.selection.select(self.arena, "container");
+        const cur = try self.selection.select(self.arena, "container");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -760,7 +760,7 @@ pub const Address = struct {
     }
 
     pub fn gitRef(self: Address) !GitRef {
-        var cur = try self.selection.select(self.arena, "gitRef");
+        const cur = try self.selection.select(self.arena, "gitRef");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -770,7 +770,7 @@ pub const Address = struct {
     }
 
     pub fn gitRepository(self: Address) !GitRepository {
-        var cur = try self.selection.select(self.arena, "gitRepository");
+        const cur = try self.selection.select(self.arena, "gitRepository");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -786,7 +786,7 @@ pub const Address = struct {
     }
 
     pub fn secret(self: Address) !Secret {
-        var cur = try self.selection.select(self.arena, "secret");
+        const cur = try self.selection.select(self.arena, "secret");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -796,7 +796,7 @@ pub const Address = struct {
     }
 
     pub fn service(self: Address) !Service {
-        var cur = try self.selection.select(self.arena, "service");
+        const cur = try self.selection.select(self.arena, "service");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -806,7 +806,7 @@ pub const Address = struct {
     }
 
     pub fn socket(self: Address) !Socket {
-        var cur = try self.selection.select(self.arena, "socket");
+        const cur = try self.selection.select(self.arena, "socket");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -816,7 +816,7 @@ pub const Address = struct {
     }
 
     pub fn value(self: Address) ![]u8 {
-        var cur = try self.selection.select(self.arena, "value");
+        const cur = try self.selection.select(self.arena, "value");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -829,7 +829,7 @@ pub const Binding = struct {
     gql: *GraphQLClient,
 
     pub fn asAddress(self: Binding) !Address {
-        var cur = try self.selection.select(self.arena, "asAddress");
+        const cur = try self.selection.select(self.arena, "asAddress");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -839,7 +839,7 @@ pub const Binding = struct {
     }
 
     pub fn asCacheVolume(self: Binding) !CacheVolume {
-        var cur = try self.selection.select(self.arena, "asCacheVolume");
+        const cur = try self.selection.select(self.arena, "asCacheVolume");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -849,7 +849,7 @@ pub const Binding = struct {
     }
 
     pub fn asChangeset(self: Binding) !Changeset {
-        var cur = try self.selection.select(self.arena, "asChangeset");
+        const cur = try self.selection.select(self.arena, "asChangeset");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -859,7 +859,7 @@ pub const Binding = struct {
     }
 
     pub fn asCheck(self: Binding) !Check {
-        var cur = try self.selection.select(self.arena, "asCheck");
+        const cur = try self.selection.select(self.arena, "asCheck");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -869,7 +869,7 @@ pub const Binding = struct {
     }
 
     pub fn asCheckGroup(self: Binding) !CheckGroup {
-        var cur = try self.selection.select(self.arena, "asCheckGroup");
+        const cur = try self.selection.select(self.arena, "asCheckGroup");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -879,7 +879,7 @@ pub const Binding = struct {
     }
 
     pub fn asCloud(self: Binding) !Cloud {
-        var cur = try self.selection.select(self.arena, "asCloud");
+        const cur = try self.selection.select(self.arena, "asCloud");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -889,7 +889,7 @@ pub const Binding = struct {
     }
 
     pub fn asContainer(self: Binding) !Container {
-        var cur = try self.selection.select(self.arena, "asContainer");
+        const cur = try self.selection.select(self.arena, "asContainer");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -899,7 +899,7 @@ pub const Binding = struct {
     }
 
     pub fn asDiffStat(self: Binding) !DiffStat {
-        var cur = try self.selection.select(self.arena, "asDiffStat");
+        const cur = try self.selection.select(self.arena, "asDiffStat");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -909,7 +909,7 @@ pub const Binding = struct {
     }
 
     pub fn asDirectory(self: Binding) !Directory {
-        var cur = try self.selection.select(self.arena, "asDirectory");
+        const cur = try self.selection.select(self.arena, "asDirectory");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -919,7 +919,7 @@ pub const Binding = struct {
     }
 
     pub fn asEnv(self: Binding) !Env {
-        var cur = try self.selection.select(self.arena, "asEnv");
+        const cur = try self.selection.select(self.arena, "asEnv");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -929,7 +929,7 @@ pub const Binding = struct {
     }
 
     pub fn asEnvFile(self: Binding) !EnvFile {
-        var cur = try self.selection.select(self.arena, "asEnvFile");
+        const cur = try self.selection.select(self.arena, "asEnvFile");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -939,7 +939,7 @@ pub const Binding = struct {
     }
 
     pub fn asFile(self: Binding) !File {
-        var cur = try self.selection.select(self.arena, "asFile");
+        const cur = try self.selection.select(self.arena, "asFile");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -949,7 +949,7 @@ pub const Binding = struct {
     }
 
     pub fn asGenerator(self: Binding) !Generator {
-        var cur = try self.selection.select(self.arena, "asGenerator");
+        const cur = try self.selection.select(self.arena, "asGenerator");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -959,7 +959,7 @@ pub const Binding = struct {
     }
 
     pub fn asGeneratorGroup(self: Binding) !GeneratorGroup {
-        var cur = try self.selection.select(self.arena, "asGeneratorGroup");
+        const cur = try self.selection.select(self.arena, "asGeneratorGroup");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -969,7 +969,7 @@ pub const Binding = struct {
     }
 
     pub fn asGitRef(self: Binding) !GitRef {
-        var cur = try self.selection.select(self.arena, "asGitRef");
+        const cur = try self.selection.select(self.arena, "asGitRef");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -979,7 +979,7 @@ pub const Binding = struct {
     }
 
     pub fn asGitRepository(self: Binding) !GitRepository {
-        var cur = try self.selection.select(self.arena, "asGitRepository");
+        const cur = try self.selection.select(self.arena, "asGitRepository");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -989,7 +989,7 @@ pub const Binding = struct {
     }
 
     pub fn asHTTPState(self: Binding) !HTTPState {
-        var cur = try self.selection.select(self.arena, "asHTTPState");
+        const cur = try self.selection.select(self.arena, "asHTTPState");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -999,7 +999,7 @@ pub const Binding = struct {
     }
 
     pub fn asJSONValue(self: Binding) !JSONValue {
-        var cur = try self.selection.select(self.arena, "asJSONValue");
+        const cur = try self.selection.select(self.arena, "asJSONValue");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1009,7 +1009,7 @@ pub const Binding = struct {
     }
 
     pub fn asModule(self: Binding) !Module {
-        var cur = try self.selection.select(self.arena, "asModule");
+        const cur = try self.selection.select(self.arena, "asModule");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1019,7 +1019,7 @@ pub const Binding = struct {
     }
 
     pub fn asModuleConfigClient(self: Binding) !ModuleConfigClient {
-        var cur = try self.selection.select(self.arena, "asModuleConfigClient");
+        const cur = try self.selection.select(self.arena, "asModuleConfigClient");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1029,7 +1029,7 @@ pub const Binding = struct {
     }
 
     pub fn asModuleSource(self: Binding) !ModuleSource {
-        var cur = try self.selection.select(self.arena, "asModuleSource");
+        const cur = try self.selection.select(self.arena, "asModuleSource");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1039,7 +1039,7 @@ pub const Binding = struct {
     }
 
     pub fn asSearchResult(self: Binding) !SearchResult {
-        var cur = try self.selection.select(self.arena, "asSearchResult");
+        const cur = try self.selection.select(self.arena, "asSearchResult");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1049,7 +1049,7 @@ pub const Binding = struct {
     }
 
     pub fn asSearchSubmatch(self: Binding) !SearchSubmatch {
-        var cur = try self.selection.select(self.arena, "asSearchSubmatch");
+        const cur = try self.selection.select(self.arena, "asSearchSubmatch");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1059,7 +1059,7 @@ pub const Binding = struct {
     }
 
     pub fn asSecret(self: Binding) !Secret {
-        var cur = try self.selection.select(self.arena, "asSecret");
+        const cur = try self.selection.select(self.arena, "asSecret");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1069,7 +1069,7 @@ pub const Binding = struct {
     }
 
     pub fn asService(self: Binding) !Service {
-        var cur = try self.selection.select(self.arena, "asService");
+        const cur = try self.selection.select(self.arena, "asService");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1079,7 +1079,7 @@ pub const Binding = struct {
     }
 
     pub fn asSocket(self: Binding) !Socket {
-        var cur = try self.selection.select(self.arena, "asSocket");
+        const cur = try self.selection.select(self.arena, "asSocket");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1089,7 +1089,7 @@ pub const Binding = struct {
     }
 
     pub fn asStat(self: Binding) !Stat {
-        var cur = try self.selection.select(self.arena, "asStat");
+        const cur = try self.selection.select(self.arena, "asStat");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1099,12 +1099,12 @@ pub const Binding = struct {
     }
 
     pub fn asString(self: Binding) ![]u8 {
-        var cur = try self.selection.select(self.arena, "asString");
+        const cur = try self.selection.select(self.arena, "asString");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn asUp(self: Binding) !Up {
-        var cur = try self.selection.select(self.arena, "asUp");
+        const cur = try self.selection.select(self.arena, "asUp");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1114,7 +1114,7 @@ pub const Binding = struct {
     }
 
     pub fn asUpGroup(self: Binding) !UpGroup {
-        var cur = try self.selection.select(self.arena, "asUpGroup");
+        const cur = try self.selection.select(self.arena, "asUpGroup");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1124,7 +1124,7 @@ pub const Binding = struct {
     }
 
     pub fn asWorkspace(self: Binding) !Workspace {
-        var cur = try self.selection.select(self.arena, "asWorkspace");
+        const cur = try self.selection.select(self.arena, "asWorkspace");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1134,7 +1134,7 @@ pub const Binding = struct {
     }
 
     pub fn digest(self: Binding) ![]u8 {
-        var cur = try self.selection.select(self.arena, "digest");
+        const cur = try self.selection.select(self.arena, "digest");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -1145,17 +1145,17 @@ pub const Binding = struct {
     }
 
     pub fn isNull(self: Binding) !bool {
-        var cur = try self.selection.select(self.arena, "isNull");
+        const cur = try self.selection.select(self.arena, "isNull");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn name(self: Binding) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn typeName(self: Binding) ![]u8 {
-        var cur = try self.selection.select(self.arena, "typeName");
+        const cur = try self.selection.select(self.arena, "typeName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -1182,12 +1182,12 @@ pub const Changeset = struct {
     gql: *GraphQLClient,
 
     pub fn addedPaths(self: Changeset) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "addedPaths");
+        const cur = try self.selection.select(self.arena, "addedPaths");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn after(self: Changeset) !Directory {
-        var cur = try self.selection.select(self.arena, "after");
+        const cur = try self.selection.select(self.arena, "after");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1197,7 +1197,7 @@ pub const Changeset = struct {
     }
 
     pub fn asPatch(self: Changeset) !File {
-        var cur = try self.selection.select(self.arena, "asPatch");
+        const cur = try self.selection.select(self.arena, "asPatch");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1207,7 +1207,7 @@ pub const Changeset = struct {
     }
 
     pub fn before(self: Changeset) !Directory {
-        var cur = try self.selection.select(self.arena, "before");
+        const cur = try self.selection.select(self.arena, "before");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1217,7 +1217,7 @@ pub const Changeset = struct {
     }
 
     pub fn diffStats(self: Changeset) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "diffStats");
+        const cur = try self.selection.select(self.arena, "diffStats");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -1234,12 +1234,12 @@ pub const Changeset = struct {
     }
 
     pub fn isEmpty(self: Changeset) !bool {
-        var cur = try self.selection.select(self.arena, "isEmpty");
+        const cur = try self.selection.select(self.arena, "isEmpty");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn layer(self: Changeset) !Directory {
-        var cur = try self.selection.select(self.arena, "layer");
+        const cur = try self.selection.select(self.arena, "layer");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1249,12 +1249,12 @@ pub const Changeset = struct {
     }
 
     pub fn modifiedPaths(self: Changeset) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "modifiedPaths");
+        const cur = try self.selection.select(self.arena, "modifiedPaths");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn removedPaths(self: Changeset) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "removedPaths");
+        const cur = try self.selection.select(self.arena, "removedPaths");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -1304,22 +1304,22 @@ pub const Check = struct {
     gql: *GraphQLClient,
 
     pub fn checkType(self: Check) ![]u8 {
-        var cur = try self.selection.select(self.arena, "checkType");
+        const cur = try self.selection.select(self.arena, "checkType");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn completed(self: Check) !bool {
-        var cur = try self.selection.select(self.arena, "completed");
+        const cur = try self.selection.select(self.arena, "completed");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: Check) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn @"error"(self: Check) !Error {
-        var cur = try self.selection.select(self.arena, "error");
+        const cur = try self.selection.select(self.arena, "error");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1335,12 +1335,12 @@ pub const Check = struct {
     }
 
     pub fn name(self: Check) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn originalModule(self: Check) !Module {
-        var cur = try self.selection.select(self.arena, "originalModule");
+        const cur = try self.selection.select(self.arena, "originalModule");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1350,22 +1350,22 @@ pub const Check = struct {
     }
 
     pub fn passed(self: Check) !bool {
-        var cur = try self.selection.select(self.arena, "passed");
+        const cur = try self.selection.select(self.arena, "passed");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn path(self: Check) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "path");
+        const cur = try self.selection.select(self.arena, "path");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn resultEmoji(self: Check) ![]u8 {
-        var cur = try self.selection.select(self.arena, "resultEmoji");
+        const cur = try self.selection.select(self.arena, "resultEmoji");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn run(self: Check) !Check {
-        var cur = try self.selection.select(self.arena, "run");
+        const cur = try self.selection.select(self.arena, "run");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1389,12 +1389,12 @@ pub const CheckGroup = struct {
     }
 
     pub fn list(self: CheckGroup) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "list");
+        const cur = try self.selection.select(self.arena, "list");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn report(self: CheckGroup) !File {
-        var cur = try self.selection.select(self.arena, "report");
+        const cur = try self.selection.select(self.arena, "report");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1446,7 +1446,7 @@ pub const Cloud = struct {
     }
 
     pub fn traceURL(self: Cloud) ![]u8 {
-        var cur = try self.selection.select(self.arena, "traceURL");
+        const cur = try self.selection.select(self.arena, "traceURL");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -1515,12 +1515,12 @@ pub const Container = struct {
     }
 
     pub fn combinedOutput(self: Container) ![]u8 {
-        var cur = try self.selection.select(self.arena, "combinedOutput");
+        const cur = try self.selection.select(self.arena, "combinedOutput");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn defaultArgs(self: Container) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "defaultArgs");
+        const cur = try self.selection.select(self.arena, "defaultArgs");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -1540,7 +1540,7 @@ pub const Container = struct {
     }
 
     pub fn dockerHealthcheck(self: Container) !HealthcheckConfig {
-        var cur = try self.selection.select(self.arena, "dockerHealthcheck");
+        const cur = try self.selection.select(self.arena, "dockerHealthcheck");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1550,7 +1550,7 @@ pub const Container = struct {
     }
 
     pub fn entrypoint(self: Container) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "entrypoint");
+        const cur = try self.selection.select(self.arena, "entrypoint");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -1561,7 +1561,7 @@ pub const Container = struct {
     }
 
     pub fn envVariables(self: Container) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "envVariables");
+        const cur = try self.selection.select(self.arena, "envVariables");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -1584,12 +1584,12 @@ pub const Container = struct {
     }
 
     pub fn exitCode(self: Container) !i64 {
-        var cur = try self.selection.select(self.arena, "exitCode");
+        const cur = try self.selection.select(self.arena, "exitCode");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn experimentalWithAllGPUs(self: Container) !Container {
-        var cur = try self.selection.select(self.arena, "experimentalWithAllGPUs");
+        const cur = try self.selection.select(self.arena, "experimentalWithAllGPUs");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1651,7 +1651,7 @@ pub const Container = struct {
     }
 
     pub fn exposedPorts(self: Container) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "exposedPorts");
+        const cur = try self.selection.select(self.arena, "exposedPorts");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -1691,7 +1691,7 @@ pub const Container = struct {
     }
 
     pub fn imageRef(self: Container) ![]u8 {
-        var cur = try self.selection.select(self.arena, "imageRef");
+        const cur = try self.selection.select(self.arena, "imageRef");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -1716,17 +1716,17 @@ pub const Container = struct {
     }
 
     pub fn labels(self: Container) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "labels");
+        const cur = try self.selection.select(self.arena, "labels");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn mounts(self: Container) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "mounts");
+        const cur = try self.selection.select(self.arena, "mounts");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn platform(self: Container) ![]u8 {
-        var cur = try self.selection.select(self.arena, "platform");
+        const cur = try self.selection.select(self.arena, "platform");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -1752,7 +1752,7 @@ pub const Container = struct {
     }
 
     pub fn rootfs(self: Container) !Directory {
-        var cur = try self.selection.select(self.arena, "rootfs");
+        const cur = try self.selection.select(self.arena, "rootfs");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -1777,12 +1777,12 @@ pub const Container = struct {
     }
 
     pub fn stderr(self: Container) ![]u8 {
-        var cur = try self.selection.select(self.arena, "stderr");
+        const cur = try self.selection.select(self.arena, "stderr");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn stdout(self: Container) ![]u8 {
-        var cur = try self.selection.select(self.arena, "stdout");
+        const cur = try self.selection.select(self.arena, "stdout");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -1852,7 +1852,7 @@ pub const Container = struct {
     }
 
     pub fn user(self: Container) ![]u8 {
-        var cur = try self.selection.select(self.arena, "user");
+        const cur = try self.selection.select(self.arena, "user");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -2297,9 +2297,9 @@ pub const Container = struct {
         };
     }
 
-    pub fn withRootfs(self: Container, directory: []const u8) !Container {
+    pub fn withRootfs(self: Container, directory_: []const u8) !Container {
         var cur = try self.selection.select(self.arena, "withRootfs");
-            cur = try cur.argStr(self.arena, "directory", directory);
+            cur = try cur.argStr(self.arena, "directory", directory_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2417,7 +2417,7 @@ pub const Container = struct {
     }
 
     pub fn withoutDefaultArgs(self: Container) !Container {
-        var cur = try self.selection.select(self.arena, "withoutDefaultArgs");
+        const cur = try self.selection.select(self.arena, "withoutDefaultArgs");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2442,7 +2442,7 @@ pub const Container = struct {
     }
 
     pub fn withoutDockerHealthcheck(self: Container) !Container {
-        var cur = try self.selection.select(self.arena, "withoutDockerHealthcheck");
+        const cur = try self.selection.select(self.arena, "withoutDockerHealthcheck");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2587,7 +2587,7 @@ pub const Container = struct {
     }
 
     pub fn withoutUser(self: Container) !Container {
-        var cur = try self.selection.select(self.arena, "withoutUser");
+        const cur = try self.selection.select(self.arena, "withoutUser");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2608,7 +2608,7 @@ pub const Container = struct {
     }
 
     pub fn withoutWorkdir(self: Container) !Container {
-        var cur = try self.selection.select(self.arena, "withoutWorkdir");
+        const cur = try self.selection.select(self.arena, "withoutWorkdir");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2618,7 +2618,7 @@ pub const Container = struct {
     }
 
     pub fn workdir(self: Container) ![]u8 {
-        var cur = try self.selection.select(self.arena, "workdir");
+        const cur = try self.selection.select(self.arena, "workdir");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -2631,12 +2631,12 @@ pub const CurrentModule = struct {
     gql: *GraphQLClient,
 
     pub fn dependencies(self: CurrentModule) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "dependencies");
+        const cur = try self.selection.select(self.arena, "dependencies");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn generatedContextDirectory(self: CurrentModule) !Directory {
-        var cur = try self.selection.select(self.arena, "generatedContextDirectory");
+        const cur = try self.selection.select(self.arena, "generatedContextDirectory");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2666,12 +2666,12 @@ pub const CurrentModule = struct {
     }
 
     pub fn name(self: CurrentModule) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn source(self: CurrentModule) !Directory {
-        var cur = try self.selection.select(self.arena, "source");
+        const cur = try self.selection.select(self.arena, "source");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2723,7 +2723,7 @@ pub const DiffStat = struct {
     gql: *GraphQLClient,
 
     pub fn addedLines(self: DiffStat) !i64 {
-        var cur = try self.selection.select(self.arena, "addedLines");
+        const cur = try self.selection.select(self.arena, "addedLines");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -2734,7 +2734,7 @@ pub const DiffStat = struct {
     }
 
     pub fn kind(self: DiffStat) !DiffStatKind {
-        var cur = try self.selection.select(self.arena, "kind");
+        const cur = try self.selection.select(self.arena, "kind");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2744,17 +2744,17 @@ pub const DiffStat = struct {
     }
 
     pub fn oldPath(self: DiffStat) ![]u8 {
-        var cur = try self.selection.select(self.arena, "oldPath");
+        const cur = try self.selection.select(self.arena, "oldPath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn path(self: DiffStat) ![]u8 {
-        var cur = try self.selection.select(self.arena, "path");
+        const cur = try self.selection.select(self.arena, "path");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn removedLines(self: DiffStat) !i64 {
-        var cur = try self.selection.select(self.arena, "removedLines");
+        const cur = try self.selection.select(self.arena, "removedLines");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -2767,7 +2767,7 @@ pub const Directory = struct {
     gql: *GraphQLClient,
 
     pub fn asGit(self: Directory) !GitRepository {
-        var cur = try self.selection.select(self.arena, "asGit");
+        const cur = try self.selection.select(self.arena, "asGit");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -2837,7 +2837,7 @@ pub const Directory = struct {
     }
 
     pub fn digest(self: Directory) ![]u8 {
-        var cur = try self.selection.select(self.arena, "digest");
+        const cur = try self.selection.select(self.arena, "digest");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -2951,9 +2951,9 @@ pub const Directory = struct {
         };
     }
 
-    pub fn findUp(self: Directory, name: []const u8, start: []const u8) ![]u8 {
+    pub fn findUp(self: Directory, name_: []const u8, start: []const u8) ![]u8 {
         var cur = try self.selection.select(self.arena, "findUp");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
             cur = try cur.argStr(self.arena, "start", start);
         return executeScalarString(self.allocator, cur, self.gql);
     }
@@ -2971,7 +2971,7 @@ pub const Directory = struct {
     }
 
     pub fn name(self: Directory) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -3067,9 +3067,9 @@ pub const Directory = struct {
         };
     }
 
-    pub fn withChanges(self: Directory, changes: []const u8) !Directory {
+    pub fn withChanges(self: Directory, changes_: []const u8) !Directory {
         var cur = try self.selection.select(self.arena, "withChanges");
-            cur = try cur.argStr(self.arena, "changes", changes);
+            cur = try cur.argStr(self.arena, "changes", changes_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -3276,7 +3276,7 @@ pub const Engine = struct {
     gql: *GraphQLClient,
 
     pub fn clients(self: Engine) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "clients");
+        const cur = try self.selection.select(self.arena, "clients");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -3287,7 +3287,7 @@ pub const Engine = struct {
     }
 
     pub fn localCache(self: Engine) !EngineCache {
-        var cur = try self.selection.select(self.arena, "localCache");
+        const cur = try self.selection.select(self.arena, "localCache");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -3297,7 +3297,7 @@ pub const Engine = struct {
     }
 
     pub fn name(self: Engine) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -3329,43 +3329,43 @@ pub const EngineCache = struct {
     }
 
     pub fn maxUsedSpace(self: EngineCache) !i64 {
-        var cur = try self.selection.select(self.arena, "maxUsedSpace");
+        const cur = try self.selection.select(self.arena, "maxUsedSpace");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn minFreeSpace(self: EngineCache) !i64 {
-        var cur = try self.selection.select(self.arena, "minFreeSpace");
+        const cur = try self.selection.select(self.arena, "minFreeSpace");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
-    pub fn prune(self: EngineCache, useDefaultPolicy: ?bool, maxUsedSpace: ?[]const u8, reservedSpace: ?[]const u8, minFreeSpace: ?[]const u8, targetSpace: ?[]const u8) !void {
+    pub fn prune(self: EngineCache, useDefaultPolicy: ?bool, maxUsedSpace_: ?[]const u8, reservedSpace_: ?[]const u8, minFreeSpace_: ?[]const u8, targetSpace_: ?[]const u8) !void {
         var cur = try self.selection.select(self.arena, "prune");
         if (useDefaultPolicy) |useDefaultPolicy_val| {
             const useDefaultPolicy_str = if (useDefaultPolicy_val) "true" else "false";
             cur = try cur.arg(self.arena, "useDefaultPolicy", .{ .eager = useDefaultPolicy_str });
         }
-        if (maxUsedSpace) |maxUsedSpace_val| {
-            cur = try cur.argStr(self.arena, "maxUsedSpace", maxUsedSpace_val);
+        if (maxUsedSpace_) |maxUsedSpace__val| {
+            cur = try cur.argStr(self.arena, "maxUsedSpace", maxUsedSpace__val);
         }
-        if (reservedSpace) |reservedSpace_val| {
-            cur = try cur.argStr(self.arena, "reservedSpace", reservedSpace_val);
+        if (reservedSpace_) |reservedSpace__val| {
+            cur = try cur.argStr(self.arena, "reservedSpace", reservedSpace__val);
         }
-        if (minFreeSpace) |minFreeSpace_val| {
-            cur = try cur.argStr(self.arena, "minFreeSpace", minFreeSpace_val);
+        if (minFreeSpace_) |minFreeSpace__val| {
+            cur = try cur.argStr(self.arena, "minFreeSpace", minFreeSpace__val);
         }
-        if (targetSpace) |targetSpace_val| {
-            cur = try cur.argStr(self.arena, "targetSpace", targetSpace_val);
+        if (targetSpace_) |targetSpace__val| {
+            cur = try cur.argStr(self.arena, "targetSpace", targetSpace__val);
         }
         _ = try executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn reservedSpace(self: EngineCache) !i64 {
-        var cur = try self.selection.select(self.arena, "reservedSpace");
+        const cur = try self.selection.select(self.arena, "reservedSpace");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn targetSpace(self: EngineCache) !i64 {
-        var cur = try self.selection.select(self.arena, "targetSpace");
+        const cur = try self.selection.select(self.arena, "targetSpace");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -3378,27 +3378,27 @@ pub const EngineCacheEntry = struct {
     gql: *GraphQLClient,
 
     pub fn activelyUsed(self: EngineCacheEntry) !bool {
-        var cur = try self.selection.select(self.arena, "activelyUsed");
+        const cur = try self.selection.select(self.arena, "activelyUsed");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn createdTimeUnixNano(self: EngineCacheEntry) !i64 {
-        var cur = try self.selection.select(self.arena, "createdTimeUnixNano");
+        const cur = try self.selection.select(self.arena, "createdTimeUnixNano");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn dagqlCall(self: EngineCacheEntry) ![]u8 {
-        var cur = try self.selection.select(self.arena, "dagqlCall");
+        const cur = try self.selection.select(self.arena, "dagqlCall");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: EngineCacheEntry) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn diskSpaceBytes(self: EngineCacheEntry) !i64 {
-        var cur = try self.selection.select(self.arena, "diskSpaceBytes");
+        const cur = try self.selection.select(self.arena, "diskSpaceBytes");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -3409,17 +3409,17 @@ pub const EngineCacheEntry = struct {
     }
 
     pub fn mostRecentUseTimeUnixNano(self: EngineCacheEntry) !i64 {
-        var cur = try self.selection.select(self.arena, "mostRecentUseTimeUnixNano");
+        const cur = try self.selection.select(self.arena, "mostRecentUseTimeUnixNano");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn recordType(self: EngineCacheEntry) ![]u8 {
-        var cur = try self.selection.select(self.arena, "recordType");
+        const cur = try self.selection.select(self.arena, "recordType");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn recordTypes(self: EngineCacheEntry) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "recordTypes");
+        const cur = try self.selection.select(self.arena, "recordTypes");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -3432,17 +3432,17 @@ pub const EngineCacheEntrySet = struct {
     gql: *GraphQLClient,
 
     pub fn diskSpaceBytes(self: EngineCacheEntrySet) !i64 {
-        var cur = try self.selection.select(self.arena, "diskSpaceBytes");
+        const cur = try self.selection.select(self.arena, "diskSpaceBytes");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn entries(self: EngineCacheEntrySet) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "entries");
+        const cur = try self.selection.select(self.arena, "entries");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn entryCount(self: EngineCacheEntrySet) !i64 {
-        var cur = try self.selection.select(self.arena, "entryCount");
+        const cur = try self.selection.select(self.arena, "entryCount");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -3461,7 +3461,7 @@ pub const EnumTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn description(self: EnumTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -3472,17 +3472,17 @@ pub const EnumTypeDef = struct {
     }
 
     pub fn members(self: EnumTypeDef) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "members");
+        const cur = try self.selection.select(self.arena, "members");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn name(self: EnumTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceMap(self: EnumTypeDef) !SourceMap {
-        var cur = try self.selection.select(self.arena, "sourceMap");
+        const cur = try self.selection.select(self.arena, "sourceMap");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -3492,7 +3492,7 @@ pub const EnumTypeDef = struct {
     }
 
     pub fn sourceModuleName(self: EnumTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "sourceModuleName");
+        const cur = try self.selection.select(self.arena, "sourceModuleName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -3505,12 +3505,12 @@ pub const EnumValueTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn deprecated(self: EnumValueTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "deprecated");
+        const cur = try self.selection.select(self.arena, "deprecated");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: EnumValueTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -3521,12 +3521,12 @@ pub const EnumValueTypeDef = struct {
     }
 
     pub fn name(self: EnumValueTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceMap(self: EnumValueTypeDef) !SourceMap {
-        var cur = try self.selection.select(self.arena, "sourceMap");
+        const cur = try self.selection.select(self.arena, "sourceMap");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -3536,7 +3536,7 @@ pub const EnumValueTypeDef = struct {
     }
 
     pub fn value(self: EnumValueTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "value");
+        const cur = try self.selection.select(self.arena, "value");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -3595,7 +3595,7 @@ pub const Env = struct {
     }
 
     pub fn inputs(self: Env) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "inputs");
+        const cur = try self.selection.select(self.arena, "inputs");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -3611,7 +3611,7 @@ pub const Env = struct {
     }
 
     pub fn outputs(self: Env) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "outputs");
+        const cur = try self.selection.select(self.arena, "outputs");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -3805,7 +3805,7 @@ pub const Env = struct {
     }
 
     pub fn withCurrentModule(self: Env) !Env {
-        var cur = try self.selection.select(self.arena, "withCurrentModule");
+        const cur = try self.selection.select(self.arena, "withCurrentModule");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4400,9 +4400,9 @@ pub const Env = struct {
         };
     }
 
-    pub fn withWorkspace(self: Env, workspace: []const u8) !Env {
+    pub fn withWorkspace(self: Env, workspace_: []const u8) !Env {
         var cur = try self.selection.select(self.arena, "withWorkspace");
-            cur = try cur.argStr(self.arena, "workspace", workspace);
+            cur = try cur.argStr(self.arena, "workspace", workspace_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4437,7 +4437,7 @@ pub const Env = struct {
     }
 
     pub fn withoutOutputs(self: Env) !Env {
-        var cur = try self.selection.select(self.arena, "withoutOutputs");
+        const cur = try self.selection.select(self.arena, "withoutOutputs");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4447,7 +4447,7 @@ pub const Env = struct {
     }
 
     pub fn workspace(self: Env) !Directory {
-        var cur = try self.selection.select(self.arena, "workspace");
+        const cur = try self.selection.select(self.arena, "workspace");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4465,7 +4465,7 @@ pub const EnvFile = struct {
     gql: *GraphQLClient,
 
     pub fn asFile(self: EnvFile) !File {
-        var cur = try self.selection.select(self.arena, "asFile");
+        const cur = try self.selection.select(self.arena, "asFile");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4554,12 +4554,12 @@ pub const EnvVariable = struct {
     }
 
     pub fn name(self: EnvVariable) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn value(self: EnvVariable) ![]u8 {
-        var cur = try self.selection.select(self.arena, "value");
+        const cur = try self.selection.select(self.arena, "value");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -4578,12 +4578,12 @@ pub const Error = struct {
     }
 
     pub fn message(self: Error) ![]u8 {
-        var cur = try self.selection.select(self.arena, "message");
+        const cur = try self.selection.select(self.arena, "message");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn values(self: Error) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "values");
+        const cur = try self.selection.select(self.arena, "values");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -4614,13 +4614,33 @@ pub const ErrorValue = struct {
     }
 
     pub fn name(self: ErrorValue) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn value(self: ErrorValue) ![]u8 {
-        var cur = try self.selection.select(self.arena, "value");
+        const cur = try self.selection.select(self.arena, "value");
         return executeScalarString(self.allocator, cur, self.gql);
+    }
+
+};
+
+pub const Exportable = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    pub fn @"export"(self: Exportable, path: []const u8) ![]u8 {
+        var cur = try self.selection.select(self.arena, "export");
+            cur = try cur.argStr(self.arena, "path", path);
+        return executeScalarString(self.allocator, cur, self.gql);
+    }
+
+    pub fn id(self: Exportable) !ExportableID {
+        const s0 = try self.selection.select(self.arena, "id");
+        const raw = try executeScalarString(self.allocator, s0, self.gql);
+        return .{ .value = raw };
     }
 
 };
@@ -4632,12 +4652,12 @@ pub const FieldTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn deprecated(self: FieldTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "deprecated");
+        const cur = try self.selection.select(self.arena, "deprecated");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: FieldTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -4648,12 +4668,12 @@ pub const FieldTypeDef = struct {
     }
 
     pub fn name(self: FieldTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceMap(self: FieldTypeDef) !SourceMap {
-        var cur = try self.selection.select(self.arena, "sourceMap");
+        const cur = try self.selection.select(self.arena, "sourceMap");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4663,7 +4683,7 @@ pub const FieldTypeDef = struct {
     }
 
     pub fn typeDef(self: FieldTypeDef) !TypeDef {
-        var cur = try self.selection.select(self.arena, "typeDef");
+        const cur = try self.selection.select(self.arena, "typeDef");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4681,7 +4701,7 @@ pub const File = struct {
     gql: *GraphQLClient,
 
     pub fn asEnvFile(self: File) !EnvFile {
-        var cur = try self.selection.select(self.arena, "asEnvFile");
+        const cur = try self.selection.select(self.arena, "asEnvFile");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4691,7 +4711,7 @@ pub const File = struct {
     }
 
     pub fn asJSON(self: File) !JSONValue {
-        var cur = try self.selection.select(self.arena, "asJSON");
+        const cur = try self.selection.select(self.arena, "asJSON");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4750,7 +4770,7 @@ pub const File = struct {
     }
 
     pub fn name(self: File) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -4801,12 +4821,12 @@ pub const File = struct {
     }
 
     pub fn size(self: File) !i64 {
-        var cur = try self.selection.select(self.arena, "size");
+        const cur = try self.selection.select(self.arena, "size");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn stat(self: File) !Stat {
-        var cur = try self.selection.select(self.arena, "stat");
+        const cur = try self.selection.select(self.arena, "stat");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4821,9 +4841,9 @@ pub const File = struct {
         return .{ .value = raw };
     }
 
-    pub fn withName(self: File, name: []const u8) !File {
+    pub fn withName(self: File, name_: []const u8) !File {
         var cur = try self.selection.select(self.arena, "withName");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4832,9 +4852,9 @@ pub const File = struct {
         };
     }
 
-    pub fn withReplaced(self: File, search: []const u8, replacement: []const u8, all: ?bool, firstFrom: ?i64) !File {
+    pub fn withReplaced(self: File, search_: []const u8, replacement: []const u8, all: ?bool, firstFrom: ?i64) !File {
         var cur = try self.selection.select(self.arena, "withReplaced");
-            cur = try cur.argStr(self.arena, "search", search);
+            cur = try cur.argStr(self.arena, "search", search_);
             cur = try cur.argStr(self.arena, "replacement", replacement);
         if (all) |all_val| {
             const all_str = if (all_val) "true" else "false";
@@ -4873,17 +4893,17 @@ pub const Function = struct {
     gql: *GraphQLClient,
 
     pub fn args(self: Function) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "args");
+        const cur = try self.selection.select(self.arena, "args");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn deprecated(self: Function) ![]u8 {
-        var cur = try self.selection.select(self.arena, "deprecated");
+        const cur = try self.selection.select(self.arena, "deprecated");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: Function) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -4894,12 +4914,12 @@ pub const Function = struct {
     }
 
     pub fn name(self: Function) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn returnType(self: Function) !TypeDef {
-        var cur = try self.selection.select(self.arena, "returnType");
+        const cur = try self.selection.select(self.arena, "returnType");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4909,7 +4929,7 @@ pub const Function = struct {
     }
 
     pub fn sourceMap(self: Function) !SourceMap {
-        var cur = try self.selection.select(self.arena, "sourceMap");
+        const cur = try self.selection.select(self.arena, "sourceMap");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4919,16 +4939,16 @@ pub const Function = struct {
     }
 
     pub fn sourceModuleName(self: Function) ![]u8 {
-        var cur = try self.selection.select(self.arena, "sourceModuleName");
+        const cur = try self.selection.select(self.arena, "sourceModuleName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
-    pub fn withArg(self: Function, name: []const u8, typeDef: []const u8, description: ?[]const u8, defaultValue: ?[]const u8, defaultPath: ?[]const u8, ignore: ?[]const []const u8, sourceMap: ?[]const u8, deprecated: ?[]const u8, defaultAddress: ?[]const u8) !Function {
+    pub fn withArg(self: Function, name_: []const u8, typeDef: []const u8, description_: ?[]const u8, defaultValue: ?[]const u8, defaultPath: ?[]const u8, ignore: ?[]const []const u8, sourceMap_: ?[]const u8, deprecated_: ?[]const u8, defaultAddress: ?[]const u8) !Function {
         var cur = try self.selection.select(self.arena, "withArg");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
             cur = try cur.argStr(self.arena, "typeDef", typeDef);
-        if (description) |description_val| {
-            cur = try cur.argStr(self.arena, "description", description_val);
+        if (description_) |description__val| {
+            cur = try cur.argStr(self.arena, "description", description__val);
         }
         if (defaultValue) |defaultValue_val| {
             cur = try cur.argStr(self.arena, "defaultValue", defaultValue_val);
@@ -4940,11 +4960,11 @@ pub const Function = struct {
             const ignore_lit = try qb.serializeStringList(self.arena, ignore_val);
             cur = try cur.arg(self.arena, "ignore", .{ .eager = ignore_lit });
         }
-        if (sourceMap) |sourceMap_val| {
-            cur = try cur.argStr(self.arena, "sourceMap", sourceMap_val);
+        if (sourceMap_) |sourceMap__val| {
+            cur = try cur.argStr(self.arena, "sourceMap", sourceMap__val);
         }
-        if (deprecated) |deprecated_val| {
-            cur = try cur.argStr(self.arena, "deprecated", deprecated_val);
+        if (deprecated_) |deprecated__val| {
+            cur = try cur.argStr(self.arena, "deprecated", deprecated__val);
         }
         if (defaultAddress) |defaultAddress_val| {
             cur = try cur.argStr(self.arena, "defaultAddress", defaultAddress_val);
@@ -4973,7 +4993,7 @@ pub const Function = struct {
     }
 
     pub fn withCheck(self: Function) !Function {
-        var cur = try self.selection.select(self.arena, "withCheck");
+        const cur = try self.selection.select(self.arena, "withCheck");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -4995,9 +5015,9 @@ pub const Function = struct {
         };
     }
 
-    pub fn withDescription(self: Function, description: []const u8) !Function {
+    pub fn withDescription(self: Function, description_: []const u8) !Function {
         var cur = try self.selection.select(self.arena, "withDescription");
-            cur = try cur.argStr(self.arena, "description", description);
+            cur = try cur.argStr(self.arena, "description", description_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5007,7 +5027,7 @@ pub const Function = struct {
     }
 
     pub fn withGenerator(self: Function) !Function {
-        var cur = try self.selection.select(self.arena, "withGenerator");
+        const cur = try self.selection.select(self.arena, "withGenerator");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5016,9 +5036,9 @@ pub const Function = struct {
         };
     }
 
-    pub fn withSourceMap(self: Function, sourceMap: []const u8) !Function {
+    pub fn withSourceMap(self: Function, sourceMap_: []const u8) !Function {
         var cur = try self.selection.select(self.arena, "withSourceMap");
-            cur = try cur.argStr(self.arena, "sourceMap", sourceMap);
+            cur = try cur.argStr(self.arena, "sourceMap", sourceMap_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5028,7 +5048,7 @@ pub const Function = struct {
     }
 
     pub fn withUp(self: Function) !Function {
-        var cur = try self.selection.select(self.arena, "withUp");
+        const cur = try self.selection.select(self.arena, "withUp");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5046,27 +5066,27 @@ pub const FunctionArg = struct {
     gql: *GraphQLClient,
 
     pub fn defaultAddress(self: FunctionArg) ![]u8 {
-        var cur = try self.selection.select(self.arena, "defaultAddress");
+        const cur = try self.selection.select(self.arena, "defaultAddress");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn defaultPath(self: FunctionArg) ![]u8 {
-        var cur = try self.selection.select(self.arena, "defaultPath");
+        const cur = try self.selection.select(self.arena, "defaultPath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn defaultValue(self: FunctionArg) ![]u8 {
-        var cur = try self.selection.select(self.arena, "defaultValue");
+        const cur = try self.selection.select(self.arena, "defaultValue");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn deprecated(self: FunctionArg) ![]u8 {
-        var cur = try self.selection.select(self.arena, "deprecated");
+        const cur = try self.selection.select(self.arena, "deprecated");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: FunctionArg) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5077,17 +5097,17 @@ pub const FunctionArg = struct {
     }
 
     pub fn ignore(self: FunctionArg) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "ignore");
+        const cur = try self.selection.select(self.arena, "ignore");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn name(self: FunctionArg) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceMap(self: FunctionArg) !SourceMap {
-        var cur = try self.selection.select(self.arena, "sourceMap");
+        const cur = try self.selection.select(self.arena, "sourceMap");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5097,7 +5117,7 @@ pub const FunctionArg = struct {
     }
 
     pub fn typeDef(self: FunctionArg) !TypeDef {
-        var cur = try self.selection.select(self.arena, "typeDef");
+        const cur = try self.selection.select(self.arena, "typeDef");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5121,22 +5141,22 @@ pub const FunctionCall = struct {
     }
 
     pub fn inputArgs(self: FunctionCall) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "inputArgs");
+        const cur = try self.selection.select(self.arena, "inputArgs");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn name(self: FunctionCall) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn parent(self: FunctionCall) ![]u8 {
-        var cur = try self.selection.select(self.arena, "parent");
+        const cur = try self.selection.select(self.arena, "parent");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn parentName(self: FunctionCall) ![]u8 {
-        var cur = try self.selection.select(self.arena, "parentName");
+        const cur = try self.selection.select(self.arena, "parentName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5167,12 +5187,12 @@ pub const FunctionCallArgValue = struct {
     }
 
     pub fn name(self: FunctionCallArgValue) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn value(self: FunctionCallArgValue) ![]u8 {
-        var cur = try self.selection.select(self.arena, "value");
+        const cur = try self.selection.select(self.arena, "value");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5185,7 +5205,7 @@ pub const GeneratedCode = struct {
     gql: *GraphQLClient,
 
     pub fn code(self: GeneratedCode) !Directory {
-        var cur = try self.selection.select(self.arena, "code");
+        const cur = try self.selection.select(self.arena, "code");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5201,12 +5221,12 @@ pub const GeneratedCode = struct {
     }
 
     pub fn vcsGeneratedPaths(self: GeneratedCode) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "vcsGeneratedPaths");
+        const cur = try self.selection.select(self.arena, "vcsGeneratedPaths");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn vcsIgnoredPaths(self: GeneratedCode) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "vcsIgnoredPaths");
+        const cur = try self.selection.select(self.arena, "vcsIgnoredPaths");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -5243,7 +5263,7 @@ pub const Generator = struct {
     gql: *GraphQLClient,
 
     pub fn changes(self: Generator) !Changeset {
-        var cur = try self.selection.select(self.arena, "changes");
+        const cur = try self.selection.select(self.arena, "changes");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5253,12 +5273,12 @@ pub const Generator = struct {
     }
 
     pub fn completed(self: Generator) !bool {
-        var cur = try self.selection.select(self.arena, "completed");
+        const cur = try self.selection.select(self.arena, "completed");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: Generator) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5269,17 +5289,17 @@ pub const Generator = struct {
     }
 
     pub fn isEmpty(self: Generator) !bool {
-        var cur = try self.selection.select(self.arena, "isEmpty");
+        const cur = try self.selection.select(self.arena, "isEmpty");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn name(self: Generator) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn originalModule(self: Generator) !Module {
-        var cur = try self.selection.select(self.arena, "originalModule");
+        const cur = try self.selection.select(self.arena, "originalModule");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5289,12 +5309,12 @@ pub const Generator = struct {
     }
 
     pub fn path(self: Generator) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "path");
+        const cur = try self.selection.select(self.arena, "path");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn run(self: Generator) !Generator {
-        var cur = try self.selection.select(self.arena, "run");
+        const cur = try self.selection.select(self.arena, "run");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5332,17 +5352,17 @@ pub const GeneratorGroup = struct {
     }
 
     pub fn isEmpty(self: GeneratorGroup) !bool {
-        var cur = try self.selection.select(self.arena, "isEmpty");
+        const cur = try self.selection.select(self.arena, "isEmpty");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn list(self: GeneratorGroup) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "list");
+        const cur = try self.selection.select(self.arena, "list");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn run(self: GeneratorGroup) !GeneratorGroup {
-        var cur = try self.selection.select(self.arena, "run");
+        const cur = try self.selection.select(self.arena, "run");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5360,7 +5380,7 @@ pub const GitRef = struct {
     gql: *GraphQLClient,
 
     pub fn commit(self: GitRef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "commit");
+        const cur = try self.selection.select(self.arena, "commit");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5382,7 +5402,7 @@ pub const GitRef = struct {
     }
 
     pub fn ref(self: GitRef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "ref");
+        const cur = try self.selection.select(self.arena, "ref");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5436,9 +5456,9 @@ pub const GitRepository = struct {
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
-    pub fn commit(self: GitRepository, id: []const u8) !GitRef {
+    pub fn commit(self: GitRepository, id_: []const u8) !GitRef {
         var cur = try self.selection.select(self.arena, "commit");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5448,7 +5468,7 @@ pub const GitRepository = struct {
     }
 
     pub fn head(self: GitRepository) !GitRef {
-        var cur = try self.selection.select(self.arena, "head");
+        const cur = try self.selection.select(self.arena, "head");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5464,7 +5484,7 @@ pub const GitRepository = struct {
     }
 
     pub fn latestVersion(self: GitRepository) !GitRef {
-        var cur = try self.selection.select(self.arena, "latestVersion");
+        const cur = try self.selection.select(self.arena, "latestVersion");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5505,7 +5525,7 @@ pub const GitRepository = struct {
     }
 
     pub fn uncommitted(self: GitRepository) !Changeset {
-        var cur = try self.selection.select(self.arena, "uncommitted");
+        const cur = try self.selection.select(self.arena, "uncommitted");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5515,7 +5535,7 @@ pub const GitRepository = struct {
     }
 
     pub fn url(self: GitRepository) ![]u8 {
-        var cur = try self.selection.select(self.arena, "url");
+        const cur = try self.selection.select(self.arena, "url");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5542,7 +5562,7 @@ pub const HealthcheckConfig = struct {
     gql: *GraphQLClient,
 
     pub fn args(self: HealthcheckConfig) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "args");
+        const cur = try self.selection.select(self.arena, "args");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -5553,32 +5573,32 @@ pub const HealthcheckConfig = struct {
     }
 
     pub fn interval(self: HealthcheckConfig) ![]u8 {
-        var cur = try self.selection.select(self.arena, "interval");
+        const cur = try self.selection.select(self.arena, "interval");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn retries(self: HealthcheckConfig) !i64 {
-        var cur = try self.selection.select(self.arena, "retries");
+        const cur = try self.selection.select(self.arena, "retries");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn shell(self: HealthcheckConfig) !bool {
-        var cur = try self.selection.select(self.arena, "shell");
+        const cur = try self.selection.select(self.arena, "shell");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn startInterval(self: HealthcheckConfig) ![]u8 {
-        var cur = try self.selection.select(self.arena, "startInterval");
+        const cur = try self.selection.select(self.arena, "startInterval");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn startPeriod(self: HealthcheckConfig) ![]u8 {
-        var cur = try self.selection.select(self.arena, "startPeriod");
+        const cur = try self.selection.select(self.arena, "startPeriod");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn timeout(self: HealthcheckConfig) ![]u8 {
-        var cur = try self.selection.select(self.arena, "timeout");
+        const cur = try self.selection.select(self.arena, "timeout");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5674,9 +5694,9 @@ pub const Host = struct {
         };
     }
 
-    pub fn tunnel(self: Host, service: []const u8, native: ?bool, ports: ?[]const []const u8) !Service {
+    pub fn tunnel(self: Host, service_: []const u8, native: ?bool, ports: ?[]const []const u8) !Service {
         var cur = try self.selection.select(self.arena, "tunnel");
-            cur = try cur.argStr(self.arena, "service", service);
+            cur = try cur.argStr(self.arena, "service", service_);
         if (native) |native_val| {
             const native_str = if (native_val) "true" else "false";
             cur = try cur.arg(self.arena, "native", .{ .eager = native_str });
@@ -5713,7 +5733,7 @@ pub const InputTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn fields(self: InputTypeDef) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "fields");
+        const cur = try self.selection.select(self.arena, "fields");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -5724,7 +5744,7 @@ pub const InputTypeDef = struct {
     }
 
     pub fn name(self: InputTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5737,12 +5757,12 @@ pub const InterfaceTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn description(self: InterfaceTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn functions(self: InterfaceTypeDef) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "functions");
+        const cur = try self.selection.select(self.arena, "functions");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -5753,12 +5773,12 @@ pub const InterfaceTypeDef = struct {
     }
 
     pub fn name(self: InterfaceTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceMap(self: InterfaceTypeDef) !SourceMap {
-        var cur = try self.selection.select(self.arena, "sourceMap");
+        const cur = try self.selection.select(self.arena, "sourceMap");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5768,7 +5788,7 @@ pub const InterfaceTypeDef = struct {
     }
 
     pub fn sourceModuleName(self: InterfaceTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "sourceModuleName");
+        const cur = try self.selection.select(self.arena, "sourceModuleName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5781,22 +5801,22 @@ pub const JSONValue = struct {
     gql: *GraphQLClient,
 
     pub fn asArray(self: JSONValue) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "asArray");
+        const cur = try self.selection.select(self.arena, "asArray");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn asBoolean(self: JSONValue) !bool {
-        var cur = try self.selection.select(self.arena, "asBoolean");
+        const cur = try self.selection.select(self.arena, "asBoolean");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn asInteger(self: JSONValue) !i64 {
-        var cur = try self.selection.select(self.arena, "asInteger");
+        const cur = try self.selection.select(self.arena, "asInteger");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn asString(self: JSONValue) ![]u8 {
-        var cur = try self.selection.select(self.arena, "asString");
+        const cur = try self.selection.select(self.arena, "asString");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5825,7 +5845,7 @@ pub const JSONValue = struct {
     }
 
     pub fn fields(self: JSONValue) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "fields");
+        const cur = try self.selection.select(self.arena, "fields");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -5870,9 +5890,9 @@ pub const JSONValue = struct {
         };
     }
 
-    pub fn withContents(self: JSONValue, contents: []const u8) !JSONValue {
+    pub fn withContents(self: JSONValue, contents_: []const u8) !JSONValue {
         var cur = try self.selection.select(self.arena, "withContents");
-            cur = try cur.argStr(self.arena, "contents", contents);
+            cur = try cur.argStr(self.arena, "contents", contents_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5926,7 +5946,7 @@ pub const LLM = struct {
     }
 
     pub fn env(self: LLM) !Env {
-        var cur = try self.selection.select(self.arena, "env");
+        const cur = try self.selection.select(self.arena, "env");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5936,17 +5956,17 @@ pub const LLM = struct {
     }
 
     pub fn hasPrompt(self: LLM) !bool {
-        var cur = try self.selection.select(self.arena, "hasPrompt");
+        const cur = try self.selection.select(self.arena, "hasPrompt");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn history(self: LLM) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "history");
+        const cur = try self.selection.select(self.arena, "history");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn historyJSON(self: LLM) ![]u8 {
-        var cur = try self.selection.select(self.arena, "historyJSON");
+        const cur = try self.selection.select(self.arena, "historyJSON");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5957,12 +5977,12 @@ pub const LLM = struct {
     }
 
     pub fn lastReply(self: LLM) ![]u8 {
-        var cur = try self.selection.select(self.arena, "lastReply");
+        const cur = try self.selection.select(self.arena, "lastReply");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn loop(self: LLM) !LLM {
-        var cur = try self.selection.select(self.arena, "loop");
+        const cur = try self.selection.select(self.arena, "loop");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -5972,17 +5992,17 @@ pub const LLM = struct {
     }
 
     pub fn model(self: LLM) ![]u8 {
-        var cur = try self.selection.select(self.arena, "model");
+        const cur = try self.selection.select(self.arena, "model");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn provider(self: LLM) ![]u8 {
-        var cur = try self.selection.select(self.arena, "provider");
+        const cur = try self.selection.select(self.arena, "provider");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn step(self: LLM) ![]u8 {
-        var cur = try self.selection.select(self.arena, "step");
+        const cur = try self.selection.select(self.arena, "step");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -5993,7 +6013,7 @@ pub const LLM = struct {
     }
 
     pub fn tokenUsage(self: LLM) !LLMTokenUsage {
-        var cur = try self.selection.select(self.arena, "tokenUsage");
+        const cur = try self.selection.select(self.arena, "tokenUsage");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6003,7 +6023,7 @@ pub const LLM = struct {
     }
 
     pub fn tools(self: LLM) ![]u8 {
-        var cur = try self.selection.select(self.arena, "tools");
+        const cur = try self.selection.select(self.arena, "tools");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -6019,9 +6039,9 @@ pub const LLM = struct {
         };
     }
 
-    pub fn withEnv(self: LLM, env: []const u8) !LLM {
+    pub fn withEnv(self: LLM, env_: []const u8) !LLM {
         var cur = try self.selection.select(self.arena, "withEnv");
-            cur = try cur.argStr(self.arena, "env", env);
+            cur = try cur.argStr(self.arena, "env", env_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6042,9 +6062,9 @@ pub const LLM = struct {
         };
     }
 
-    pub fn withModel(self: LLM, model: []const u8) !LLM {
+    pub fn withModel(self: LLM, model_: []const u8) !LLM {
         var cur = try self.selection.select(self.arena, "withModel");
-            cur = try cur.argStr(self.arena, "model", model);
+            cur = try cur.argStr(self.arena, "model", model_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6076,7 +6096,7 @@ pub const LLM = struct {
     }
 
     pub fn withStaticTools(self: LLM) !LLM {
-        var cur = try self.selection.select(self.arena, "withStaticTools");
+        const cur = try self.selection.select(self.arena, "withStaticTools");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6097,7 +6117,7 @@ pub const LLM = struct {
     }
 
     pub fn withoutDefaultSystemPrompt(self: LLM) !LLM {
-        var cur = try self.selection.select(self.arena, "withoutDefaultSystemPrompt");
+        const cur = try self.selection.select(self.arena, "withoutDefaultSystemPrompt");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6107,7 +6127,7 @@ pub const LLM = struct {
     }
 
     pub fn withoutMessageHistory(self: LLM) !LLM {
-        var cur = try self.selection.select(self.arena, "withoutMessageHistory");
+        const cur = try self.selection.select(self.arena, "withoutMessageHistory");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6117,7 +6137,7 @@ pub const LLM = struct {
     }
 
     pub fn withoutSystemPrompts(self: LLM) !LLM {
-        var cur = try self.selection.select(self.arena, "withoutSystemPrompts");
+        const cur = try self.selection.select(self.arena, "withoutSystemPrompts");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6135,12 +6155,12 @@ pub const LLMTokenUsage = struct {
     gql: *GraphQLClient,
 
     pub fn cachedTokenReads(self: LLMTokenUsage) !i64 {
-        var cur = try self.selection.select(self.arena, "cachedTokenReads");
+        const cur = try self.selection.select(self.arena, "cachedTokenReads");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn cachedTokenWrites(self: LLMTokenUsage) !i64 {
-        var cur = try self.selection.select(self.arena, "cachedTokenWrites");
+        const cur = try self.selection.select(self.arena, "cachedTokenWrites");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -6151,17 +6171,17 @@ pub const LLMTokenUsage = struct {
     }
 
     pub fn inputTokens(self: LLMTokenUsage) !i64 {
-        var cur = try self.selection.select(self.arena, "inputTokens");
+        const cur = try self.selection.select(self.arena, "inputTokens");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn outputTokens(self: LLMTokenUsage) !i64 {
-        var cur = try self.selection.select(self.arena, "outputTokens");
+        const cur = try self.selection.select(self.arena, "outputTokens");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn totalTokens(self: LLMTokenUsage) !i64 {
-        var cur = try self.selection.select(self.arena, "totalTokens");
+        const cur = try self.selection.select(self.arena, "totalTokens");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -6180,12 +6200,12 @@ pub const Label = struct {
     }
 
     pub fn name(self: Label) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn value(self: Label) ![]u8 {
-        var cur = try self.selection.select(self.arena, "value");
+        const cur = try self.selection.select(self.arena, "value");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -6198,7 +6218,7 @@ pub const ListTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn elementTypeDef(self: ListTypeDef) !TypeDef {
-        var cur = try self.selection.select(self.arena, "elementTypeDef");
+        const cur = try self.selection.select(self.arena, "elementTypeDef");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6221,9 +6241,9 @@ pub const Module = struct {
     selection: *const Selection,
     gql: *GraphQLClient,
 
-    pub fn check(self: Module, name: []const u8) !Check {
+    pub fn check(self: Module, name_: []const u8) !Check {
         var cur = try self.selection.select(self.arena, "check");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6251,22 +6271,22 @@ pub const Module = struct {
     }
 
     pub fn dependencies(self: Module) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "dependencies");
+        const cur = try self.selection.select(self.arena, "dependencies");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: Module) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn enums(self: Module) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "enums");
+        const cur = try self.selection.select(self.arena, "enums");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn generatedContextDirectory(self: Module) !Directory {
-        var cur = try self.selection.select(self.arena, "generatedContextDirectory");
+        const cur = try self.selection.select(self.arena, "generatedContextDirectory");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6275,9 +6295,9 @@ pub const Module = struct {
         };
     }
 
-    pub fn generator(self: Module, name: []const u8) !Generator {
+    pub fn generator(self: Module, name_: []const u8) !Generator {
         var cur = try self.selection.select(self.arena, "generator");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6307,12 +6327,12 @@ pub const Module = struct {
     }
 
     pub fn interfaces(self: Module) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "interfaces");
+        const cur = try self.selection.select(self.arena, "interfaces");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn introspectionSchemaJSON(self: Module) !File {
-        var cur = try self.selection.select(self.arena, "introspectionSchemaJSON");
+        const cur = try self.selection.select(self.arena, "introspectionSchemaJSON");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6322,17 +6342,17 @@ pub const Module = struct {
     }
 
     pub fn name(self: Module) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn objects(self: Module) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "objects");
+        const cur = try self.selection.select(self.arena, "objects");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn runtime(self: Module) !Container {
-        var cur = try self.selection.select(self.arena, "runtime");
+        const cur = try self.selection.select(self.arena, "runtime");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6342,7 +6362,7 @@ pub const Module = struct {
     }
 
     pub fn sdk(self: Module) !SDKConfig {
-        var cur = try self.selection.select(self.arena, "sdk");
+        const cur = try self.selection.select(self.arena, "sdk");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6379,7 +6399,7 @@ pub const Module = struct {
     }
 
     pub fn source(self: Module) !ModuleSource {
-        var cur = try self.selection.select(self.arena, "source");
+        const cur = try self.selection.select(self.arena, "source");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6395,7 +6415,7 @@ pub const Module = struct {
     }
 
     pub fn userDefaults(self: Module) !EnvFile {
-        var cur = try self.selection.select(self.arena, "userDefaults");
+        const cur = try self.selection.select(self.arena, "userDefaults");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6404,9 +6424,9 @@ pub const Module = struct {
         };
     }
 
-    pub fn withDescription(self: Module, description: []const u8) !Module {
+    pub fn withDescription(self: Module, description_: []const u8) !Module {
         var cur = try self.selection.select(self.arena, "withDescription");
-            cur = try cur.argStr(self.arena, "description", description);
+            cur = try cur.argStr(self.arena, "description", description_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6457,12 +6477,12 @@ pub const ModuleConfigClient = struct {
     gql: *GraphQLClient,
 
     pub fn directory(self: ModuleConfigClient) ![]u8 {
-        var cur = try self.selection.select(self.arena, "directory");
+        const cur = try self.selection.select(self.arena, "directory");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn generator(self: ModuleConfigClient) ![]u8 {
-        var cur = try self.selection.select(self.arena, "generator");
+        const cur = try self.selection.select(self.arena, "generator");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -6481,7 +6501,7 @@ pub const ModuleSource = struct {
     gql: *GraphQLClient,
 
     pub fn asModule(self: ModuleSource) !Module {
-        var cur = try self.selection.select(self.arena, "asModule");
+        const cur = try self.selection.select(self.arena, "asModule");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6491,12 +6511,12 @@ pub const ModuleSource = struct {
     }
 
     pub fn asString(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "asString");
+        const cur = try self.selection.select(self.arena, "asString");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn blueprint(self: ModuleSource) !ModuleSource {
-        var cur = try self.selection.select(self.arena, "blueprint");
+        const cur = try self.selection.select(self.arena, "blueprint");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6506,27 +6526,27 @@ pub const ModuleSource = struct {
     }
 
     pub fn cloneRef(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "cloneRef");
+        const cur = try self.selection.select(self.arena, "cloneRef");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn commit(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "commit");
+        const cur = try self.selection.select(self.arena, "commit");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn configClients(self: ModuleSource) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "configClients");
+        const cur = try self.selection.select(self.arena, "configClients");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn configExists(self: ModuleSource) !bool {
-        var cur = try self.selection.select(self.arena, "configExists");
+        const cur = try self.selection.select(self.arena, "configExists");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn contextDirectory(self: ModuleSource) !Directory {
-        var cur = try self.selection.select(self.arena, "contextDirectory");
+        const cur = try self.selection.select(self.arena, "contextDirectory");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6536,12 +6556,12 @@ pub const ModuleSource = struct {
     }
 
     pub fn dependencies(self: ModuleSource) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "dependencies");
+        const cur = try self.selection.select(self.arena, "dependencies");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn digest(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "digest");
+        const cur = try self.selection.select(self.arena, "digest");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -6557,12 +6577,12 @@ pub const ModuleSource = struct {
     }
 
     pub fn engineVersion(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "engineVersion");
+        const cur = try self.selection.select(self.arena, "engineVersion");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn generatedContextChangeset(self: ModuleSource) !Changeset {
-        var cur = try self.selection.select(self.arena, "generatedContextChangeset");
+        const cur = try self.selection.select(self.arena, "generatedContextChangeset");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6572,7 +6592,7 @@ pub const ModuleSource = struct {
     }
 
     pub fn generatedContextDirectory(self: ModuleSource) !Directory {
-        var cur = try self.selection.select(self.arena, "generatedContextDirectory");
+        const cur = try self.selection.select(self.arena, "generatedContextDirectory");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6582,12 +6602,12 @@ pub const ModuleSource = struct {
     }
 
     pub fn htmlRepoURL(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "htmlRepoURL");
+        const cur = try self.selection.select(self.arena, "htmlRepoURL");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn htmlURL(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "htmlURL");
+        const cur = try self.selection.select(self.arena, "htmlURL");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -6598,7 +6618,7 @@ pub const ModuleSource = struct {
     }
 
     pub fn introspectionSchemaJSON(self: ModuleSource) !File {
-        var cur = try self.selection.select(self.arena, "introspectionSchemaJSON");
+        const cur = try self.selection.select(self.arena, "introspectionSchemaJSON");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6608,7 +6628,7 @@ pub const ModuleSource = struct {
     }
 
     pub fn kind(self: ModuleSource) !ModuleSourceKind {
-        var cur = try self.selection.select(self.arena, "kind");
+        const cur = try self.selection.select(self.arena, "kind");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6618,37 +6638,37 @@ pub const ModuleSource = struct {
     }
 
     pub fn localContextDirectoryPath(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "localContextDirectoryPath");
+        const cur = try self.selection.select(self.arena, "localContextDirectoryPath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn moduleName(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "moduleName");
+        const cur = try self.selection.select(self.arena, "moduleName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn moduleOriginalName(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "moduleOriginalName");
+        const cur = try self.selection.select(self.arena, "moduleOriginalName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn originalSubpath(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "originalSubpath");
+        const cur = try self.selection.select(self.arena, "originalSubpath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn pin(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "pin");
+        const cur = try self.selection.select(self.arena, "pin");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn repoRootPath(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "repoRootPath");
+        const cur = try self.selection.select(self.arena, "repoRootPath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sdk(self: ModuleSource) !SDKConfig {
-        var cur = try self.selection.select(self.arena, "sdk");
+        const cur = try self.selection.select(self.arena, "sdk");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6658,12 +6678,12 @@ pub const ModuleSource = struct {
     }
 
     pub fn sourceRootSubpath(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "sourceRootSubpath");
+        const cur = try self.selection.select(self.arena, "sourceRootSubpath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceSubpath(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "sourceSubpath");
+        const cur = try self.selection.select(self.arena, "sourceSubpath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -6674,12 +6694,12 @@ pub const ModuleSource = struct {
     }
 
     pub fn toolchains(self: ModuleSource) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "toolchains");
+        const cur = try self.selection.select(self.arena, "toolchains");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn userDefaults(self: ModuleSource) !EnvFile {
-        var cur = try self.selection.select(self.arena, "userDefaults");
+        const cur = try self.selection.select(self.arena, "userDefaults");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6689,13 +6709,13 @@ pub const ModuleSource = struct {
     }
 
     pub fn version(self: ModuleSource) ![]u8 {
-        var cur = try self.selection.select(self.arena, "version");
+        const cur = try self.selection.select(self.arena, "version");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
-    pub fn withBlueprint(self: ModuleSource, blueprint: []const u8) !ModuleSource {
+    pub fn withBlueprint(self: ModuleSource, blueprint_: []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withBlueprint");
-            cur = try cur.argStr(self.arena, "blueprint", blueprint);
+            cur = try cur.argStr(self.arena, "blueprint", blueprint_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6716,9 +6736,9 @@ pub const ModuleSource = struct {
         };
     }
 
-    pub fn withDependencies(self: ModuleSource, dependencies: []const []const u8) !ModuleSource {
+    pub fn withDependencies(self: ModuleSource, dependencies_: []const []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withDependencies");
-            const dependencies_lit = try qb.serializeStringList(self.arena, dependencies);
+            const dependencies_lit = try qb.serializeStringList(self.arena, dependencies_);
             cur = try cur.arg(self.arena, "dependencies", .{ .eager = dependencies_lit });
         return .{
             .allocator = self.allocator,
@@ -6728,9 +6748,9 @@ pub const ModuleSource = struct {
         };
     }
 
-    pub fn withEngineVersion(self: ModuleSource, version: []const u8) !ModuleSource {
+    pub fn withEngineVersion(self: ModuleSource, version_: []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withEngineVersion");
-            cur = try cur.argStr(self.arena, "version", version);
+            cur = try cur.argStr(self.arena, "version", version_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6796,9 +6816,9 @@ pub const ModuleSource = struct {
         };
     }
 
-    pub fn withToolchains(self: ModuleSource, toolchains: []const []const u8) !ModuleSource {
+    pub fn withToolchains(self: ModuleSource, toolchains_: []const []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withToolchains");
-            const toolchains_lit = try qb.serializeStringList(self.arena, toolchains);
+            const toolchains_lit = try qb.serializeStringList(self.arena, toolchains_);
             cur = try cur.arg(self.arena, "toolchains", .{ .eager = toolchains_lit });
         return .{
             .allocator = self.allocator,
@@ -6809,7 +6829,7 @@ pub const ModuleSource = struct {
     }
 
     pub fn withUpdateBlueprint(self: ModuleSource) !ModuleSource {
-        var cur = try self.selection.select(self.arena, "withUpdateBlueprint");
+        const cur = try self.selection.select(self.arena, "withUpdateBlueprint");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6818,9 +6838,9 @@ pub const ModuleSource = struct {
         };
     }
 
-    pub fn withUpdateDependencies(self: ModuleSource, dependencies: []const []const u8) !ModuleSource {
+    pub fn withUpdateDependencies(self: ModuleSource, dependencies_: []const []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withUpdateDependencies");
-            const dependencies_lit = try qb.serializeStringList(self.arena, dependencies);
+            const dependencies_lit = try qb.serializeStringList(self.arena, dependencies_);
             cur = try cur.arg(self.arena, "dependencies", .{ .eager = dependencies_lit });
         return .{
             .allocator = self.allocator,
@@ -6830,9 +6850,9 @@ pub const ModuleSource = struct {
         };
     }
 
-    pub fn withUpdateToolchains(self: ModuleSource, toolchains: []const []const u8) !ModuleSource {
+    pub fn withUpdateToolchains(self: ModuleSource, toolchains_: []const []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withUpdateToolchains");
-            const toolchains_lit = try qb.serializeStringList(self.arena, toolchains);
+            const toolchains_lit = try qb.serializeStringList(self.arena, toolchains_);
             cur = try cur.arg(self.arena, "toolchains", .{ .eager = toolchains_lit });
         return .{
             .allocator = self.allocator,
@@ -6855,7 +6875,7 @@ pub const ModuleSource = struct {
     }
 
     pub fn withoutBlueprint(self: ModuleSource) !ModuleSource {
-        var cur = try self.selection.select(self.arena, "withoutBlueprint");
+        const cur = try self.selection.select(self.arena, "withoutBlueprint");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6875,9 +6895,9 @@ pub const ModuleSource = struct {
         };
     }
 
-    pub fn withoutDependencies(self: ModuleSource, dependencies: []const []const u8) !ModuleSource {
+    pub fn withoutDependencies(self: ModuleSource, dependencies_: []const []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withoutDependencies");
-            const dependencies_lit = try qb.serializeStringList(self.arena, dependencies);
+            const dependencies_lit = try qb.serializeStringList(self.arena, dependencies_);
             cur = try cur.arg(self.arena, "dependencies", .{ .eager = dependencies_lit });
         return .{
             .allocator = self.allocator,
@@ -6899,9 +6919,9 @@ pub const ModuleSource = struct {
         };
     }
 
-    pub fn withoutToolchains(self: ModuleSource, toolchains: []const []const u8) !ModuleSource {
+    pub fn withoutToolchains(self: ModuleSource, toolchains_: []const []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "withoutToolchains");
-            const toolchains_lit = try qb.serializeStringList(self.arena, toolchains);
+            const toolchains_lit = try qb.serializeStringList(self.arena, toolchains_);
             cur = try cur.arg(self.arena, "toolchains", .{ .eager = toolchains_lit });
         return .{
             .allocator = self.allocator,
@@ -6913,6 +6933,19 @@ pub const ModuleSource = struct {
 
 };
 
+pub const Node = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    pub fn id(self: Node) ![]u8 {
+        const cur = try self.selection.select(self.arena, "id");
+        return executeScalarString(self.allocator, cur, self.gql);
+    }
+
+};
+
 pub const ObjectTypeDef = struct {
     allocator: std.mem.Allocator,
     arena: std.mem.Allocator,
@@ -6920,7 +6953,7 @@ pub const ObjectTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn constructor(self: ObjectTypeDef) !Function {
-        var cur = try self.selection.select(self.arena, "constructor");
+        const cur = try self.selection.select(self.arena, "constructor");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6930,22 +6963,22 @@ pub const ObjectTypeDef = struct {
     }
 
     pub fn deprecated(self: ObjectTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "deprecated");
+        const cur = try self.selection.select(self.arena, "deprecated");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn description(self: ObjectTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn fields(self: ObjectTypeDef) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "fields");
+        const cur = try self.selection.select(self.arena, "fields");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn functions(self: ObjectTypeDef) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "functions");
+        const cur = try self.selection.select(self.arena, "functions");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -6956,12 +6989,12 @@ pub const ObjectTypeDef = struct {
     }
 
     pub fn name(self: ObjectTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceMap(self: ObjectTypeDef) !SourceMap {
-        var cur = try self.selection.select(self.arena, "sourceMap");
+        const cur = try self.selection.select(self.arena, "sourceMap");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -6971,7 +7004,7 @@ pub const ObjectTypeDef = struct {
     }
 
     pub fn sourceModuleName(self: ObjectTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "sourceModuleName");
+        const cur = try self.selection.select(self.arena, "sourceModuleName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -6984,12 +7017,12 @@ pub const Port = struct {
     gql: *GraphQLClient,
 
     pub fn description(self: Port) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn experimentalSkipHealthcheck(self: Port) !bool {
-        var cur = try self.selection.select(self.arena, "experimentalSkipHealthcheck");
+        const cur = try self.selection.select(self.arena, "experimentalSkipHealthcheck");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
@@ -7000,12 +7033,12 @@ pub const Port = struct {
     }
 
     pub fn port(self: Port) !i64 {
-        var cur = try self.selection.select(self.arena, "port");
+        const cur = try self.selection.select(self.arena, "port");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn protocol(self: Port) !NetworkProtocol {
-        var cur = try self.selection.select(self.arena, "protocol");
+        const cur = try self.selection.select(self.arena, "protocol");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7055,7 +7088,7 @@ pub const Query = struct {
     }
 
     pub fn changeset(self: Query) !Changeset {
-        var cur = try self.selection.select(self.arena, "changeset");
+        const cur = try self.selection.select(self.arena, "changeset");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7065,7 +7098,7 @@ pub const Query = struct {
     }
 
     pub fn cloud(self: Query) !Cloud {
-        var cur = try self.selection.select(self.arena, "cloud");
+        const cur = try self.selection.select(self.arena, "cloud");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7088,7 +7121,7 @@ pub const Query = struct {
     }
 
     pub fn currentEnv(self: Query) !Env {
-        var cur = try self.selection.select(self.arena, "currentEnv");
+        const cur = try self.selection.select(self.arena, "currentEnv");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7098,7 +7131,7 @@ pub const Query = struct {
     }
 
     pub fn currentFunctionCall(self: Query) !FunctionCall {
-        var cur = try self.selection.select(self.arena, "currentFunctionCall");
+        const cur = try self.selection.select(self.arena, "currentFunctionCall");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7108,7 +7141,7 @@ pub const Query = struct {
     }
 
     pub fn currentModule(self: Query) !CurrentModule {
-        var cur = try self.selection.select(self.arena, "currentModule");
+        const cur = try self.selection.select(self.arena, "currentModule");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7131,7 +7164,7 @@ pub const Query = struct {
     }
 
     pub fn currentWorkspace(self: Query) !Workspace {
-        var cur = try self.selection.select(self.arena, "currentWorkspace");
+        const cur = try self.selection.select(self.arena, "currentWorkspace");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7141,12 +7174,12 @@ pub const Query = struct {
     }
 
     pub fn defaultPlatform(self: Query) ![]u8 {
-        var cur = try self.selection.select(self.arena, "defaultPlatform");
+        const cur = try self.selection.select(self.arena, "defaultPlatform");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn directory(self: Query) !Directory {
-        var cur = try self.selection.select(self.arena, "directory");
+        const cur = try self.selection.select(self.arena, "directory");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7156,7 +7189,7 @@ pub const Query = struct {
     }
 
     pub fn engine(self: Query) !Engine {
-        var cur = try self.selection.select(self.arena, "engine");
+        const cur = try self.selection.select(self.arena, "engine");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7184,7 +7217,7 @@ pub const Query = struct {
     }
 
     pub fn envFile(self: Query) !EnvFile {
-        var cur = try self.selection.select(self.arena, "envFile");
+        const cur = try self.selection.select(self.arena, "envFile");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7273,7 +7306,7 @@ pub const Query = struct {
     }
 
     pub fn host(self: Query) !Host {
-        var cur = try self.selection.select(self.arena, "host");
+        const cur = try self.selection.select(self.arena, "host");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7310,12 +7343,12 @@ pub const Query = struct {
     }
 
     pub fn id(self: Query) ![]u8 {
-        var cur = try self.selection.select(self.arena, "id");
+        const cur = try self.selection.select(self.arena, "id");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn json(self: Query) !JSONValue {
-        var cur = try self.selection.select(self.arena, "json");
+        const cur = try self.selection.select(self.arena, "json");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7341,9 +7374,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadAddressFromID(self: Query, id: []const u8) !Address {
+    pub fn loadAddressFromID(self: Query, id_: []const u8) !Address {
         var cur = try self.selection.select(self.arena, "loadAddressFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7352,9 +7385,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadBindingFromID(self: Query, id: []const u8) !Binding {
+    pub fn loadBindingFromID(self: Query, id_: []const u8) !Binding {
         var cur = try self.selection.select(self.arena, "loadBindingFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7363,9 +7396,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadCacheVolumeFromID(self: Query, id: []const u8) !CacheVolume {
+    pub fn loadCacheVolumeFromID(self: Query, id_: []const u8) !CacheVolume {
         var cur = try self.selection.select(self.arena, "loadCacheVolumeFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7374,9 +7407,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadChangesetFromID(self: Query, id: []const u8) !Changeset {
+    pub fn loadChangesetFromID(self: Query, id_: []const u8) !Changeset {
         var cur = try self.selection.select(self.arena, "loadChangesetFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7385,9 +7418,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadCheckFromID(self: Query, id: []const u8) !Check {
+    pub fn loadCheckFromID(self: Query, id_: []const u8) !Check {
         var cur = try self.selection.select(self.arena, "loadCheckFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7396,9 +7429,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadCheckGroupFromID(self: Query, id: []const u8) !CheckGroup {
+    pub fn loadCheckGroupFromID(self: Query, id_: []const u8) !CheckGroup {
         var cur = try self.selection.select(self.arena, "loadCheckGroupFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7407,9 +7440,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadClientFilesyncMirrorFromID(self: Query, id: []const u8) !ClientFilesyncMirror {
+    pub fn loadClientFilesyncMirrorFromID(self: Query, id_: []const u8) !ClientFilesyncMirror {
         var cur = try self.selection.select(self.arena, "loadClientFilesyncMirrorFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7418,9 +7451,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadCloudFromID(self: Query, id: []const u8) !Cloud {
+    pub fn loadCloudFromID(self: Query, id_: []const u8) !Cloud {
         var cur = try self.selection.select(self.arena, "loadCloudFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7429,9 +7462,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadContainerFromID(self: Query, id: []const u8) !Container {
+    pub fn loadContainerFromID(self: Query, id_: []const u8) !Container {
         var cur = try self.selection.select(self.arena, "loadContainerFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7440,9 +7473,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadCurrentModuleFromID(self: Query, id: []const u8) !CurrentModule {
+    pub fn loadCurrentModuleFromID(self: Query, id_: []const u8) !CurrentModule {
         var cur = try self.selection.select(self.arena, "loadCurrentModuleFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7451,9 +7484,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadDiffStatFromID(self: Query, id: []const u8) !DiffStat {
+    pub fn loadDiffStatFromID(self: Query, id_: []const u8) !DiffStat {
         var cur = try self.selection.select(self.arena, "loadDiffStatFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7462,9 +7495,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadDirectoryFromID(self: Query, id: []const u8) !Directory {
+    pub fn loadDirectoryFromID(self: Query, id_: []const u8) !Directory {
         var cur = try self.selection.select(self.arena, "loadDirectoryFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7473,9 +7506,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEngineCacheEntryFromID(self: Query, id: []const u8) !EngineCacheEntry {
+    pub fn loadEngineCacheEntryFromID(self: Query, id_: []const u8) !EngineCacheEntry {
         var cur = try self.selection.select(self.arena, "loadEngineCacheEntryFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7484,9 +7517,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEngineCacheEntrySetFromID(self: Query, id: []const u8) !EngineCacheEntrySet {
+    pub fn loadEngineCacheEntrySetFromID(self: Query, id_: []const u8) !EngineCacheEntrySet {
         var cur = try self.selection.select(self.arena, "loadEngineCacheEntrySetFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7495,9 +7528,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEngineCacheFromID(self: Query, id: []const u8) !EngineCache {
+    pub fn loadEngineCacheFromID(self: Query, id_: []const u8) !EngineCache {
         var cur = try self.selection.select(self.arena, "loadEngineCacheFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7506,9 +7539,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEngineFromID(self: Query, id: []const u8) !Engine {
+    pub fn loadEngineFromID(self: Query, id_: []const u8) !Engine {
         var cur = try self.selection.select(self.arena, "loadEngineFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7517,9 +7550,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEnumTypeDefFromID(self: Query, id: []const u8) !EnumTypeDef {
+    pub fn loadEnumTypeDefFromID(self: Query, id_: []const u8) !EnumTypeDef {
         var cur = try self.selection.select(self.arena, "loadEnumTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7528,9 +7561,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEnumValueTypeDefFromID(self: Query, id: []const u8) !EnumValueTypeDef {
+    pub fn loadEnumValueTypeDefFromID(self: Query, id_: []const u8) !EnumValueTypeDef {
         var cur = try self.selection.select(self.arena, "loadEnumValueTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7539,9 +7572,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEnvFileFromID(self: Query, id: []const u8) !EnvFile {
+    pub fn loadEnvFileFromID(self: Query, id_: []const u8) !EnvFile {
         var cur = try self.selection.select(self.arena, "loadEnvFileFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7550,9 +7583,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEnvFromID(self: Query, id: []const u8) !Env {
+    pub fn loadEnvFromID(self: Query, id_: []const u8) !Env {
         var cur = try self.selection.select(self.arena, "loadEnvFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7561,9 +7594,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadEnvVariableFromID(self: Query, id: []const u8) !EnvVariable {
+    pub fn loadEnvVariableFromID(self: Query, id_: []const u8) !EnvVariable {
         var cur = try self.selection.select(self.arena, "loadEnvVariableFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7572,9 +7605,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadErrorFromID(self: Query, id: []const u8) !Error {
+    pub fn loadErrorFromID(self: Query, id_: []const u8) !Error {
         var cur = try self.selection.select(self.arena, "loadErrorFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7583,9 +7616,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadErrorValueFromID(self: Query, id: []const u8) !ErrorValue {
+    pub fn loadErrorValueFromID(self: Query, id_: []const u8) !ErrorValue {
         var cur = try self.selection.select(self.arena, "loadErrorValueFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7594,9 +7627,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadExportableFromID(self: Query, id: []const u8) !Exportable {
+    pub fn loadExportableFromID(self: Query, id_: []const u8) !Exportable {
         var cur = try self.selection.select(self.arena, "loadExportableFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7605,9 +7638,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadFieldTypeDefFromID(self: Query, id: []const u8) !FieldTypeDef {
+    pub fn loadFieldTypeDefFromID(self: Query, id_: []const u8) !FieldTypeDef {
         var cur = try self.selection.select(self.arena, "loadFieldTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7616,9 +7649,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadFileFromID(self: Query, id: []const u8) !File {
+    pub fn loadFileFromID(self: Query, id_: []const u8) !File {
         var cur = try self.selection.select(self.arena, "loadFileFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7627,9 +7660,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadFunctionArgFromID(self: Query, id: []const u8) !FunctionArg {
+    pub fn loadFunctionArgFromID(self: Query, id_: []const u8) !FunctionArg {
         var cur = try self.selection.select(self.arena, "loadFunctionArgFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7638,9 +7671,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadFunctionCallArgValueFromID(self: Query, id: []const u8) !FunctionCallArgValue {
+    pub fn loadFunctionCallArgValueFromID(self: Query, id_: []const u8) !FunctionCallArgValue {
         var cur = try self.selection.select(self.arena, "loadFunctionCallArgValueFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7649,9 +7682,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadFunctionCallFromID(self: Query, id: []const u8) !FunctionCall {
+    pub fn loadFunctionCallFromID(self: Query, id_: []const u8) !FunctionCall {
         var cur = try self.selection.select(self.arena, "loadFunctionCallFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7660,9 +7693,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadFunctionFromID(self: Query, id: []const u8) !Function {
+    pub fn loadFunctionFromID(self: Query, id_: []const u8) !Function {
         var cur = try self.selection.select(self.arena, "loadFunctionFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7671,9 +7704,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadGeneratedCodeFromID(self: Query, id: []const u8) !GeneratedCode {
+    pub fn loadGeneratedCodeFromID(self: Query, id_: []const u8) !GeneratedCode {
         var cur = try self.selection.select(self.arena, "loadGeneratedCodeFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7682,9 +7715,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadGeneratorFromID(self: Query, id: []const u8) !Generator {
+    pub fn loadGeneratorFromID(self: Query, id_: []const u8) !Generator {
         var cur = try self.selection.select(self.arena, "loadGeneratorFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7693,9 +7726,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadGeneratorGroupFromID(self: Query, id: []const u8) !GeneratorGroup {
+    pub fn loadGeneratorGroupFromID(self: Query, id_: []const u8) !GeneratorGroup {
         var cur = try self.selection.select(self.arena, "loadGeneratorGroupFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7704,9 +7737,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadGitRefFromID(self: Query, id: []const u8) !GitRef {
+    pub fn loadGitRefFromID(self: Query, id_: []const u8) !GitRef {
         var cur = try self.selection.select(self.arena, "loadGitRefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7715,9 +7748,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadGitRepositoryFromID(self: Query, id: []const u8) !GitRepository {
+    pub fn loadGitRepositoryFromID(self: Query, id_: []const u8) !GitRepository {
         var cur = try self.selection.select(self.arena, "loadGitRepositoryFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7726,9 +7759,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadHTTPStateFromID(self: Query, id: []const u8) !HTTPState {
+    pub fn loadHTTPStateFromID(self: Query, id_: []const u8) !HTTPState {
         var cur = try self.selection.select(self.arena, "loadHTTPStateFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7737,9 +7770,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadHealthcheckConfigFromID(self: Query, id: []const u8) !HealthcheckConfig {
+    pub fn loadHealthcheckConfigFromID(self: Query, id_: []const u8) !HealthcheckConfig {
         var cur = try self.selection.select(self.arena, "loadHealthcheckConfigFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7748,9 +7781,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadHostFromID(self: Query, id: []const u8) !Host {
+    pub fn loadHostFromID(self: Query, id_: []const u8) !Host {
         var cur = try self.selection.select(self.arena, "loadHostFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7759,9 +7792,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadInputTypeDefFromID(self: Query, id: []const u8) !InputTypeDef {
+    pub fn loadInputTypeDefFromID(self: Query, id_: []const u8) !InputTypeDef {
         var cur = try self.selection.select(self.arena, "loadInputTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7770,9 +7803,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadInterfaceTypeDefFromID(self: Query, id: []const u8) !InterfaceTypeDef {
+    pub fn loadInterfaceTypeDefFromID(self: Query, id_: []const u8) !InterfaceTypeDef {
         var cur = try self.selection.select(self.arena, "loadInterfaceTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7781,9 +7814,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadJSONValueFromID(self: Query, id: []const u8) !JSONValue {
+    pub fn loadJSONValueFromID(self: Query, id_: []const u8) !JSONValue {
         var cur = try self.selection.select(self.arena, "loadJSONValueFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7792,9 +7825,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadLLMFromID(self: Query, id: []const u8) !LLM {
+    pub fn loadLLMFromID(self: Query, id_: []const u8) !LLM {
         var cur = try self.selection.select(self.arena, "loadLLMFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7803,9 +7836,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadLLMTokenUsageFromID(self: Query, id: []const u8) !LLMTokenUsage {
+    pub fn loadLLMTokenUsageFromID(self: Query, id_: []const u8) !LLMTokenUsage {
         var cur = try self.selection.select(self.arena, "loadLLMTokenUsageFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7814,9 +7847,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadLabelFromID(self: Query, id: []const u8) !Label {
+    pub fn loadLabelFromID(self: Query, id_: []const u8) !Label {
         var cur = try self.selection.select(self.arena, "loadLabelFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7825,9 +7858,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadListTypeDefFromID(self: Query, id: []const u8) !ListTypeDef {
+    pub fn loadListTypeDefFromID(self: Query, id_: []const u8) !ListTypeDef {
         var cur = try self.selection.select(self.arena, "loadListTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7836,9 +7869,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadModuleConfigClientFromID(self: Query, id: []const u8) !ModuleConfigClient {
+    pub fn loadModuleConfigClientFromID(self: Query, id_: []const u8) !ModuleConfigClient {
         var cur = try self.selection.select(self.arena, "loadModuleConfigClientFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7847,9 +7880,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadModuleFromID(self: Query, id: []const u8) !Module {
+    pub fn loadModuleFromID(self: Query, id_: []const u8) !Module {
         var cur = try self.selection.select(self.arena, "loadModuleFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7858,9 +7891,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadModuleSourceFromID(self: Query, id: []const u8) !ModuleSource {
+    pub fn loadModuleSourceFromID(self: Query, id_: []const u8) !ModuleSource {
         var cur = try self.selection.select(self.arena, "loadModuleSourceFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7869,9 +7902,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadObjectTypeDefFromID(self: Query, id: []const u8) !ObjectTypeDef {
+    pub fn loadObjectTypeDefFromID(self: Query, id_: []const u8) !ObjectTypeDef {
         var cur = try self.selection.select(self.arena, "loadObjectTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7880,9 +7913,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadPortFromID(self: Query, id: []const u8) !Port {
+    pub fn loadPortFromID(self: Query, id_: []const u8) !Port {
         var cur = try self.selection.select(self.arena, "loadPortFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7891,9 +7924,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadRemoteGitMirrorFromID(self: Query, id: []const u8) !RemoteGitMirror {
+    pub fn loadRemoteGitMirrorFromID(self: Query, id_: []const u8) !RemoteGitMirror {
         var cur = try self.selection.select(self.arena, "loadRemoteGitMirrorFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7902,9 +7935,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadSDKConfigFromID(self: Query, id: []const u8) !SDKConfig {
+    pub fn loadSDKConfigFromID(self: Query, id_: []const u8) !SDKConfig {
         var cur = try self.selection.select(self.arena, "loadSDKConfigFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7913,9 +7946,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadScalarTypeDefFromID(self: Query, id: []const u8) !ScalarTypeDef {
+    pub fn loadScalarTypeDefFromID(self: Query, id_: []const u8) !ScalarTypeDef {
         var cur = try self.selection.select(self.arena, "loadScalarTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7924,9 +7957,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadSearchResultFromID(self: Query, id: []const u8) !SearchResult {
+    pub fn loadSearchResultFromID(self: Query, id_: []const u8) !SearchResult {
         var cur = try self.selection.select(self.arena, "loadSearchResultFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7935,9 +7968,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadSearchSubmatchFromID(self: Query, id: []const u8) !SearchSubmatch {
+    pub fn loadSearchSubmatchFromID(self: Query, id_: []const u8) !SearchSubmatch {
         var cur = try self.selection.select(self.arena, "loadSearchSubmatchFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7946,9 +7979,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadSecretFromID(self: Query, id: []const u8) !Secret {
+    pub fn loadSecretFromID(self: Query, id_: []const u8) !Secret {
         var cur = try self.selection.select(self.arena, "loadSecretFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7957,9 +7990,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadServiceFromID(self: Query, id: []const u8) !Service {
+    pub fn loadServiceFromID(self: Query, id_: []const u8) !Service {
         var cur = try self.selection.select(self.arena, "loadServiceFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7968,9 +8001,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadSocketFromID(self: Query, id: []const u8) !Socket {
+    pub fn loadSocketFromID(self: Query, id_: []const u8) !Socket {
         var cur = try self.selection.select(self.arena, "loadSocketFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7979,9 +8012,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadSourceMapFromID(self: Query, id: []const u8) !SourceMap {
+    pub fn loadSourceMapFromID(self: Query, id_: []const u8) !SourceMap {
         var cur = try self.selection.select(self.arena, "loadSourceMapFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -7990,9 +8023,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadStatFromID(self: Query, id: []const u8) !Stat {
+    pub fn loadStatFromID(self: Query, id_: []const u8) !Stat {
         var cur = try self.selection.select(self.arena, "loadStatFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8001,9 +8034,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadSyncerFromID(self: Query, id: []const u8) !Syncer {
+    pub fn loadSyncerFromID(self: Query, id_: []const u8) !Syncer {
         var cur = try self.selection.select(self.arena, "loadSyncerFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8012,9 +8045,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadTerminalFromID(self: Query, id: []const u8) !Terminal {
+    pub fn loadTerminalFromID(self: Query, id_: []const u8) !Terminal {
         var cur = try self.selection.select(self.arena, "loadTerminalFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8023,9 +8056,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadTypeDefFromID(self: Query, id: []const u8) !TypeDef {
+    pub fn loadTypeDefFromID(self: Query, id_: []const u8) !TypeDef {
         var cur = try self.selection.select(self.arena, "loadTypeDefFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8034,9 +8067,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadUpFromID(self: Query, id: []const u8) !Up {
+    pub fn loadUpFromID(self: Query, id_: []const u8) !Up {
         var cur = try self.selection.select(self.arena, "loadUpFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8045,9 +8078,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadUpGroupFromID(self: Query, id: []const u8) !UpGroup {
+    pub fn loadUpGroupFromID(self: Query, id_: []const u8) !UpGroup {
         var cur = try self.selection.select(self.arena, "loadUpGroupFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8056,9 +8089,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn loadWorkspaceFromID(self: Query, id: []const u8) !Workspace {
+    pub fn loadWorkspaceFromID(self: Query, id_: []const u8) !Workspace {
         var cur = try self.selection.select(self.arena, "loadWorkspaceFromID");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8068,7 +8101,7 @@ pub const Query = struct {
     }
 
     pub fn module(self: Query) !Module {
-        var cur = try self.selection.select(self.arena, "module");
+        const cur = try self.selection.select(self.arena, "module");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8103,9 +8136,9 @@ pub const Query = struct {
         };
     }
 
-    pub fn node(self: Query, id: []const u8) !Node {
+    pub fn node(self: Query, id_: []const u8) !Node {
         var cur = try self.selection.select(self.arena, "node");
-            cur = try cur.argStr(self.arena, "id", id);
+            cur = try cur.argStr(self.arena, "id", id_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8156,7 +8189,7 @@ pub const Query = struct {
     }
 
     pub fn typeDef(self: Query) !TypeDef {
-        var cur = try self.selection.select(self.arena, "typeDef");
+        const cur = try self.selection.select(self.arena, "typeDef");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8166,7 +8199,7 @@ pub const Query = struct {
     }
 
     pub fn version(self: Query) ![]u8 {
-        var cur = try self.selection.select(self.arena, "version");
+        const cur = try self.selection.select(self.arena, "version");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8193,7 +8226,7 @@ pub const SDKConfig = struct {
     gql: *GraphQLClient,
 
     pub fn debug(self: SDKConfig) !bool {
-        var cur = try self.selection.select(self.arena, "debug");
+        const cur = try self.selection.select(self.arena, "debug");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
@@ -8204,7 +8237,7 @@ pub const SDKConfig = struct {
     }
 
     pub fn source(self: SDKConfig) ![]u8 {
-        var cur = try self.selection.select(self.arena, "source");
+        const cur = try self.selection.select(self.arena, "source");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8217,7 +8250,7 @@ pub const ScalarTypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn description(self: ScalarTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8228,12 +8261,12 @@ pub const ScalarTypeDef = struct {
     }
 
     pub fn name(self: ScalarTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn sourceModuleName(self: ScalarTypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "sourceModuleName");
+        const cur = try self.selection.select(self.arena, "sourceModuleName");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8246,12 +8279,12 @@ pub const SearchResult = struct {
     gql: *GraphQLClient,
 
     pub fn absoluteOffset(self: SearchResult) !i64 {
-        var cur = try self.selection.select(self.arena, "absoluteOffset");
+        const cur = try self.selection.select(self.arena, "absoluteOffset");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn filePath(self: SearchResult) ![]u8 {
-        var cur = try self.selection.select(self.arena, "filePath");
+        const cur = try self.selection.select(self.arena, "filePath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8262,17 +8295,17 @@ pub const SearchResult = struct {
     }
 
     pub fn lineNumber(self: SearchResult) !i64 {
-        var cur = try self.selection.select(self.arena, "lineNumber");
+        const cur = try self.selection.select(self.arena, "lineNumber");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn matchedLines(self: SearchResult) ![]u8 {
-        var cur = try self.selection.select(self.arena, "matchedLines");
+        const cur = try self.selection.select(self.arena, "matchedLines");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn submatches(self: SearchResult) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "submatches");
+        const cur = try self.selection.select(self.arena, "submatches");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
@@ -8285,7 +8318,7 @@ pub const SearchSubmatch = struct {
     gql: *GraphQLClient,
 
     pub fn end(self: SearchSubmatch) !i64 {
-        var cur = try self.selection.select(self.arena, "end");
+        const cur = try self.selection.select(self.arena, "end");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
@@ -8296,12 +8329,12 @@ pub const SearchSubmatch = struct {
     }
 
     pub fn start(self: SearchSubmatch) !i64 {
-        var cur = try self.selection.select(self.arena, "start");
+        const cur = try self.selection.select(self.arena, "start");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn text(self: SearchSubmatch) ![]u8 {
-        var cur = try self.selection.select(self.arena, "text");
+        const cur = try self.selection.select(self.arena, "text");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8320,17 +8353,17 @@ pub const Secret = struct {
     }
 
     pub fn name(self: Secret) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn plaintext(self: Secret) ![]u8 {
-        var cur = try self.selection.select(self.arena, "plaintext");
+        const cur = try self.selection.select(self.arena, "plaintext");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn uri(self: Secret) ![]u8 {
-        var cur = try self.selection.select(self.arena, "uri");
+        const cur = try self.selection.select(self.arena, "uri");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8355,7 +8388,7 @@ pub const Service = struct {
     }
 
     pub fn hostname(self: Service) ![]u8 {
-        var cur = try self.selection.select(self.arena, "hostname");
+        const cur = try self.selection.select(self.arena, "hostname");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8366,12 +8399,12 @@ pub const Service = struct {
     }
 
     pub fn ports(self: Service) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "ports");
+        const cur = try self.selection.select(self.arena, "ports");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn start(self: Service) ![]u8 {
-        var cur = try self.selection.select(self.arena, "start");
+        const cur = try self.selection.select(self.arena, "start");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8404,10 +8437,10 @@ pub const Service = struct {
         };
     }
 
-    pub fn up(self: Service, ports: ?[]const []const u8, random: ?bool) !void {
+    pub fn up(self: Service, ports_: ?[]const []const u8, random: ?bool) !void {
         var cur = try self.selection.select(self.arena, "up");
-        if (ports) |ports_val| {
-            const ports_lit = try qb.serializeStringList(self.arena, ports_val);
+        if (ports_) |ports__val| {
+            const ports_lit = try qb.serializeStringList(self.arena, ports__val);
             cur = try cur.arg(self.arena, "ports", .{ .eager = ports_lit });
         }
         if (random) |random_val| {
@@ -8417,9 +8450,9 @@ pub const Service = struct {
         _ = try executeScalarString(self.allocator, cur, self.gql);
     }
 
-    pub fn withHostname(self: Service, hostname: []const u8) !Service {
+    pub fn withHostname(self: Service, hostname_: []const u8) !Service {
         var cur = try self.selection.select(self.arena, "withHostname");
-            cur = try cur.argStr(self.arena, "hostname", hostname);
+            cur = try cur.argStr(self.arena, "hostname", hostname_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8451,12 +8484,12 @@ pub const SourceMap = struct {
     gql: *GraphQLClient,
 
     pub fn column(self: SourceMap) !i64 {
-        var cur = try self.selection.select(self.arena, "column");
+        const cur = try self.selection.select(self.arena, "column");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn filename(self: SourceMap) ![]u8 {
-        var cur = try self.selection.select(self.arena, "filename");
+        const cur = try self.selection.select(self.arena, "filename");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8467,17 +8500,17 @@ pub const SourceMap = struct {
     }
 
     pub fn line(self: SourceMap) !i64 {
-        var cur = try self.selection.select(self.arena, "line");
+        const cur = try self.selection.select(self.arena, "line");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn module(self: SourceMap) ![]u8 {
-        var cur = try self.selection.select(self.arena, "module");
+        const cur = try self.selection.select(self.arena, "module");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn url(self: SourceMap) ![]u8 {
-        var cur = try self.selection.select(self.arena, "url");
+        const cur = try self.selection.select(self.arena, "url");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8490,7 +8523,7 @@ pub const Stat = struct {
     gql: *GraphQLClient,
 
     pub fn fileType(self: Stat) !FileType {
-        var cur = try self.selection.select(self.arena, "fileType");
+        const cur = try self.selection.select(self.arena, "fileType");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8506,18 +8539,38 @@ pub const Stat = struct {
     }
 
     pub fn name(self: Stat) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn permissions(self: Stat) !i64 {
-        var cur = try self.selection.select(self.arena, "permissions");
+        const cur = try self.selection.select(self.arena, "permissions");
         return executeScalarInt(self.allocator, cur, self.gql);
     }
 
     pub fn size(self: Stat) !i64 {
-        var cur = try self.selection.select(self.arena, "size");
+        const cur = try self.selection.select(self.arena, "size");
         return executeScalarInt(self.allocator, cur, self.gql);
+    }
+
+};
+
+pub const Syncer = struct {
+    allocator: std.mem.Allocator,
+    arena: std.mem.Allocator,
+    selection: *const Selection,
+    gql: *GraphQLClient,
+
+    pub fn id(self: Syncer) !SyncerID {
+        const s0 = try self.selection.select(self.arena, "id");
+        const raw = try executeScalarString(self.allocator, s0, self.gql);
+        return .{ .value = raw };
+    }
+
+    pub fn sync(self: Syncer) !SyncerID {
+        const s0 = try self.selection.select(self.arena, "sync");
+        const raw = try executeScalarString(self.allocator, s0, self.gql);
+        return .{ .value = raw };
     }
 
 };
@@ -8549,7 +8602,7 @@ pub const TypeDef = struct {
     gql: *GraphQLClient,
 
     pub fn asEnum(self: TypeDef) !EnumTypeDef {
-        var cur = try self.selection.select(self.arena, "asEnum");
+        const cur = try self.selection.select(self.arena, "asEnum");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8559,7 +8612,7 @@ pub const TypeDef = struct {
     }
 
     pub fn asInput(self: TypeDef) !InputTypeDef {
-        var cur = try self.selection.select(self.arena, "asInput");
+        const cur = try self.selection.select(self.arena, "asInput");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8569,7 +8622,7 @@ pub const TypeDef = struct {
     }
 
     pub fn asInterface(self: TypeDef) !InterfaceTypeDef {
-        var cur = try self.selection.select(self.arena, "asInterface");
+        const cur = try self.selection.select(self.arena, "asInterface");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8579,7 +8632,7 @@ pub const TypeDef = struct {
     }
 
     pub fn asList(self: TypeDef) !ListTypeDef {
-        var cur = try self.selection.select(self.arena, "asList");
+        const cur = try self.selection.select(self.arena, "asList");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8589,7 +8642,7 @@ pub const TypeDef = struct {
     }
 
     pub fn asObject(self: TypeDef) !ObjectTypeDef {
-        var cur = try self.selection.select(self.arena, "asObject");
+        const cur = try self.selection.select(self.arena, "asObject");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8599,7 +8652,7 @@ pub const TypeDef = struct {
     }
 
     pub fn asScalar(self: TypeDef) !ScalarTypeDef {
-        var cur = try self.selection.select(self.arena, "asScalar");
+        const cur = try self.selection.select(self.arena, "asScalar");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8615,7 +8668,7 @@ pub const TypeDef = struct {
     }
 
     pub fn kind(self: TypeDef) !TypeDefKind {
-        var cur = try self.selection.select(self.arena, "kind");
+        const cur = try self.selection.select(self.arena, "kind");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8625,12 +8678,12 @@ pub const TypeDef = struct {
     }
 
     pub fn name(self: TypeDef) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn optional(self: TypeDef) !bool {
-        var cur = try self.selection.select(self.arena, "optional");
+        const cur = try self.selection.select(self.arena, "optional");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
@@ -8645,9 +8698,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withEnum(self: TypeDef, name: []const u8, description: ?[]const u8, sourceMap: ?[]const u8) !TypeDef {
+    pub fn withEnum(self: TypeDef, name_: []const u8, description: ?[]const u8, sourceMap: ?[]const u8) !TypeDef {
         var cur = try self.selection.select(self.arena, "withEnum");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         if (description) |description_val| {
             cur = try cur.argStr(self.arena, "description", description_val);
         }
@@ -8662,9 +8715,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withEnumMember(self: TypeDef, name: []const u8, value: ?[]const u8, description: ?[]const u8, sourceMap: ?[]const u8, deprecated: ?[]const u8) !TypeDef {
+    pub fn withEnumMember(self: TypeDef, name_: []const u8, value: ?[]const u8, description: ?[]const u8, sourceMap: ?[]const u8, deprecated: ?[]const u8) !TypeDef {
         var cur = try self.selection.select(self.arena, "withEnumMember");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         if (value) |value_val| {
             cur = try cur.argStr(self.arena, "value", value_val);
         }
@@ -8685,9 +8738,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withField(self: TypeDef, name: []const u8, typeDef: []const u8, description: ?[]const u8, sourceMap: ?[]const u8, deprecated: ?[]const u8) !TypeDef {
+    pub fn withField(self: TypeDef, name_: []const u8, typeDef: []const u8, description: ?[]const u8, sourceMap: ?[]const u8, deprecated: ?[]const u8) !TypeDef {
         var cur = try self.selection.select(self.arena, "withField");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
             cur = try cur.argStr(self.arena, "typeDef", typeDef);
         if (description) |description_val| {
             cur = try cur.argStr(self.arena, "description", description_val);
@@ -8717,9 +8770,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withInterface(self: TypeDef, name: []const u8, description: ?[]const u8, sourceMap: ?[]const u8) !TypeDef {
+    pub fn withInterface(self: TypeDef, name_: []const u8, description: ?[]const u8, sourceMap: ?[]const u8) !TypeDef {
         var cur = try self.selection.select(self.arena, "withInterface");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         if (description) |description_val| {
             cur = try cur.argStr(self.arena, "description", description_val);
         }
@@ -8734,9 +8787,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withKind(self: TypeDef, kind: TypeDefKind) !TypeDef {
+    pub fn withKind(self: TypeDef, kind_: TypeDefKind) !TypeDef {
         var cur = try self.selection.select(self.arena, "withKind");
-            const kind_str = try qb.serializeEnum(self.arena, @tagName(kind));
+            const kind_str = try qb.serializeEnum(self.arena, @tagName(kind_));
             cur = try cur.arg(self.arena, "kind", .{ .eager = kind_str });
         return .{
             .allocator = self.allocator,
@@ -8757,9 +8810,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withObject(self: TypeDef, name: []const u8, description: ?[]const u8, sourceMap: ?[]const u8, deprecated: ?[]const u8) !TypeDef {
+    pub fn withObject(self: TypeDef, name_: []const u8, description: ?[]const u8, sourceMap: ?[]const u8, deprecated: ?[]const u8) !TypeDef {
         var cur = try self.selection.select(self.arena, "withObject");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         if (description) |description_val| {
             cur = try cur.argStr(self.arena, "description", description_val);
         }
@@ -8777,9 +8830,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withOptional(self: TypeDef, optional: bool) !TypeDef {
+    pub fn withOptional(self: TypeDef, optional_: bool) !TypeDef {
         var cur = try self.selection.select(self.arena, "withOptional");
-            const optional_str = if (optional) "true" else "false";
+            const optional_str = if (optional_) "true" else "false";
             cur = try cur.arg(self.arena, "optional", .{ .eager = optional_str });
         return .{
             .allocator = self.allocator,
@@ -8789,9 +8842,9 @@ pub const TypeDef = struct {
         };
     }
 
-    pub fn withScalar(self: TypeDef, name: []const u8, description: ?[]const u8) !TypeDef {
+    pub fn withScalar(self: TypeDef, name_: []const u8, description: ?[]const u8) !TypeDef {
         var cur = try self.selection.select(self.arena, "withScalar");
-            cur = try cur.argStr(self.arena, "name", name);
+            cur = try cur.argStr(self.arena, "name", name_);
         if (description) |description_val| {
             cur = try cur.argStr(self.arena, "description", description_val);
         }
@@ -8812,7 +8865,7 @@ pub const Up = struct {
     gql: *GraphQLClient,
 
     pub fn description(self: Up) ![]u8 {
-        var cur = try self.selection.select(self.arena, "description");
+        const cur = try self.selection.select(self.arena, "description");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8823,12 +8876,12 @@ pub const Up = struct {
     }
 
     pub fn name(self: Up) ![]u8 {
-        var cur = try self.selection.select(self.arena, "name");
+        const cur = try self.selection.select(self.arena, "name");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn originalModule(self: Up) !Module {
-        var cur = try self.selection.select(self.arena, "originalModule");
+        const cur = try self.selection.select(self.arena, "originalModule");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8838,12 +8891,12 @@ pub const Up = struct {
     }
 
     pub fn path(self: Up) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "path");
+        const cur = try self.selection.select(self.arena, "path");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn run(self: Up) !Up {
-        var cur = try self.selection.select(self.arena, "run");
+        const cur = try self.selection.select(self.arena, "run");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8867,12 +8920,12 @@ pub const UpGroup = struct {
     }
 
     pub fn list(self: UpGroup) ![][]u8 {
-        var cur = try self.selection.select(self.arena, "list");
+        const cur = try self.selection.select(self.arena, "list");
         return executeScalarStringList(self.allocator, cur, self.gql);
     }
 
     pub fn run(self: UpGroup) !UpGroup {
-        var cur = try self.selection.select(self.arena, "run");
+        const cur = try self.selection.select(self.arena, "run");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8890,7 +8943,7 @@ pub const Workspace = struct {
     gql: *GraphQLClient,
 
     pub fn address(self: Workspace) ![]u8 {
-        var cur = try self.selection.select(self.arena, "address");
+        const cur = try self.selection.select(self.arena, "address");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -8917,18 +8970,18 @@ pub const Workspace = struct {
     }
 
     pub fn clientId(self: Workspace) ![]u8 {
-        var cur = try self.selection.select(self.arena, "clientId");
+        const cur = try self.selection.select(self.arena, "clientId");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
     pub fn configPath(self: Workspace) ![]u8 {
-        var cur = try self.selection.select(self.arena, "configPath");
+        const cur = try self.selection.select(self.arena, "configPath");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
-    pub fn directory(self: Workspace, path: []const u8, exclude: ?[]const []const u8, include: ?[]const []const u8, gitignore: ?bool) !Directory {
+    pub fn directory(self: Workspace, path_: []const u8, exclude: ?[]const []const u8, include: ?[]const []const u8, gitignore: ?bool) !Directory {
         var cur = try self.selection.select(self.arena, "directory");
-            cur = try cur.argStr(self.arena, "path", path);
+            cur = try cur.argStr(self.arena, "path", path_);
         if (exclude) |exclude_val| {
             const exclude_lit = try qb.serializeStringList(self.arena, exclude_val);
             cur = try cur.arg(self.arena, "exclude", .{ .eager = exclude_lit });
@@ -8949,9 +9002,9 @@ pub const Workspace = struct {
         };
     }
 
-    pub fn file(self: Workspace, path: []const u8) !File {
+    pub fn file(self: Workspace, path_: []const u8) !File {
         var cur = try self.selection.select(self.arena, "file");
-            cur = try cur.argStr(self.arena, "path", path);
+            cur = try cur.argStr(self.arena, "path", path_);
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -8984,7 +9037,7 @@ pub const Workspace = struct {
     }
 
     pub fn hasConfig(self: Workspace) !bool {
-        var cur = try self.selection.select(self.arena, "hasConfig");
+        const cur = try self.selection.select(self.arena, "hasConfig");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
@@ -8995,12 +9048,12 @@ pub const Workspace = struct {
     }
 
     pub fn initialized(self: Workspace) !bool {
-        var cur = try self.selection.select(self.arena, "initialized");
+        const cur = try self.selection.select(self.arena, "initialized");
         return executeScalarBool(self.allocator, cur, self.gql);
     }
 
     pub fn path(self: Workspace) ![]u8 {
-        var cur = try self.selection.select(self.arena, "path");
+        const cur = try self.selection.select(self.arena, "path");
         return executeScalarString(self.allocator, cur, self.gql);
     }
 
@@ -9019,7 +9072,7 @@ pub const Workspace = struct {
     }
 
     pub fn update(self: Workspace) !Changeset {
-        var cur = try self.selection.select(self.arena, "update");
+        const cur = try self.selection.select(self.arena, "update");
         return .{
             .allocator = self.allocator,
             .arena = self.arena,
@@ -9234,7 +9287,7 @@ fn executeObjectList(
     for (arr.items, 0..) |item, i| {
         const id_str = switch (item) {
             .string => |s| s,
-            .object => |o| blk: {
+            .object => blk: {
                 // Walk to find the ID leaf
                 var v = item;
                 while (true) {

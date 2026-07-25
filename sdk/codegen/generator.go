@@ -426,7 +426,13 @@ func (g *zigGenerator) writeObjectTypes(b *strings.Builder) {
 	b.WriteString("// ─────────────────────────── object types ───────────────────────────────────\n\n")
 
 	for _, t := range g.sortedTypes {
-		if t.Kind != "OBJECT" || len(t.Fields) == 0 {
+		// Generate structs for both OBJECT and INTERFACE kinds. Dagger
+		// interfaces (Exportable, Syncer, Node) are used as return types
+		// and need handle structs just like concrete objects.
+		if len(t.Fields) == 0 {
+			continue
+		}
+		if t.Kind != "OBJECT" && t.Kind != "INTERFACE" {
 			continue
 		}
 
@@ -448,12 +454,47 @@ func (g *zigGenerator) writeObject(b *strings.Builder, t *introspectionType) {
 	b.WriteString("};\n\n")
 }
 
+// fieldNameSet returns the set of all field/method names declared on a
+// type. Used to detect parameter names that would shadow them.
+func (g *zigGenerator) fieldNameSet(t *introspectionType) map[string]bool {
+	set := make(map[string]bool, len(t.Fields))
+	for _, f := range t.Fields {
+		set[f.Name] = true
+	}
+	// Also include the struct's own fields (allocator, arena, selection, gql)
+	// and common ID-type names that could collide.
+	set["allocator"] = true
+	set["arena"] = true
+	set["selection"] = true
+	set["gql"] = true
+	set["self"] = true
+	return set
+}
+
+// escapeArgName escapes a GraphQL argument name for use as a Zig parameter.
+// If the name is a Zig keyword or would shadow a declaration on the parent
+// type, it is suffixed with "_" to avoid the collision.
+func (g *zigGenerator) escapeArgName(name string, fieldNames map[string]bool) string {
+	if zigKeywords[name] {
+		return "@\"" + name + "\""
+	}
+	if fieldNames[name] {
+		return name + "_"
+	}
+	return name
+}
+
 func (g *zigGenerator) writeMethod(b *strings.Builder, t *introspectionType, f introspectionField) {
 	fieldName := zigEscapeName(f.Name)
 	retType := f.Type.zigReturnType()
 	isScalar := f.Type.isScalarReturn()
 	isVoid := f.Type.isVoid()
 	_, _, isListRet, _, _ := f.Type.unwrap()
+
+	// Collect all field names declared on this type so we can detect
+	// parameter names that would shadow them (Zig 0.16 treats this as
+	// an error). Colliding arg names get a trailing underscore.
+	fieldNames := g.fieldNameSet(t)
 
 	// Special case: id() and sync() return the type-specific ID struct
 	// (e.g., Container.id() → ContainerID, not the generic ID scalar)
@@ -481,7 +522,7 @@ func (g *zigGenerator) writeMethod(b *strings.Builder, t *introspectionType, f i
 
 	// Generate arguments
 	for i, arg := range f.Args {
-		argName := zigEscapeName(arg.Name)
+		argName := g.escapeArgName(arg.Name, fieldNames)
 		argType := arg.Type.zigArgType()
 		if argOptional[i] {
 			// Optional arg: wrap in ?T
@@ -494,14 +535,17 @@ func (g *zigGenerator) writeMethod(b *strings.Builder, t *introspectionType, f i
 	b.WriteString(retType)
 	b.WriteString(" {\n")
 
-	// Build the selection chain using a mutable variable
-	b.WriteString("        var cur = try self.selection.select(self.arena, \"")
-	b.WriteString(f.Name)
-	b.WriteString("\");\n")
+	// Build the selection chain. Use `const` when there are no args (cur
+	// is never reassigned), `var` when args mutate it.
+	keyword := "const"
+	if len(f.Args) > 0 {
+		keyword = "var"
+	}
+	fmt.Fprintf(b, "        %s cur = try self.selection.select(self.arena, %q);\n", keyword, f.Name)
 
 	// Add arguments
 	for i, arg := range f.Args {
-		argName := zigEscapeName(arg.Name)
+		argName := g.escapeArgName(arg.Name, fieldNames)
 		if argOptional[i] {
 			g.writeOptionalArg(b, &arg.Name, argName, arg.Type)
 		} else {
@@ -982,7 +1026,7 @@ func (g *zigGenerator) writeExecuteHelpers(b *strings.Builder) {
     for (arr.items, 0..) |item, i| {
         const id_str = switch (item) {
             .string => |s| s,
-            .object => |o| blk: {
+            .object => blk: {
                 // Walk to find the ID leaf
                 var v = item;
                 while (true) {
