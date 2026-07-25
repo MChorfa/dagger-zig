@@ -23,9 +23,9 @@ test "alpine echo hello end-to-end" {
     var client = try dagger.connect(std.testing.allocator, io, .{});
     defer client.close();
 
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
-    const ctr2 = try ctr1.withExec(&.{ "echo", "hello" });
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
+    const ctr2 = try ctr1.withExec(&.{ "echo", "hello" }, null, null, null, null, null, null, null, null, null, null);
 
     const out = try ctr2.stdout();
     defer std.testing.allocator.free(out);
@@ -43,8 +43,8 @@ test "container id is opaque and non-empty" {
     var client = try dagger.connect(std.testing.allocator, io, .{});
     defer client.close();
 
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
 
     var id = try ctr1.id();
     defer id.deinit(std.testing.allocator);
@@ -62,11 +62,11 @@ test "container withEnvVariable and env resolution" {
     var client = try dagger.connect(std.testing.allocator, io, .{});
     defer client.close();
 
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
-    const ctr2_base = try ctr1.withEnvVariable("MY_VAR", "my_value");
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
+    const ctr2_base = try ctr1.withEnvVariable("MY_VAR", "my_value", null);
 
-    const ctr2 = try ctr2_base.withExec(&.{ "sh", "-c", "echo $MY_VAR" });
+    const ctr2 = try ctr2_base.withExec(&.{ "sh", "-c", "echo $MY_VAR" }, null, null, null, null, null, null, null, null, null, null);
     const out = try ctr2.stdout();
     defer std.testing.allocator.free(out);
 
@@ -84,11 +84,11 @@ test "directory operations" {
     defer client.close();
 
     // Create a file in a container, then read it back through the directory API.
-    const ctr = try client.dag().container();
-    const ctr_with_file = try ctr.withNewFile("/work/hello.txt", "Hello, World!");
-    const dir = try ctr_with_file.directory("/work");
+    const ctr = try client.dag().container(null);
+    const ctr_with_file = try ctr.withNewFile("/work/hello.txt", "Hello, World!", null, null, null);
+    const dir = try ctr_with_file.directory("/work", null);
     const file = try dir.file("hello.txt");
-    const contents = try file.contents();
+    const contents = try file.contents(null, null);
     defer std.testing.allocator.free(contents);
 
     try std.testing.expectEqualStrings("Hello, World!", contents);
@@ -105,20 +105,22 @@ test "cache volume persistence" {
     defer client.close();
 
     // Create cache volume
-    const cache = try client.dag().cacheVolume("test-cache");
+    const cache = try client.dag().cacheVolume("test-cache", null, null, null);
+    var cache_id = try cache.id();
+    defer cache_id.deinit(std.testing.allocator);
 
     // Use in container
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
-    const ctr_with_cache = try ctr1.withMountedCache("/cache", cache);
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
+    const ctr_with_cache = try ctr1.withMountedCache("/cache", cache_id.value, null, null, null, null);
 
     // Write to cache
-    const ctr2 = try ctr_with_cache.withExec(&.{ "sh", "-c", "echo cached > /cache/data.txt" });
+    const ctr2 = try ctr_with_cache.withExec(&.{ "sh", "-c", "echo cached > /cache/data.txt" }, null, null, null, null, null, null, null, null, null, null);
     var written_id = try ctr2.sync();
     defer written_id.deinit(std.testing.allocator);
 
     // Read back from the same mounted cache chain.
-    const ctr3 = try ctr2.withExec(&.{ "cat", "/cache/data.txt" });
+    const ctr3 = try ctr2.withExec(&.{ "cat", "/cache/data.txt" }, null, null, null, null, null, null, null, null, null, null);
 
     const out = try ctr3.stdout();
     defer std.testing.allocator.free(out);
@@ -137,9 +139,9 @@ test "git repository operations" {
     defer client.close();
 
     // Clone a public repo
-    const repo = try client.dag().git("https://github.com/dagger/hello-dagger");
+    const repo = try client.dag().git("https://github.com/dagger/hello-dagger", null, null, null, null, null, null);
     const head = try repo.head();
-    const tree = try head.tree();
+    const tree = try head.tree(null, null, null);
 
     // Check that we got a valid directory
     var id = try tree.id();
@@ -159,15 +161,17 @@ test "secret handling" {
     defer client.close();
 
     const secret = try client.dag().setSecret("my-secret", "secret-value");
+    var secret_id = try secret.id();
+    defer secret_id.deinit(std.testing.allocator);
 
     // Use secret in container
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
-    const ctr2 = try ctr1.withSecretVariable("TEST_SECRET", secret);
-    const ctr3 = try ctr2.withExec(&.{ "sh", "-c", "test -n \"$TEST_SECRET\"" });
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
+    const ctr2 = try ctr1.withSecretVariable("TEST_SECRET", secret_id.value);
+    const ctr3 = try ctr2.withExec(&.{ "sh", "-c", "test -n \"$TEST_SECRET\"" }, null, null, null, null, null, null, null, null, null, null);
 
-    var secret_id = try ctr3.sync();
-    defer secret_id.deinit(std.testing.allocator);
+    var ctr_id = try ctr3.sync();
+    defer ctr_id.deinit(std.testing.allocator);
 }
 
 test "multi-platform container" {
@@ -180,10 +184,10 @@ test "multi-platform container" {
     var client = try dagger.connect(std.testing.allocator, io, .{});
     defer client.close();
 
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
 
-    const ctr2 = try ctr1.withExec(&.{ "uname", "-m" });
+    const ctr2 = try ctr1.withExec(&.{ "uname", "-m" }, null, null, null, null, null, null, null, null, null, null);
     const out = try ctr2.stdout();
     defer std.testing.allocator.free(out);
 
@@ -209,14 +213,14 @@ test "container publish and reference" {
     var client = try dagger.connect(std.testing.allocator, io, .{});
     defer client.close();
 
-    const ctr = try client.dag().container();
-    const ctr1 = try ctr.from("alpine:latest");
-    const ctr2 = try ctr1.withExec(&.{ "echo", "published" });
+    const ctr = try client.dag().container(null);
+    const ctr1 = try ctr.from("alpine:latest", null);
+    const ctr2 = try ctr1.withExec(&.{ "echo", "published" }, null, null, null, null, null, null, null, null, null, null);
 
     const addr = try std.fmt.allocPrint(std.testing.allocator, "{s}/dagger-zig-test:latest", .{registry});
     defer std.testing.allocator.free(addr);
 
-    const digest = try ctr2.publish(addr);
+    const digest = try ctr2.publish(addr, null, null, null, null);
     defer std.testing.allocator.free(digest);
 
     try std.testing.expect(digest.len > 0);

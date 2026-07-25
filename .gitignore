@@ -73,4 +73,5 @@ tests/fixtures/downstream-smoke/.zig-cache/**
 tests/fixtures/downstream-smoke/zig-out/
 tests/fixtures/downstream-smoke/zig-out/**
 tests/fixtures/downstream-smoke/zig-pkg/
-tests/fixtures/downstream-smoke/zig-pkg/**
+
+ci/pipeline/.dagger-sdk-lib

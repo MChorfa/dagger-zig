@@ -13,19 +13,22 @@ pub const ProvenanceGenerator = struct {
     ) !dagger.File {
         _ = self;
 
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var git_runner = try ctx.container();
-        git_runner = try git_runner.from("alpine/git");
-        git_runner = try git_runner.withDirectory("/src", source);
-        git_runner = try git_runner.withWorkdir("/src");
+        git_runner = try git_runner.from("alpine/git", null);
+        git_runner = try git_runner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        git_runner = try git_runner.withWorkdir("/src", null);
         git_runner = try git_runner.withExec(&.{
             "sh", "-c", "git rev-parse HEAD 2>/dev/null || echo unknown",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const git_commit_raw = try git_runner.stdout();
         const git_commit = std.mem.trim(u8, git_commit_raw, " \t\r\n");
 
         var ts_runner = try ctx.container();
-        ts_runner = try ts_runner.from("alpine:latest");
-        ts_runner = try ts_runner.withExec(&.{ "date", "-u", "+%Y-%m-%dT%H:%M:%SZ" });
+        ts_runner = try ts_runner.from("alpine:latest", null);
+        ts_runner = try ts_runner.withExec(&.{ "date", "-u", "+%Y-%m-%dT%H:%M:%SZ" }, null, null, null, null, null, null, null, null, null, null);
         const timestamp_raw = try ts_runner.stdout();
         const timestamp = std.mem.trim(u8, timestamp_raw, " \t\r\n");
 
@@ -51,9 +54,9 @@ pub const ProvenanceGenerator = struct {
         });
 
         var writer = try ctx.container();
-        writer = try writer.from("alpine:latest");
-        writer = try writer.withNewFile("/provenance.json", content);
-        return writer.file("/provenance.json");
+        writer = try writer.from("alpine:latest", null);
+        writer = try writer.withNewFile("/provenance.json", content, null, null, null);
+        return writer.file("/provenance.json", null);
     }
 };
 

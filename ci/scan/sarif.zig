@@ -17,10 +17,10 @@ pub const SarifReporter = struct {
 
         const container = try ctx.dag()
             .container()
-            .from("alpine:latest")
-            .withNewFile("/report.sarif", content);
+            .from("alpine:latest", null)
+            .withNewFile("/report.sarif", content, null, null, null);
 
-        return try container.file("/report.sarif");
+        return try container.file("/report.sarif", null);
     }
 };
 

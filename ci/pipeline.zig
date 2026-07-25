@@ -3,16 +3,16 @@ const dagger = @import("dagger_sdk");
 
 fn writeTextFile(ctx: *dagger.Context, path: []const u8, contents: []const u8) !dagger.File {
     var artifact = try ctx.container();
-    artifact = try artifact.withNewFile(path, contents);
-    return artifact.file(path);
+    artifact = try artifact.withNewFile(path, contents, null, null, null);
+    return artifact.file(path, null);
 }
 
 fn writeArtifactDirectory(ctx: *dagger.Context, files: []const struct { path: []const u8, contents: []const u8 }) !dagger.Directory {
     var artifact = try ctx.container();
     for (files) |file| {
-        artifact = try artifact.withNewFile(file.path, file.contents);
+        artifact = try artifact.withNewFile(file.path, file.contents, null, null, null);
     }
-    return artifact.directory("/");
+    return artifact.directory("/", null);
 }
 
 pub const Pipeline = struct {
@@ -22,12 +22,15 @@ pub const Pipeline = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var runner = try ctx.container();
-        runner = try runner.from("alpine:latest");
-        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
-        runner = try runner.withDirectory("/src", source);
-        runner = try runner.withWorkdir("/src");
-        runner = try runner.withExec(&.{ "zig", "fmt", "--check", "src/" });
+        runner = try runner.from("alpine:latest", null);
+        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" }, null, null, null, null, null, null, null, null, null, null);
+        runner = try runner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        runner = try runner.withWorkdir("/src", null);
+        runner = try runner.withExec(&.{ "zig", "fmt", "--check", "src/" }, null, null, null, null, null, null, null, null, null, null);
 
         const output = try runner.stdout();
         return try writeTextFile(ctx, "/lint-output.txt", output);
@@ -39,12 +42,15 @@ pub const Pipeline = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var runner = try ctx.container();
-        runner = try runner.from("alpine:latest");
-        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
-        runner = try runner.withDirectory("/src", source);
-        runner = try runner.withWorkdir("/src");
-        runner = try runner.withExec(&.{ "zig", "build", "test" });
+        runner = try runner.from("alpine:latest", null);
+        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" }, null, null, null, null, null, null, null, null, null, null);
+        runner = try runner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        runner = try runner.withWorkdir("/src", null);
+        runner = try runner.withExec(&.{ "zig", "build", "test" }, null, null, null, null, null, null, null, null, null, null);
 
         const output = try runner.stdout();
         return try writeTextFile(ctx, "/test-output.txt", output);
@@ -70,13 +76,16 @@ pub const Pipeline = struct {
         target: []const u8,
     ) !dagger.Container {
         _ = self;
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var builder = try ctx.container();
-        builder = try builder.from("alpine:latest");
-        builder = try builder.withExec(&.{ "apk", "add", "--no-cache", "zig" });
-        builder = try builder.withDirectory("/src", source);
-        builder = try builder.withWorkdir("/src");
+        builder = try builder.from("alpine:latest", null);
+        builder = try builder.withExec(&.{ "apk", "add", "--no-cache", "zig" }, null, null, null, null, null, null, null, null, null, null);
+        builder = try builder.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        builder = try builder.withWorkdir("/src", null);
         const build_command = try std.fmt.allocPrint(ctx.allocator(), "zig build -Doptimize=ReleaseSafe -Dtarget={s}", .{target});
-        builder = try builder.withExec(&.{ "sh", "-c", build_command });
+        builder = try builder.withExec(&.{ "sh", "-c", build_command }, null, null, null, null, null, null, null, null, null, null);
         return builder;
     }
 
@@ -88,39 +97,45 @@ pub const Pipeline = struct {
     ) !dagger.Directory {
         _ = self;
 
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var sbom_runner = try ctx.container();
-        sbom_runner = try sbom_runner.from("ghcr.io/anchore/syft:v1.14.0");
-        sbom_runner = try sbom_runner.withDirectory("/src", source);
-        sbom_runner = try sbom_runner.withNewFile("/results/.keep", "");
+        sbom_runner = try sbom_runner.from("ghcr.io/anchore/syft:v1.14.0", null);
+        sbom_runner = try sbom_runner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        sbom_runner = try sbom_runner.withNewFile("/results/.keep", "", null, null, null);
         sbom_runner = try sbom_runner.withExec(&.{
             "/syft", "dir:/src",
             "-o",    "cyclonedx-json=/results/sbom.cdx.json",
             "-o",    "spdx-json=/results/sbom.spdx.json",
-        });
-        const sbom_results = try sbom_runner.directory("/results");
+        }, null, null, null, null, null, null, null, null, null, null);
+        const sbom_results = try sbom_runner.directory("/results", null);
+
+        var sbom_results_id = try sbom_results.id();
+        defer sbom_results_id.deinit(ctx.allocator());
 
         var hasher = try ctx.container();
-        hasher = try hasher.from("alpine:latest");
-        hasher = try hasher.withDirectory("/sbom", sbom_results);
+        hasher = try hasher.from("alpine:latest", null);
+        hasher = try hasher.withDirectory("/sbom", sbom_results_id.value, null, null, null, null, null, null);
         hasher = try hasher.withExec(&.{
             "sh", "-c", "sha256sum /sbom/sbom.spdx.json | awk '{print $1}'",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const sbom_hash_raw = try hasher.stdout();
         const sbom_hash = std.mem.trim(u8, sbom_hash_raw, " \t\r\n");
 
         var git_runner = try ctx.container();
-        git_runner = try git_runner.from("alpine/git");
-        git_runner = try git_runner.withDirectory("/src", source);
-        git_runner = try git_runner.withWorkdir("/src");
+        git_runner = try git_runner.from("alpine/git", null);
+        git_runner = try git_runner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        git_runner = try git_runner.withWorkdir("/src", null);
         git_runner = try git_runner.withExec(&.{
             "sh", "-c", "git rev-parse HEAD 2>/dev/null || echo unknown",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const git_commit_raw = try git_runner.stdout();
         const git_commit = std.mem.trim(u8, git_commit_raw, " \t\r\n");
 
         var ts_runner = try ctx.container();
-        ts_runner = try ts_runner.from("alpine:latest");
-        ts_runner = try ts_runner.withExec(&.{ "date", "-u", "+%Y-%m-%dT%H:%M:%SZ" });
+        ts_runner = try ts_runner.from("alpine:latest", null);
+        ts_runner = try ts_runner.withExec(&.{ "date", "-u", "+%Y-%m-%dT%H:%M:%SZ" }, null, null, null, null, null, null, null, null, null, null);
         const timestamp_raw = try ts_runner.stdout();
         const timestamp = std.mem.trim(u8, timestamp_raw, " \t\r\n");
 
@@ -146,10 +161,10 @@ pub const Pipeline = struct {
         });
 
         var out = try ctx.container();
-        out = try out.from("alpine:latest");
-        out = try out.withDirectory("/sbom", sbom_results);
-        out = try out.withNewFile("/provenance.json", provenance_json);
-        return try out.directory("/");
+        out = try out.from("alpine:latest", null);
+        out = try out.withDirectory("/sbom", sbom_results_id.value, null, null, null, null, null, null);
+        out = try out.withNewFile("/provenance.json", provenance_json, null, null, null);
+        return try out.directory("/", null);
     }
 
     pub fn run(
@@ -168,11 +183,18 @@ pub const Pipeline = struct {
         const attestations = try self.attest(ctx, source, "https://dagger.io/engine");
 
         var all_artifacts = try ctx.container();
-        all_artifacts = try all_artifacts.withDirectory("/security-reports", security_reports);
-        all_artifacts = try all_artifacts.withDirectory("/attestations", attestations);
-        all_artifacts = try all_artifacts.withDirectory("/builder", try builder.directory("/src/zig-out"));
+        var security_id = try security_reports.id();
+        defer security_id.deinit(ctx.allocator());
+        all_artifacts = try all_artifacts.withDirectory("/security-reports", security_id.value, null, null, null, null, null, null);
+        var attestations_id = try attestations.id();
+        defer attestations_id.deinit(ctx.allocator());
+        all_artifacts = try all_artifacts.withDirectory("/attestations", attestations_id.value, null, null, null, null, null, null);
+        const builder_dir = try builder.directory("/src/zig-out", null);
+        var builder_dir_id = try builder_dir.id();
+        defer builder_dir_id.deinit(ctx.allocator());
+        all_artifacts = try all_artifacts.withDirectory("/builder", builder_dir_id.value, null, null, null, null, null, null);
 
-        return try all_artifacts.directory("/");
+        return try all_artifacts.directory("/", null);
     }
 };
 

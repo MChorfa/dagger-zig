@@ -102,15 +102,25 @@ pub const Pipeline = struct {
 
         // Aggregate all artifacts
         var artifacts = try ctx.container();
-        artifacts = try artifacts.from("alpine:latest");
+        artifacts = try artifacts.from("alpine:latest", null);
 
-        artifacts = try artifacts.withDirectory("/security", security_results);
-        artifacts = try artifacts.withDirectory("/build", build_results);
-        artifacts = try artifacts.withDirectory("/test", test_results);
-        artifacts = try artifacts.withDirectory("/compliance", compliance_results);
-        artifacts = try artifacts.withDirectory("/docs", docs_results);
+        var security_id = try security_results.id();
+        defer security_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("/security", security_id.value, null, null, null, null, null, null);
+        var build_id = try build_results.id();
+        defer build_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("/build", build_id.value, null, null, null, null, null, null);
+        var test_id = try test_results.id();
+        defer test_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("/test", test_id.value, null, null, null, null, null, null);
+        var compliance_id = try compliance_results.id();
+        defer compliance_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("/compliance", compliance_id.value, null, null, null, null, null, null);
+        var docs_id = try docs_results.id();
+        defer docs_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("/docs", docs_id.value, null, null, null, null, null, null);
 
-        return artifacts.directory("/");
+        return artifacts.directory("/", null);
     }
 };
 

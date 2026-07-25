@@ -28,9 +28,9 @@ pub const Compliance = struct {
         // ("1 item required; only 0 were supplied"), so one run is required.
         const empty_sarif = "{\"version\":\"2.1.0\",\"$schema\":\"https://json.schemastore.org/sarif-2.1.0.json\",\"runs\":[{\"tool\":{\"driver\":{\"name\":\"scorecard-stub\",\"informationUri\":\"https://github.com/ossf/scorecard\",\"version\":\"0.0.0\",\"rules\":[]}},\"results\":[]}]}";
         var stub = try ctx.container();
-        stub = try stub.from("alpine:latest");
-        stub = try stub.withNewFile("/scorecard.sarif", empty_sarif);
-        return stub.file("/scorecard.sarif");
+        stub = try stub.from("alpine:latest", null);
+        stub = try stub.withNewFile("/scorecard.sarif", empty_sarif, null, null, null);
+        return stub.file("/scorecard.sarif", null);
     }
 
     /// commitlint validates commit messages in the source tree
@@ -38,15 +38,21 @@ pub const Compliance = struct {
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.File {
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var linter = try ctx.container();
-        linter = try linter.from("node:20-alpine");
-        linter = try linter.withExec(&.{ "npm", "install", "-g", "commitlint@19", "@commitlint/config-conventional@19" });
-        linter = try linter.withDirectory("/src", source);
-        linter = try linter.withWorkdir("/src");
-        linter = try linter.withNewFile("/src/.commitlintrc.json", "{\"extends\":[\"@commitlint/config-conventional\"]}");
+        linter = try linter.from("node:20-alpine", null);
+        linter = try linter.withExec(&.{ "npm", "install", "-g", "commitlint@19", "@commitlint/config-conventional@19" }, null, null, null, null, null, null, null, null, null, null);
+        linter = try linter.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        linter = try linter.withWorkdir("/src", null);
+        linter = try linter.withNewFile("/src/.commitlintrc.json", "{\"extends\":[\"@commitlint/config-conventional\"]}", null, null, null);
 
         // Volume cache for npm packages
-        linter = try linter.withMountedCache("/root/.npm", try ctx.dag().cacheVolume("npm-cache"));
+        var npm_cache = try ctx.dag().cacheVolume("npm-cache", null, null, null);
+        var npm_cache_id = try npm_cache.id();
+        defer npm_cache_id.deinit(ctx.allocator());
+        linter = try linter.withMountedCache("/root/.npm", npm_cache_id.value, null, null, null, null);
 
         // Capture the report to a file; tolerate non-zero exit (commit violations
         // and absent git history) so the artifact is always produced. Skips
@@ -55,9 +61,9 @@ pub const Compliance = struct {
             "sh",
             "-c",
             "if [ -d .git ]; then commitlint --from HEAD~10 --to HEAD; else echo 'commitlint: no .git in source, skipped'; fi > /commitlint-output.txt 2>&1 || true",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
 
-        return linter.file("/commitlint-output.txt");
+        return linter.file("/commitlint-output.txt", null);
     }
 
     /// markdown linting with cache
@@ -65,23 +71,29 @@ pub const Compliance = struct {
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.File {
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var linter = try ctx.container();
-        linter = try linter.from("node:20-alpine");
-        linter = try linter.withExec(&.{ "npm", "install", "-g", "markdownlint-cli" });
-        linter = try linter.withDirectory("/src", source);
-        linter = try linter.withWorkdir("/src");
+        linter = try linter.from("node:20-alpine", null);
+        linter = try linter.withExec(&.{ "npm", "install", "-g", "markdownlint-cli" }, null, null, null, null, null, null, null, null, null, null);
+        linter = try linter.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        linter = try linter.withWorkdir("/src", null);
 
         // Volume cache for npm
-        linter = try linter.withMountedCache("/root/.npm", try ctx.dag().cacheVolume("npm-cache"));
+        var npm_cache = try ctx.dag().cacheVolume("npm-cache", null, null, null);
+        var npm_cache_id = try npm_cache.id();
+        defer npm_cache_id.deinit(ctx.allocator());
+        linter = try linter.withMountedCache("/root/.npm", npm_cache_id.value, null, null, null, null);
 
         // Capture report; tolerate lint findings so the artifact is produced.
         linter = try linter.withExec(&.{
             "sh",
             "-c",
             "markdownlint 'docs/**/*.md' --config .markdownlint.yaml > /lint-output.txt 2>&1 || true",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
 
-        return linter.file("/lint-output.txt");
+        return linter.file("/lint-output.txt", null);
     }
 
     /// runAll orchestrates all compliance checks
@@ -93,16 +105,23 @@ pub const Compliance = struct {
         is_fork: bool,
     ) !dagger.Directory {
         var results = try ctx.container();
-        results = try results.from("alpine:latest");
+        results = try results.from("alpine:latest", null);
 
         const scorecard_result = try scorecard(ctx, repo_url, branch, is_fork);
         const commitlint_result = try commitlint(ctx, source);
         const markdown_result = try markdownLint(ctx, source);
 
-        results = try results.withFile("/scorecard.sarif", scorecard_result);
-        results = try results.withFile("/commitlint.txt", commitlint_result);
-        results = try results.withFile("/markdown-lint.txt", markdown_result);
+        var scorecard_id = try scorecard_result.id();
+        defer scorecard_id.deinit(ctx.allocator());
+        var commitlint_id = try commitlint_result.id();
+        defer commitlint_id.deinit(ctx.allocator());
+        var markdown_id = try markdown_result.id();
+        defer markdown_id.deinit(ctx.allocator());
 
-        return results.directory("/");
+        results = try results.withFile("/scorecard.sarif", scorecard_id.value, null, null, null);
+        results = try results.withFile("/commitlint.txt", commitlint_id.value, null, null, null);
+        results = try results.withFile("/markdown-lint.txt", markdown_id.value, null, null, null);
+
+        return results.directory("/", null);
     }
 };
