@@ -42,22 +42,25 @@ pub const PolicyGate = struct {
         provenance: dagger.File,
     ) !dagger.File {
         _ = self;
+        var provenance_id = try provenance.id();
+        defer provenance_id.deinit(ctx.allocator());
+
         var gate = try ctx.container();
-        gate = try gate.from("openpolicyagent/opa:latest");
-        gate = try gate.withFile("/provenance.json", provenance);
-        gate = try gate.withNewFile("/policy.rego", policy_rego);
+        gate = try gate.from("openpolicyagent/opa:latest", null);
+        gate = try gate.withFile("/provenance.json", provenance_id.value, null, null, null);
+        gate = try gate.withNewFile("/policy.rego", policy_rego, null, null, null);
         gate = try gate.withExec(&.{
             "/opa",                               "eval",
             "--input",                            "/provenance.json",
             "--data",                             "/policy.rego",
             "--format",                           "raw",
             "data.supply_chain.governance.allow",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const result_raw = try gate.stdout();
         var out = try ctx.container();
         out = try out.from("alpine:latest", null);
-        out = try out.withNewFile("/policy-result.txt", result_raw);
-        return out.file("/policy-result.txt");
+        out = try out.withNewFile("/policy-result.txt", result_raw, null, null, null);
+        return out.file("/policy-result.txt", null);
     }
 };
 

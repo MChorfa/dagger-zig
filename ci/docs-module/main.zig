@@ -21,15 +21,18 @@ pub const DocsPipeline = struct {
     ) !dagger.Directory {
         _ = self;
 
-        var ctr = try ctx.container();
-        ctr = try ctr.from("rust:slim");
-        ctr = try ctr.withExec(&.{ "cargo", "install", "mdbook" });
-        ctr = try ctr.withDirectory("/src", source);
-        ctr = try ctr.withWorkdir("/src");
-        ctr = try ctr.withExec(&.{ "sh", "-c", "if [ ! -f docs/book.toml ]; then mdbook init docs --title 'dagger-zig Documentation'; fi" });
-        ctr = try ctr.withExec(&.{ "mdbook", "build", "docs", "--dest-dir", "_site" });
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
 
-        return ctr.directory("/src/docs/_site");
+        var ctr = try ctx.container();
+        ctr = try ctr.from("rust:slim", null);
+        ctr = try ctr.withExec(&.{ "cargo", "install", "mdbook" }, null, null, null, null, null, null, null, null, null, null);
+        ctr = try ctr.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        ctr = try ctr.withWorkdir("/src", null);
+        ctr = try ctr.withExec(&.{ "sh", "-c", "if [ ! -f docs/book.toml ]; then mdbook init docs --title 'dagger-zig Documentation'; fi" }, null, null, null, null, null, null, null, null, null, null);
+        ctr = try ctr.withExec(&.{ "mdbook", "build", "docs", "--dest-dir", "_site" }, null, null, null, null, null, null, null, null, null, null);
+
+        return ctr.directory("/src/docs/_site", null);
     }
 };
 

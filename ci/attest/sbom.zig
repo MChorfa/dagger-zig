@@ -8,14 +8,17 @@ pub const SbomGenerator = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var scanner = try ctx.container();
-        scanner = try scanner.from("ghcr.io/anchore/syft:v1.14.0");
-        scanner = try scanner.withDirectory("/src", source);
-        scanner = try scanner.withNewFile("/results/.keep", "");
+        scanner = try scanner.from("ghcr.io/anchore/syft:v1.14.0", null);
+        scanner = try scanner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        scanner = try scanner.withNewFile("/results/.keep", "", null, null, null);
         scanner = try scanner.withExec(&.{
             "/syft", "dir:/src", "-o", "cyclonedx-json=/results/sbom.cdx.json",
-        });
-        return scanner.file("/results/sbom.cdx.json");
+        }, null, null, null, null, null, null, null, null, null, null);
+        return scanner.file("/results/sbom.cdx.json", null);
     }
 
     pub fn spdx(
@@ -24,14 +27,17 @@ pub const SbomGenerator = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var scanner = try ctx.container();
-        scanner = try scanner.from("ghcr.io/anchore/syft:v1.14.0");
-        scanner = try scanner.withDirectory("/src", source);
-        scanner = try scanner.withNewFile("/results/.keep", "");
+        scanner = try scanner.from("ghcr.io/anchore/syft:v1.14.0", null);
+        scanner = try scanner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        scanner = try scanner.withNewFile("/results/.keep", "", null, null, null);
         scanner = try scanner.withExec(&.{
             "/syft", "dir:/src", "-o", "spdx-json=/results/sbom.spdx.json",
-        });
-        return scanner.file("/results/sbom.spdx.json");
+        }, null, null, null, null, null, null, null, null, null, null);
+        return scanner.file("/results/sbom.spdx.json", null);
     }
 };
 

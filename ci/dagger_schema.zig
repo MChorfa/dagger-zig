@@ -11,16 +11,19 @@ pub const SchemaValidator = struct {
     pub fn validate(self: SchemaValidator, ctx: *dagger.Context) !dagger.File {
         _ = self;
         var dir = try ctx.directory();
-        return try dir.withNewFile(
+        dir = try dir.withNewFile(
             "schema-validation.md",
             "# Schema Validation\n\nStatus: stub (validator not yet implemented)\n",
+            null,
         );
+        return try dir.file("schema-validation.md");
     }
 
     pub fn conformance(self: SchemaValidator, ctx: *dagger.Context, category: []const u8) !dagger.File {
         _ = self;
         const buf = try std.fmt.allocPrint(ctx.arena, "# Conformance: {s}\n\nStatus: stub (validator not yet implemented)\n", .{category});
         var dir = try ctx.directory();
-        return try dir.withNewFile("conformance.md", buf);
+        dir = try dir.withNewFile("conformance.md", buf, null);
+        return try dir.file("conformance.md");
     }
 };

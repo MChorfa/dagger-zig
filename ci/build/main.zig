@@ -24,19 +24,28 @@ pub const Build = struct {
     /// Implements Two-Phase Mounting: dependency cache isolated from source changes
     fn goBase(ctx: *dagger.Context) !dagger.Container {
         var base = try ctx.container();
-        base = try base.from("golang:1.26");
-        base = try base.withMountedCache("/go/pkg/mod", try ctx.dag().cacheVolume("go-mod-cache"));
-        base = try base.withMountedCache("/root/.cache/go-build", try ctx.dag().cacheVolume("go-build-cache"));
+        base = try base.from("golang:1.26", null);
+        var go_mod_cache = try ctx.dag().cacheVolume("go-mod-cache", null, null, null);
+        var go_mod_cache_id = try go_mod_cache.id();
+        defer go_mod_cache_id.deinit(ctx.allocator());
+        base = try base.withMountedCache("/go/pkg/mod", go_mod_cache_id.value, null, null, null, null);
+        var go_build_cache = try ctx.dag().cacheVolume("go-build-cache", null, null, null);
+        var go_build_cache_id = try go_build_cache.id();
+        defer go_build_cache_id.deinit(ctx.allocator());
+        base = try base.withMountedCache("/root/.cache/go-build", go_build_cache_id.value, null, null, null, null);
         return base;
     }
 
     /// zigBase sets up Zig build environment with volume caching
     fn zigBase(ctx: *dagger.Context) !dagger.Container {
         var base = try ctx.container();
-        base = try base.from("alpine:3.20");
-        base = try base.withExec(&.{ "apk", "add", "--no-cache", "curl", "tar", "xz" });
-        base = try base.withExec(&.{ "sh", "-c", zig_install });
-        base = try base.withMountedCache("/root/.cache/zig", try ctx.dag().cacheVolume("zig-build-cache"));
+        base = try base.from("alpine:3.20", null);
+        base = try base.withExec(&.{ "apk", "add", "--no-cache", "curl", "tar", "xz" }, null, null, null, null, null, null, null, null, null, null);
+        base = try base.withExec(&.{ "sh", "-c", zig_install }, null, null, null, null, null, null, null, null, null, null);
+        var zig_cache = try ctx.dag().cacheVolume("zig-build-cache", null, null, null);
+        var zig_cache_id = try zig_cache.id();
+        defer zig_cache_id.deinit(ctx.allocator());
+        base = try base.withMountedCache("/root/.cache/zig", zig_cache_id.value, null, null, null, null);
         return base;
     }
 
@@ -49,9 +58,12 @@ pub const Build = struct {
         source: dagger.Directory,
         target: []const u8,
     ) !dagger.Directory {
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var builder = try zigBase(ctx);
-        builder = try builder.withDirectory("/src", source);
-        builder = try builder.withWorkdir("/src");
+        builder = try builder.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        builder = try builder.withWorkdir("/src", null);
 
         const cmd = try std.fmt.allocPrint(
             std.heap.page_allocator,
@@ -60,9 +72,9 @@ pub const Build = struct {
         );
         defer std.heap.page_allocator.free(cmd);
 
-        builder = try builder.withExec(&.{ "sh", "-c", cmd });
+        builder = try builder.withExec(&.{ "sh", "-c", cmd }, null, null, null, null, null, null, null, null, null, null);
 
-        return builder.directory("/out");
+        return builder.directory("/out", null);
     }
 
     /// buildMultiArch builds every platform and assembles the artifacts under
@@ -78,10 +90,12 @@ pub const Build = struct {
             const artifact = try buildSingleTarget(ctx, source, platform);
             const output_path = try std.fmt.allocPrint(std.heap.page_allocator, "/builds/{s}", .{platform});
             defer std.heap.page_allocator.free(output_path);
-            results = try results.withDirectory(output_path, artifact);
+            var artifact_id = try artifact.id();
+            defer artifact_id.deinit(ctx.allocator());
+            results = try results.withDirectory(output_path, artifact_id.value, null, null, null, null, null, null);
         }
 
-        return results.directory("/builds");
+        return results.directory("/builds", null);
     }
 
     /// generateSBOM creates CycloneDX and SPDX manifests with caching
@@ -89,14 +103,17 @@ pub const Build = struct {
         ctx: *dagger.Context,
         source: dagger.Directory,
     ) !dagger.Directory {
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         var sbom = try ctx.container();
-        sbom = try sbom.from("ghcr.io/anchore/syft:v1.14.0");
-        sbom = try sbom.withDirectory("/src", source);
-        sbom = try sbom.withWorkdir("/src");
+        sbom = try sbom.from("ghcr.io/anchore/syft:v1.14.0", null);
+        sbom = try sbom.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        sbom = try sbom.withWorkdir("/src", null);
 
         // syft image is distroless (no shell); seed /results so syft can write
         // into it, then emit both formats in a single invocation.
-        sbom = try sbom.withNewFile("/results/.keep", "");
+        sbom = try sbom.withNewFile("/results/.keep", "", null, null, null);
         // The binary lives at the image root (scratch-based image, not on PATH).
         sbom = try sbom.withExec(&.{
             "/syft",
@@ -105,9 +122,9 @@ pub const Build = struct {
             "cyclonedx-json=/results/sbom.cdx.json",
             "-o",
             "spdx-json=/results/sbom.spdx.json",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
 
-        return sbom.directory("/results");
+        return sbom.directory("/results", null);
     }
 
     /// buildAndSign stages build, SBOM generation, signing, and inline SLSA v1 provenance
@@ -121,17 +138,23 @@ pub const Build = struct {
         artifacts = try artifacts.from("alpine:latest", null);
 
         const multi_arch = try buildMultiArch(ctx, source);
-        artifacts = try artifacts.withDirectory("/builds", multi_arch);
+        var multi_arch_id = try multi_arch.id();
+        defer multi_arch_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("/builds", multi_arch_id.value, null, null, null, null, null, null);
 
         const sbom_dir = try generateSBOM(ctx, source);
-        artifacts = try artifacts.withDirectory("/sbom", sbom_dir);
+        var sbom_dir_id = try sbom_dir.id();
+        defer sbom_dir_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("/sbom", sbom_dir_id.value, null, null, null, null, null, null);
 
         var hasher = try ctx.container();
         hasher = try hasher.from("alpine:latest", null);
-        hasher = try hasher.withDirectory("/sbom", sbom_dir);
+        var sbom_dir_id2 = try sbom_dir.id();
+        defer sbom_dir_id2.deinit(ctx.allocator());
+        hasher = try hasher.withDirectory("/sbom", sbom_dir_id2.value, null, null, null, null, null, null);
         hasher = try hasher.withExec(&.{
             "sh", "-c", "sha256sum /sbom/sbom.spdx.json | awk '{print $1}'",
-        });
+        }, null, null, null, null, null, null, null, null, null, null);
         const sbom_hash_raw = try hasher.stdout();
         const sbom_hash = std.mem.trim(u8, sbom_hash_raw, " \t\r\n");
 
@@ -155,27 +178,38 @@ pub const Build = struct {
         });
         defer std.heap.page_allocator.free(provenance_json);
 
-        artifacts = try artifacts.withNewFile("/provenance.json", provenance_json);
+        artifacts = try artifacts.withNewFile("/provenance.json", provenance_json, null, null, null);
 
         if (oidc_token) |token| {
+            var token_id = try token.id();
+            defer token_id.deinit(ctx.allocator());
+            var sbom_dir_id3 = try sbom_dir.id();
+            defer sbom_dir_id3.deinit(ctx.allocator());
+
             var signer = try ctx.container();
-            signer = try signer.from("ghcr.io/sigstore/cosign/cosign:v2.2.3");
-            signer = try signer.withDirectory("/sbom", sbom_dir);
-            signer = try signer.withNewFile("/provenance.json", provenance_json);
-            signer = try signer.withSecretVariable("SIGSTORE_ID_TOKEN", token);
+            signer = try signer.from("ghcr.io/sigstore/cosign/cosign:v2.2.3", null);
+            signer = try signer.withDirectory("/sbom", sbom_dir_id3.value, null, null, null, null, null, null);
+            signer = try signer.withNewFile("/provenance.json", provenance_json, null, null, null);
+            signer = try signer.withSecretVariable("SIGSTORE_ID_TOKEN", token_id.value);
             signer = try signer.withExec(&.{
                 "cosign",           "attest",
                 "--yes",            "--predicate",
                 "/provenance.json", "--type",
                 "slsaprovenance1",  "--output-bundle",
                 "/output.bundle",   "/sbom/sbom.spdx.json",
-            });
+            }, null, null, null, null, null, null, null, null, null, null);
+            const attestation_file = try signer.file("/output.bundle", null);
+            var attestation_id = try attestation_file.id();
+            defer attestation_id.deinit(ctx.allocator());
             artifacts = try artifacts.withFile(
                 "/attestation.bundle",
-                try signer.file("/output.bundle"),
+                attestation_id.value,
+                null,
+                null,
+                null,
             );
         }
 
-        return artifacts.directory("/");
+        return artifacts.directory("/", null);
     }
 };

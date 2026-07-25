@@ -16,17 +16,21 @@ pub const CiPipeline = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         const pipeline_ctx = try ctx.pipeline("code-quality-lint");
         var runner = try pipeline_ctx.container();
         runner = try runner.from("alpine:latest", null);
-        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
-        runner = try runner.withDirectory("/src", source);
-        runner = try runner.withWorkdir("/src");
-        runner = try runner.withExec(&.{ "zig", "fmt", "--check", "src/" });
+        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" }, null, null, null, null, null, null, null, null, null, null);
+        runner = try runner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        runner = try runner.withWorkdir("/src", null);
+        runner = try runner.withExec(&.{ "zig", "fmt", "--check", "src/" }, null, null, null, null, null, null, null, null, null, null);
 
         const output = try runner.stdout();
         var dir = try ctx.directory();
-        return try dir.withNewFile("lint-output.txt", output);
+        dir = try dir.withNewFile("lint-output.txt", output, null);
+        return try dir.file("lint-output.txt");
     }
 
     /// Lint markdown documentation
@@ -48,16 +52,19 @@ pub const CiPipeline = struct {
     ) !dagger.Directory {
         _ = self;
 
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         // Build docs using mdBook or similar static site generator
         var ctr = try ctx.container();
-        ctr = try ctr.from("rust:slim");
-        ctr = try ctr.withExec(&.{ "cargo", "install", "mdbook" });
-        ctr = try ctr.withDirectory("/src", source);
-        ctr = try ctr.withWorkdir("/src");
-        ctr = try ctr.withExec(&.{ "sh", "-c", "if [ ! -f docs/book.toml ]; then mdbook init docs --title 'dagger-zig Documentation'; fi" });
-        ctr = try ctr.withExec(&.{ "mdbook", "build", "docs", "--dest-dir", "_site" });
+        ctr = try ctr.from("rust:slim", null);
+        ctr = try ctr.withExec(&.{ "cargo", "install", "mdbook" }, null, null, null, null, null, null, null, null, null, null);
+        ctr = try ctr.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        ctr = try ctr.withWorkdir("/src", null);
+        ctr = try ctr.withExec(&.{ "sh", "-c", "if [ ! -f docs/book.toml ]; then mdbook init docs --title 'dagger-zig Documentation'; fi" }, null, null, null, null, null, null, null, null, null, null);
+        ctr = try ctr.withExec(&.{ "mdbook", "build", "docs", "--dest-dir", "_site" }, null, null, null, null, null, null, null, null, null, null);
 
-        return ctr.directory("/src/_site");
+        return ctr.directory("/src/_site", null);
     }
 
     /// Phase 0: Schema Conformance - Validate SDK against Dagger API spec
@@ -81,9 +88,15 @@ pub const CiPipeline = struct {
 
         // Aggregate reports
         var reports = try ctx.directory();
-        reports = try reports.withFile("schema-validation.md", schema_report);
-        reports = try reports.withFile("conformance-core.md", conformance_core);
-        reports = try reports.withFile("conformance-container.md", conformance_container);
+        var schema_report_id = try schema_report.id();
+        defer schema_report_id.deinit(ctx.allocator());
+        reports = try reports.withFile("schema-validation.md", schema_report_id.value, null, null);
+        var conformance_core_id = try conformance_core.id();
+        defer conformance_core_id.deinit(ctx.allocator());
+        reports = try reports.withFile("conformance-core.md", conformance_core_id.value, null, null);
+        var conformance_container_id = try conformance_container.id();
+        defer conformance_container_id.deinit(ctx.allocator());
+        reports = try reports.withFile("conformance-container.md", conformance_container_id.value, null, null);
 
         return reports;
     }
@@ -107,17 +120,21 @@ pub const CiPipeline = struct {
         source: dagger.Directory,
     ) !dagger.File {
         _ = self;
+        var source_id = try source.id();
+        defer source_id.deinit(ctx.allocator());
+
         const pipeline_ctx = try ctx.pipeline("functional-verification-tests");
         var runner = try pipeline_ctx.container();
         runner = try runner.from("alpine:latest", null);
-        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" });
-        runner = try runner.withDirectory("/src", source);
-        runner = try runner.withWorkdir("/src");
-        runner = try runner.withExec(&.{ "zig", "build", "test" });
+        runner = try runner.withExec(&.{ "apk", "add", "--no-cache", "zig" }, null, null, null, null, null, null, null, null, null, null);
+        runner = try runner.withDirectory("/src", source_id.value, null, null, null, null, null, null);
+        runner = try runner.withWorkdir("/src", null);
+        runner = try runner.withExec(&.{ "zig", "build", "test" }, null, null, null, null, null, null, null, null, null, null);
 
         const output = try runner.stdout();
         var dir = try ctx.directory();
-        return try dir.withNewFile("test-output.txt", output);
+        dir = try dir.withNewFile("test-output.txt", output, null);
+        return try dir.file("test-output.txt");
     }
 
     pub fn securityScan(
@@ -131,8 +148,12 @@ pub const CiPipeline = struct {
         const secret_report = try VulnerabilityScanner.scanSecretsSarif(&VulnerabilityScanner{}, scan_ctx, source);
 
         var reports = try ctx.directory();
-        reports = try reports.withFile("vulnerability.sarif", vuln_report);
-        reports = try reports.withFile("secrets.sarif", secret_report);
+        var vuln_report_id = try vuln_report.id();
+        defer vuln_report_id.deinit(ctx.allocator());
+        reports = try reports.withFile("vulnerability.sarif", vuln_report_id.value, null, null);
+        var secret_report_id = try secret_report.id();
+        defer secret_report_id.deinit(ctx.allocator());
+        reports = try reports.withFile("secrets.sarif", secret_report_id.value, null, null);
 
         return reports;
     }
@@ -160,14 +181,22 @@ pub const CiPipeline = struct {
             source,
             builder_id,
             "ci/main.zig",
+            "dagger-zig",
+            "0000000000000000000000000000000000000000000000000000000000000000",
         );
         const sbom_cdx = try SbomGenerator.cyclonedx(&SbomGenerator{}, ctx, source);
         const sbom_spdx = try SbomGenerator.spdx(&SbomGenerator{}, ctx, source);
 
         var attestations = try ctx.directory();
-        attestations = try attestations.withFile("provenance.json", provenance);
-        attestations = try attestations.withFile("sbom.cdx.json", sbom_cdx);
-        attestations = try attestations.withFile("sbom.spdx.json", sbom_spdx);
+        var provenance_id = try provenance.id();
+        defer provenance_id.deinit(ctx.allocator());
+        attestations = try attestations.withFile("provenance.json", provenance_id.value, null, null);
+        var sbom_cdx_id = try sbom_cdx.id();
+        defer sbom_cdx_id.deinit(ctx.allocator());
+        attestations = try attestations.withFile("sbom.cdx.json", sbom_cdx_id.value, null, null);
+        var sbom_spdx_id = try sbom_spdx.id();
+        defer sbom_spdx_id.deinit(ctx.allocator());
+        attestations = try attestations.withFile("sbom.spdx.json", sbom_spdx_id.value, null, null);
 
         return attestations;
     }
@@ -186,8 +215,12 @@ pub const CiPipeline = struct {
         const sbom_sig = try CosignSigner.signBlob(&CosignSigner{}, ctx, sbom, private_key);
 
         var signed = artifacts;
-        signed = try signed.withFile("provenance.json.sig", prov_sig);
-        signed = try signed.withFile("sbom.cdx.json.sig", sbom_sig);
+        var prov_sig_id = try prov_sig.id();
+        defer prov_sig_id.deinit(ctx.allocator());
+        signed = try signed.withFile("provenance.json.sig", prov_sig_id.value, null, null);
+        var sbom_sig_id = try sbom_sig.id();
+        defer sbom_sig_id.deinit(ctx.allocator());
+        signed = try signed.withFile("sbom.cdx.json.sig", sbom_sig_id.value, null, null);
 
         return signed;
     }
@@ -222,9 +255,15 @@ pub const CiPipeline = struct {
 
         // Phase 7: Artifact Collection - Aggregate all outputs
         var all_artifacts = security_reports;
-        all_artifacts = try all_artifacts.withDirectory("conformance-reports", conformance_reports);
-        all_artifacts = try all_artifacts.withFile("container-vuln.sarif", built_vuln);
-        all_artifacts = try all_artifacts.withDirectory("attestations", attestations);
+        var conformance_id = try conformance_reports.id();
+        defer conformance_id.deinit(ctx.allocator());
+        all_artifacts = try all_artifacts.withDirectory("conformance-reports", conformance_id.value, null, null, null, null, null);
+        var built_vuln_id = try built_vuln.id();
+        defer built_vuln_id.deinit(ctx.allocator());
+        all_artifacts = try all_artifacts.withFile("container-vuln.sarif", built_vuln_id.value, null, null);
+        var attestations_id = try attestations.id();
+        defer attestations_id.deinit(ctx.allocator());
+        all_artifacts = try all_artifacts.withDirectory("attestations", attestations_id.value, null, null, null, null, null);
 
         return all_artifacts;
     }
@@ -244,15 +283,18 @@ pub const CiPipeline = struct {
         const signed = try self.signArtifacts(ctx, attestations, signing_key);
 
         // Replace unsigned with signed attestations
-        artifacts = try artifacts.withDirectory("attestations", signed);
+        var signed_id = try signed.id();
+        defer signed_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withDirectory("attestations", signed_id.value, null, null, null, null, null);
 
         // Generate release metadata
-        const metadata_container = try ctx
-            .container()
-            .from("alpine:latest", null)
-            .withNewFile("/metadata.txt", version);
-        const metadata = try metadata_container.file("/metadata.txt");
-        artifacts = try artifacts.withFile("version.txt", metadata);
+        var metadata_ctr = try ctx.container();
+        metadata_ctr = try metadata_ctr.from("alpine:latest", null);
+        metadata_ctr = try metadata_ctr.withNewFile("/metadata.txt", version, null, null, null);
+        const metadata = try metadata_ctr.file("/metadata.txt", null);
+        var metadata_id = try metadata.id();
+        defer metadata_id.deinit(ctx.allocator());
+        artifacts = try artifacts.withFile("version.txt", metadata_id.value, null, null);
 
         return artifacts;
     }
