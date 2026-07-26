@@ -1,0 +1,119 @@
+/* dagger-zig docs custom theme
+ *
+ * Accent color pulled from assets/logo.svg: #FF6B35 (dagger orange).
+ * Applied lightly so it remains readable across mdbook's light, dark, and AYU themes.
+ */
+
+/* Slightly wider content on large screens */
+@media only screen and (min-width: 1200px) {
+    .page {
+        max-width: 1200px;
+    }
+    .content {
+        max-width: 900px;
+    }
+}
+
+/* Headings */
+.content h1 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.content h2 {
+    margin-top: 2.5em;
+    border-bottom: 1px solid var(--table-header-bg, #ddd);
+    padding-bottom: 0.3em;
+}
+
+.content h3 {
+    margin-top: 2em;
+}
+
+/* Tables */
+.content table {
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    width: 100%;
+}
+
+.content table thead {
+    background: var(--table-header-bg, #f0f0f0);
+}
+
+.content table th,
+.content table td {
+    padding: 0.6em 0.8em;
+    border: 1px solid var(--table-header-bg, #ddd);
+}
+
+.content table th {
+    font-weight: 600;
+}
+
+/* Blockquotes used as callouts */
+.content blockquote {
+    border-left: 4px solid #FF6B35;
+    background: rgba(255, 107, 53, 0.06);
+    border-radius: 0 4px 4px 0;
+    padding: 0.6em 1em;
+    margin: 1.5em 0;
+}
+
+.content blockquote > p:first-child {
+    margin-top: 0;
+}
+
+.content blockquote > p:last-child {
+    margin-bottom: 0;
+}
+
+/* Code */
+.content pre {
+    border-radius: 6px;
+}
+
+.content code {
+    font-size: 0.92em;
+    padding: 0.15em 0.35em;
+    border-radius: 3px;
+    background: var(--quote-bg, #f3f3f3);
+}
+
+.content pre code {
+    background: transparent;
+    padding: 0;
+}
+
+/* Links use the brand accent */
+.content a,
+.content a:visited {
+    color: #FF6B35;
+    text-decoration: none;
+}
+
+.content a:hover {
+    text-decoration: underline;
+}
+
+/* Sidebar active item */
+#sidebar .chapter li.active > a {
+    color: #FF6B35;
+    font-weight: 600;
+}
+
+/* Print: hide sidebar and menu bar */
+@media print {
+    #sidebar,
+    #menu-bar,
+    #theme-toggle,
+    #sidebar-toggle {
+        display: none !important;
+    }
+    .page {
+        padding-left: 0 !important;
+    }
+    .content {
+        max-width: 100% !important;
+    }
+}

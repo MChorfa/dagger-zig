@@ -2,20 +2,31 @@
   <img src="assets/logo.svg" alt="dagger-zig logo" width="160" height="160">
 </p>
 
-# dagger-zig Docs
+<h1 align="center">dagger-zig Docs</h1>
 
-A practical guide to the Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine.
+<p align="center">
+  <strong>A practical guide to the Zig SDK for the <a href="https://dagger.io">Dagger</a> programmable CI/CD engine.</strong>
+</p>
 
-> **At a glance**
-> - Zero external dependencies in the SDK itself
-> - Zig 0.16 foundation
-> - Synchronous client API with `std.Io.Group` fan-out
-> - Offline benchmarks, release provenance, and SPIFFE support
+<p align="center">
+  <a href="https://dagger.io">Website</a> ·
+  <a href="https://docs.dagger.io">Dagger Docs</a> ·
+  <a href="https://github.com/dagger/dagger">GitHub</a> ·
+  <a href="https://discord.gg/dagger">Discord</a>
+</p>
 
-> **Dagger links**
-> [Website](https://dagger.io) · [Docs](https://docs.dagger.io) · [GitHub](https://github.com/dagger/dagger) · [Discord](https://discord.gg/dagger)
+---
 
-## Read This First
+## At a glance
+
+| | |
+| --- | --- |
+| **SDK dependencies** | Zero external dependencies; Zig stdlib only |
+| **Zig baseline** | 0.16 |
+| **Client model** | Synchronous API with `std.Io.Group` fan-out |
+| **Extras** | Offline benchmarks, release provenance, SPIFFE support |
+
+## Read this first
 
 This docs set is arranged in the order most people need it:
 
@@ -30,7 +41,7 @@ This docs set is arranged in the order most people need it:
 | [Compliance](compliance.md) | What the release pipeline actually ships |
 | [Observability](observability.md) | Tracing, logs, metrics, and health checks |
 
-## Design Principles
+## Design principles
 
 | Principle | Meaning |
 | --- | --- |
@@ -40,7 +51,7 @@ This docs set is arranged in the order most people need it:
 | Build-proof releases | Separate build artifacts from release attestations |
 | Local-first validation | Prefer offline checks and reproducible commands |
 
-## What Is Stable
+## What is stable
 
 | Area | Status | Notes |
 | --- | --- | --- |
@@ -50,7 +61,7 @@ This docs set is arranged in the order most people need it:
 | Tracing | Ready | OpenTelemetry-compatible spans |
 | Release provenance | Ready | SLSA L3 + GitHub attestation + cosign on tagged releases |
 
-## What Is Experimental
+## What is experimental
 
 | Area | Status | Notes |
 | --- | --- | --- |
@@ -58,9 +69,9 @@ This docs set is arranged in the order most people need it:
 | Windows support | Planned | POSIX is the shipped baseline |
 | C ABI | Planned | Not yet promoted to the primary path |
 
-## Where To Go Next
+## Where to go next
 
-1. [Getting Started](getting-started.md) if you want a first successful call.
-2. [Examples](examples.md) if you want copyable patterns.
-3. [Compliance](compliance.md) if you care about release provenance and signing.
-4. [Roadmap](roadmap.md) if you want to see what is still deferred.
+1. [Getting Started](getting-started.md) for a first successful call.
+2. [Examples](examples.md) for copyable patterns.
+3. [Compliance](compliance.md) for release provenance and signing.
+4. [Roadmap](roadmap.md) for what is still deferred.
