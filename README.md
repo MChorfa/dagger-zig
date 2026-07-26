@@ -13,7 +13,7 @@
 
 A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine. The SDK itself is Zig stdlib only and is built against Zig 0.16.
 
-> **Status — v0.3.2.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, tracing, and offline benchmarks on Linux/macOS. Windows support is planned ([what works](#what-works)).
+> **Status — v0.3.5.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, tracing, and offline benchmarks on Linux/macOS. Windows support is planned ([what works](#what-works)).
 >
 > **Self-hosting.** dagger-zig builds, tests, and releases *itself* — the CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this very SDK.
 >
@@ -95,7 +95,7 @@ pub fn main(init: std.process.Init) !void {
 ```json
 {
   "name": "my-pipeline",
-  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.2",
+  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.5",
   "source": "."
 }
 ```
@@ -112,7 +112,7 @@ More examples: [parallel pipelines](examples/parallel/main.zig) (`Io.Group`), th
 Every tagged release is signed and carries SLSA Build L3 provenance:
 
 ```bash
-scripts/release-verify.sh v0.3.2     # slsa-verifier + gh attestation + cosign, all tarballs
+scripts/release-verify.sh v0.3.5     # slsa-verifier + gh attestation + cosign, all tarballs
 ```
 
 The individual `slsa-verifier` / `gh attestation verify` / `cosign verify-blob` commands are in [docs/compliance.md](docs/compliance.md).

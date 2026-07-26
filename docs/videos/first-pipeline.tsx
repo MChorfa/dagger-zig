@@ -34,10 +34,10 @@ export const FirstPipeline: React.FC = () => {
           code: `// build.zig.zon
 .{
     .name = .my_pipeline,
-            .version = "0.3.2",
+            .version = "0.3.5",
     .dependencies = .{
         .dagger_sdk = .{
-            .url = "git+https://github.com/MChorfa/dagger-zig#v0.3.2",
+            .url = "git+https://github.com/MChorfa/dagger-zig#v0.3.5",
         },
     },
 }`,

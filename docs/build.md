@@ -25,7 +25,7 @@ zig build c_smoke
 ```shell
 zig build sbom
 zig build slsa
-scripts/release-verify.sh v0.3.2
+scripts/release-verify.sh v0.3.5
 ```
 
 The release flow produces SBOMs, GitHub attestations, SLSA provenance, and
