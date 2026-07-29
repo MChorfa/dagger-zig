@@ -35,6 +35,7 @@
 
 - [Windows Support](windows.md)
 - [Roadmap](roadmap.md)
+- [v1.0 Roadmap](v1.0-roadmap.md)
 
 ## Identity and Security
 
