@@ -44,6 +44,7 @@ coverage/
 docs/_build/
 site/
 _site/
+docs/*.html
 *.md.bak
 
 # Generated files (keep schema/dagger.api.md as it's reference)

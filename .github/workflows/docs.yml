@@ -7,14 +7,14 @@ on:
       - "**.md"
       - ".markdownlint.yaml"
       - "docs/**"
-      - ".github/workflows/markdown-lint.yml"
+      - ".github/workflows/docs.yml"
   pull_request:
     branches: [main]
     paths:
       - "**.md"
       - ".markdownlint.yaml"
       - "docs/**"
-      - ".github/workflows/markdown-lint.yml"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions: {}

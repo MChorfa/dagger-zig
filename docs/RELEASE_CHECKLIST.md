@@ -37,11 +37,11 @@ tag changes from release to release, but the required checks stay the same.
 ## Tagging
 
 ```bash
-git tag -s v0.3.2 -m "Release v0.3.2"
-git push origin v0.3.2
+git tag -s v0.3.5 -m "Release v0.3.5"
+git push origin v0.3.5
 ```
 
-Replace `v0.3.2` with the next release tag when you are preparing a new cut.
+Replace `v0.3.5` with the next release tag when you are preparing a new cut.
 
 ## Post-Release
 
@@ -57,5 +57,5 @@ zig build
 zig build test
 zig build test-module
 zig build bench
-scripts/release-verify.sh v0.3.2
+scripts/release-verify.sh v0.3.5
 ```

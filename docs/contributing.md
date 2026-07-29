@@ -23,7 +23,7 @@ If you are touching workflows or release plumbing, also run:
 
 ```bash
 zig build test-integration
-scripts/release-verify.sh v0.3.2
+scripts/release-verify.sh v0.3.5
 ```
 
 ## Workflow

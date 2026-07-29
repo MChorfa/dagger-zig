@@ -36,7 +36,7 @@ gh run list --limit 5
 gh run view <run-id> --log
 zig build test
 zig build bench
-scripts/release-verify.sh v0.3.2
+scripts/release-verify.sh v0.3.5
 ```
 
 ## Security Advisory
