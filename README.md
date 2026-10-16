@@ -11,27 +11,27 @@
 [![Sigstore](https://img.shields.io/badge/Sigstore-signed-2ea44f.svg)](https://sigstore.dev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A native Zig SDK for the [Dagger](https://dagger.io) programmable CI/CD engine. The SDK itself is Zig stdlib only and is built against Zig 0.16.
+A native Zig SDK for the [Dagger](https://dagger.io) engine. The code depends only on the Zig standard library and targets Zig 0.16.
 
-> **Status — v0.3.4.** Synchronous per-query client with concurrent fan-out (`std.Io.Group` + `Client.branch()`), module authoring, tracing, and offline benchmarks on Linux/macOS. Windows support is planned ([what works](#what-works)).
->
-> **Self-hosting.** dagger-zig builds, tests, and releases *itself* — the CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this very SDK.
->
-> **Supply chain.** Tagged releases ship SBOMs (CycloneDX + SPDX), keyless [Sigstore](https://sigstore.dev) signatures, and [SLSA](https://slsa.dev) Build **Level 3** provenance. This is an open-source SDK, **not a certified product** — see [docs/compliance.md](docs/compliance.md).
+The current release is v0.3.4. It provides a synchronous client for Linux and macOS, concurrent pipelines using `std.Io.Group` and `Client.branch`, module authoring, and tracing. Windows support is planned.
 
-## What works
+The project is self-hosting. The CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this SDK.
 
-- **Client API** — synchronous Dagger API for Linux/macOS: containers, directories, files, secrets, cache volumes, services, git. Chained the way you'd expect from any SDK.
-- **Module authoring** — write a Zig struct with methods, expose it with `dagger.module.serve(...)`. Comptime reflection maps Zig types to Dagger `TypeDef`s; unmappable signatures fail at `zig build`, not at engine dispatch.
-- **Concurrent fan-out** — run independent pipelines in parallel via `dagger.parallel` (`map`/`forEach`) over `std.Io.Group`; each task gets its own `Client.branch()`. See [examples/parallel](examples/parallel/main.zig).
-- **Tracing** — OpenTelemetry-compatible spans via `dagger.tracing`.
-- **CLI session lifecycle** — three-tier handshake (`dagger run --` env → `_EXPERIMENTAL_DAGGER_CLI_BIN` → `dagger` on `$PATH`). Never auto-downloads the CLI.
-- **SPIFFE/SPIRE (experimental)** — build with `-Dspiffe-experimental`; the `spire-agent` shellout backend works, the native Workload API is a typed skeleton. See [docs/spiffe.md](docs/spiffe.md).
-- **Self-hosting CI** — the full pipeline (build, test, scan, docs, release) is a Zig Dagger module.
+Tagged releases publish CycloneDX and SPDX SBOMs, Sigstore signatures, and SLSA Build Level 3 provenance. See [docs/compliance.md](docs/compliance.md).
 
-## Planned
+## Supported features
 
-Full Windows support, the C ABI (`zig build c-lib`), the native SPIFFE Workload API, and per-module codegen are typed or skeletoned but currently disabled to avoid `error.NotImplemented` paths. See [docs/roadmap.md](docs/roadmap.md).
+* Client API on Linux and macOS for containers, directories, files, secrets, cache volumes, services, and git operations.
+* Module authoring with Zig structs. Expose structs with `dagger.module.serve`. Comptime reflection maps Zig types to Dagger `TypeDef` definitions, rejecting invalid signatures at compile time instead of runtime dispatch.
+* Parallel pipeline execution using `dagger.parallel` map and forEach helpers over `std.Io.Group`. Each task receives an isolated `Client.branch`. See [examples/parallel](examples/parallel/main.zig).
+* OpenTelemetry compatible spans via `dagger.tracing`.
+* CLI session handshake resolving the active binary from the `dagger run` environment, `_EXPERIMENTAL_DAGGER_CLI_BIN`, or system path, without background downloads.
+* SPIFFE and SPIRE workload identity under `-Dspiffe-experimental`, using the `spire-agent` backend. See [docs/spiffe.md](docs/spiffe.md).
+* Self-hosting pipeline where building, testing, linting, and releases run as a native Zig Dagger module.
+
+## Planned work
+
+Windows support, the C ABI via `zig build c-lib`, the native SPIFFE Workload API, and per-module code generation remain under active development. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Quick start
 
@@ -51,11 +51,10 @@ pub fn main() !void {
     var client = try dagger.connect(gpa, io, .{});
     defer client.close();
 
-    // Each builder call returns `!T`, so `try` each step (handles are lazy;
-    // the pipeline only runs at the terminal `stdout()`).
-    const ctr = try client.dag().container();
+    // Builder calls return !T. Handles evaluate lazily when reading terminal output.
+    const ctr = try client.dag().container(.{});
     const alpine = try ctr.from("alpine:latest");
-    const exec = try alpine.withExec(&.{ "echo", "hello from zig" });
+    const exec = try alpine.withExec(&.{ "echo", "hello from zig" }, .{});
     const out = try exec.stdout();
     defer gpa.free(out);
     std.debug.print("{s}", .{out});
@@ -66,7 +65,7 @@ pub fn main() !void {
 dagger run -- zig build run-first-pipeline
 ```
 
-## Authoring a Dagger module in Zig
+## Module authoring
 
 ```zig
 const std = @import("std");
@@ -79,11 +78,11 @@ const MyModule = struct {
         source: dagger.Directory,
     ) !dagger.Container {
         _ = self;
-        const ctr = try ctx.container();
+        const ctr = try ctx.container(.{});
         const based = try ctr.from("golang:1.23-alpine");
-        const sourced = try based.withDirectory("/src", source);
-        const workdir = try sourced.withWorkdir("/src");
-        return workdir.withExec(&.{ "go", "build", "./..." });
+        const sourced = try based.withDirectory("/src", source, .{});
+        const workdir = try sourced.withWorkdir("/src", .{});
+        return workdir.withExec(&.{ "go", "build", "./..." }, .{});
     }
 };
 
@@ -101,86 +100,115 @@ pub fn main(init: std.process.Init) !void {
 ```
 
 ```bash
-dagger develop                 # codegen → build.zig + build.zig.zon + internal/dagger/dagger.gen.zig
+dagger develop
 dagger call build --source=.
 ```
 
-More examples: [parallel pipelines](examples/parallel/main.zig) (`Io.Group`), the [C/Python FFI](examples/c-client/), [SPIFFE registry auth](docs/spiffe.md), and the [e2e module](examples/e2e-module/) (a standalone Dagger module that exercises the full `ModuleRuntime` path).
+Additional examples include [parallel pipelines](examples/parallel/main.zig) using `Io.Group`, [C and Python FFI](examples/c-client/), [SPIFFE registry authentication](docs/spiffe.md), and the [end-to-end module](examples/e2e-module/).
 
-## Verifying a release
+## Release verification
 
-Every tagged release is signed and carries SLSA Build L3 provenance:
+Tagged releases include cryptographic signatures and SLSA Build Level 3 provenance:
 
 ```bash
-scripts/release-verify.sh v0.3.4     # slsa-verifier + gh attestation + cosign, all tarballs
+scripts/release-verify.sh v0.3.4
 ```
 
-The individual `slsa-verifier` / `gh attestation verify` / `cosign verify-blob` commands are in [docs/compliance.md](docs/compliance.md).
+Detailed verification steps using `slsa-verifier`, `gh attestation verify`, and `cosign verify-blob` are documented in [docs/compliance.md](docs/compliance.md).
 
 ## Build targets
 
 ```shell
-zig build                          build the library module
-zig build -Dspiffe-experimental    enable experimental SPIFFE support
-zig build test                     offline unit tests
-zig build test-module              offline: verify module runtime comptime plumbing
-zig build test-suite               comprehensive suite (platform, telemetry, perf)
-zig build test-integration         live-engine tests (requires `dagger run --`)
-zig build bench                    offline performance benchmarks (query builder, serialization)
-zig build flamegraph               CPU flamegraph SVG via external profiler (see benches/README.md)
-zig build codegen                  regenerate src/gen.zig from engine schema
-zig build run-first-pipeline       example: alpine echo hello
-zig build run-parallel             example: Io.Group concurrent pipelines
+zig build                          Build the library module
+zig build -Dspiffe-experimental    Enable experimental SPIFFE support
+zig build test                     Run offline unit tests
+zig build test-module              Verify module runtime comptime types
+zig build test-suite               Run complete test suite across platforms
+zig build test-integration         Run integration tests against live engine
+zig build bench                    Run offline query and serialization benchmarks
+zig build flamegraph               Generate CPU flamegraph SVG
+zig build codegen                  Regenerate bindings from engine schema
+zig build run-first-pipeline       Run first container pipeline example
+zig build run-parallel             Run concurrent pipeline example
 ```
 
 ## Repository layout
 
 ```shell
-src/        Public surface, query builder, types, tracing, parallel, C FFI, module/, spiffe/
-ci/         Self-hosting CI — a Zig Dagger module that builds dagger-zig with dagger-zig
-sdk/        Module SDK interface (Go shim — the bootstrap layer)
-codegen/    Introspection-based bindings emitter
-examples/   first-pipeline, build-app, parallel, c-client
-tests/      integration (live engine) + module_e2e (offline)
-docs/       Documentation (see docs/README.md)
-scripts/    Local CI + release verification helpers
+src/        Query builder, core types, tracing, parallel engine, module runtime, SPIFFE
+ci/         Self-hosting CI pipeline implemented as a Zig Dagger module
+sdk/        Bootstrap layer for engine communication
+codegen/    Introspection bindings generator
+examples/   Runnable pipeline examples
+tests/      Integration tests and offline unit tests
+docs/       Technical guides and specifications
+scripts/    Release verification and testing scripts
 ```
 
-## Design notes
+## Architecture decisions
 
-- **Zero external Zig dependencies** — stdlib only (HTTP, JSON, TLS, sockets, subprocess). Air-gap deployments stay trivial.
-- **Arena-scoped selection chains** — every handle lives in the client's arena, freed wholesale on `client.close()`. No refcounting; handles don't outlive the client.
-- **Immutable module receivers** (`self: *const Self`) — mutation during dispatch is almost always a bug, and immutability lets the dispatcher parallelize safely.
-- **Go bootstrap** — `sdk/` is a ~200-line Go shim, the chicken-and-egg layer the engine loads to make Zig modules possible. Everything above it (library, CI, user modules) is Zig.
+```mermaid
+flowchart TD
+    subgraph Engine["Dagger engine"]
+        GraphQL["GraphQL session and container runtime"]
+    end
+
+    subgraph Bootstrap["Bootstrap layer"]
+        GoEntry["Go shim sdk/main.go"]
+    end
+
+    subgraph SDK["Zig SDK runtime"]
+        ModuleDispatch["Comptime module reflection"]
+        QueryArena["Arena query builder"]
+        ParallelPool["Parallel executor std.Io.Group"]
+    end
+
+    subgraph User["Workloads"]
+        Pipelines["Container pipelines"]
+        Modules["Custom modules"]
+    end
+
+    GraphQL --> GoEntry
+    GoEntry --> ModuleDispatch
+    ModuleDispatch --> QueryArena
+    Pipelines --> QueryArena
+    Modules --> ModuleDispatch
+    ParallelPool --> QueryArena
+    QueryArena --> GraphQL
+```
+
+* Standard library only. The SDK avoids third-party Zig packages and uses standard library HTTP, JSON, TLS, sockets, and subprocess facilities. This simplifies air-gapped deployments.
+* Arena allocation for query chains. Handles allocate within the client arena and release when calling `client.close`. This eliminates reference counting overhead.
+* Constant module receivers. Module functions accept `self: *const Self`. Disallowing state mutation during dispatch guarantees safe parallel invocation across concurrent engine requests.
+* Go bootstrap shim. The `sdk/` directory contains a minimal Go shim required by the Dagger engine to launch external language modules. All library internals, pipelines, and user code execute entirely in Zig.
 
 ## Documentation
 
-Full docs live in [`docs/`](docs/):
+Comprehensive guides are in [`docs/`](docs/):
 
 | Document | Purpose |
 | --- | --- |
-| [getting-started](docs/getting-started.md) | Your first dagger-zig project |
-| [module-authoring](docs/module-authoring.md) | Build Dagger modules in Zig |
+| [getting-started](docs/getting-started.md) | First project walkthrough |
+| [module-authoring](docs/module-authoring.md) | Module development instructions |
 | [architecture](docs/architecture.md) | Design rationale and internals |
-| [tracing](docs/tracing.md) | Distributed tracing |
-| [spiffe](docs/spiffe.md) | Workload identity (experimental) |
-| [compliance](docs/compliance.md) | Security practices (not a certification) |
-| [roadmap](docs/roadmap.md) | What's planned |
+| [tracing](docs/tracing.md) | Distributed tracing configuration |
+| [spiffe](docs/spiffe.md) | Workload identity setup |
+| [compliance](docs/compliance.md) | Security controls and provenance |
+| [roadmap](docs/roadmap.md) | Planned milestones |
 
-## Contributing & local CI
+## Contributing
 
 ```bash
-make build && make test            # build + run tests
-make fmt && make lint              # format + lint
+make build && make test
+make fmt && make lint
 ```
 
-Test the GitHub Actions workflows locally with [`act`](https://github.com/nektos/act) — see [docs/local-ci-testing.md](docs/local-ci-testing.md). Optional CI secrets (`DAGGER_CLOUD_TOKEN`, `FOSSA_API_KEY`, `GITLEAKS_LICENSE`) let extra jobs run; they skip cleanly if unset.
+Test GitHub Actions workflows locally with [`act`](https://github.com/nektos/act). See [docs/local-ci-testing.md](docs/local-ci-testing.md). Workflows skip optional secrets when not provided.
 
-## About
+## Project status
 
-A community SDK for [Dagger](https://dagger.io), following the official SDK patterns and engine contract. The goal is to propose it as an official community SDK at v1.0.
-Dagger: [website](https://dagger.io) · [docs](https://docs.dagger.io) · [SDKs](https://docs.dagger.io/sdk) · [Discord](https://discord.gg/dagger).
+`dagger-zig` is a community SDK developed according to the Dagger engine protocol. Official Dagger resources are available at [dagger.io](https://dagger.io) and [docs.dagger.io](https://docs.dagger.io).
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
+Apache 2.0. See [LICENSE](LICENSE).
