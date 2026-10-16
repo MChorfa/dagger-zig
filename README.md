@@ -16,7 +16,7 @@
 
 <p align="center">
   <img src="https://shieldcn.dev/badge/Zig-0.16%20%7C%200.17-18181b.svg?logo=zig&variant=secondary" alt="Zig 0.16 | 0.17" />
-  <img src="https://shieldcn.dev/badge/Engine-v0.21.10-18181b.svg?logo=dagger&variant=secondary" alt="Dagger Engine" />
+  <img src="https://shieldcn.dev/badge/Engine-v0.21.9-18181b.svg?logo=dagger&variant=secondary" alt="Dagger Engine" />
   <img src="https://shieldcn.dev/badge/CI-self--hosting-18181b.svg?logo=dagger&variant=secondary" alt="Self-Hosting CI" />
   <img src="https://shieldcn.dev/badge/SLSA-Build%20L3-18181b.svg?variant=secondary" alt="SLSA Level 3" />
   <img src="https://shieldcn.dev/badge/Sigstore-signed-18181b.svg?variant=secondary" alt="Sigstore Signed" />
@@ -25,9 +25,9 @@
   <img src="https://shieldcn.dev/badge/APCA-compliant-166534.svg?wcag=3&variant=secondary" alt="WCAG 3.0 APCA" />
 </p>
 
-A native Zig SDK for the [Dagger](https://dagger.io) engine. The code depends only on the Zig standard library and targets Zig 0.16.
+A native Zig SDK for the [Dagger](https://dagger.io) engine. The code depends only on the Zig standard library and targets Zig 0.16 and 0.17.
 
-The current release is v0.3.4. It provides a synchronous client for Linux and macOS, concurrent pipelines using `std.Io.Group` and `Client.branch`, module authoring, and tracing. Windows support is planned.
+The current release is v0.3.5. It provides a synchronous client for Linux and macOS, concurrent pipelines using `std.Io.Group` and `Client.branch`, module authoring, and tracing. Windows support is planned.
 
 The project is self-hosting. The CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this SDK.
 
@@ -66,9 +66,9 @@ pub fn main() !void {
     defer client.close();
 
     // Builder calls return !T. Handles evaluate lazily when reading terminal output.
-    const ctr = try client.dag().container(.{});
-    const alpine = try ctr.from("alpine:latest");
-    const exec = try alpine.withExec(&.{ "echo", "hello from zig" }, .{});
+    const ctr = try client.dag().container(null);
+    const alpine = try ctr.from("alpine:latest", null);
+    const exec = try alpine.withExec(&.{ "echo", "hello from zig" }, null, null, null, null, null, null, null, null, null, null);
     const out = try exec.stdout();
     defer gpa.free(out);
     std.debug.print("{s}", .{out});
@@ -92,11 +92,11 @@ const MyModule = struct {
         source: dagger.Directory,
     ) !dagger.Container {
         _ = self;
-        const ctr = try ctx.container(.{});
-        const based = try ctr.from("golang:1.23-alpine");
-        const sourced = try based.withDirectory("/src", source, .{});
-        const workdir = try sourced.withWorkdir("/src", .{});
-        return workdir.withExec(&.{ "go", "build", "./..." }, .{});
+        const ctr = try ctx.container();
+        const based = try ctr.from("golang:1.23-alpine", null);
+        const sourced = try based.withDirectory("/src", (try source.id()).value, null, null, null, null, null, null);
+        const workdir = try sourced.withWorkdir("/src", null);
+        return workdir.withExec(&.{ "go", "build", "./..." }, null, null, null, null, null, null, null, null, null, null);
     }
 };
 

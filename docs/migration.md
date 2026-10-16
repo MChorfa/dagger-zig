@@ -27,7 +27,7 @@ out, err := client.Container().
 
 ```python
 out = await (
-    client.container(.{})
+    client.container()
     .from_("alpine")
     .with_exec(["echo", "hello"])
     .stdout()
@@ -66,7 +66,7 @@ ctr := client.Container().
 
 ```python
 dir = client.host().directory(".")
-ctr = (client.container(.{})
+ctr = (client.container()
     .from_("node")
     .with_directory("/src", dir))
 ```
@@ -103,7 +103,7 @@ ctr := client.Container().
 
 ```python
 secret = client.set_secret("api-key", os.environ["API_KEY"])
-ctr = (client.container(.{})
+ctr = (client.container()
     .from_("alpine")
     .with_secret_variable("API_KEY", secret))
 ```
@@ -206,7 +206,7 @@ func (m *MyModule) Build(ctx context.Context, source *dagger.Directory) (*dagger
 class MyModule:
     @dagger.function
     async def build(self, source: dagger.Directory) -> dagger.Container:
-        return await dag.container(.{}).from_("golang").with_directory("/src", source)
+        return await dag.container().from_("golang").with_directory("/src", source)
 ```
 
 ### Zig SDK

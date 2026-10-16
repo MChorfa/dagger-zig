@@ -166,58 +166,23 @@ pub const ModuleQuery = struct {
     }
 
     pub fn loadServiceFromID(self: ModuleQuery, id: []const u8) !api.Service {
-        const s1 = try self.selection.select(self.arena, "loadServiceFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.Service, self, "Service", id);
     }
 
     pub fn loadSocketFromID(self: ModuleQuery, id: []const u8) !api.Socket {
-        const s1 = try self.selection.select(self.arena, "loadSocketFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.Socket, self, "Socket", id);
     }
 
     pub fn loadGitRefFromID(self: ModuleQuery, id: []const u8) !api.GitRef {
-        const s1 = try self.selection.select(self.arena, "loadGitRefFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.GitRef, self, "GitRef", id);
     }
 
     pub fn loadGitRepositoryFromID(self: ModuleQuery, id: []const u8) !api.GitRepository {
-        const s1 = try self.selection.select(self.arena, "loadGitRepositoryFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.GitRepository, self, "GitRepository", id);
     }
 
     pub fn loadHostFromID(self: ModuleQuery, id: []const u8) !api.Host {
-        const s1 = try self.selection.select(self.arena, "loadHostFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.Host, self, "Host", id);
     }
 };
 
