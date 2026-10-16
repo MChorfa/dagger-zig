@@ -242,7 +242,7 @@ pub const GraphQLClient = struct {
         var redirect_buffer: [4096]u8 = undefined;
         var resp = req.receiveHead(&redirect_buffer) catch return error.TransportFailed;
 
-        if (@backingInt(resp.head.status) >= 400) {
+        if (@intFromEnum(resp.head.status) >= 400) {
             const err_body = self.readResponseBody(&resp) catch return error.HttpStatus;
             self.last_error = .{ .message = err_body };
             return error.HttpStatus;

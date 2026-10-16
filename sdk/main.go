@@ -46,8 +46,6 @@ import (
 	runtimeutil "dagger/dagger-zig-sdk/runtimeutil"
 )
 
-var dag = dagger.Connect()
-
 // The Zig toolchain version. Pinned — bumping it is a coordinated release
 // because every module built by this SDK inherits the Zig version.
 //
