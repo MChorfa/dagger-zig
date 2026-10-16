@@ -10,6 +10,12 @@ zig build                 # build the library/module targets
 zig build test            # offline unit tests
 zig build test-module     # module-runtime integration check
 zig build codegen         # regenerate API from schema
+
+# Regeneration sources:
+zig build codegen -- --schema codegen/testdata/schema.v0.21.9.json --out sdk/lib/src/gen.zig
+                          # offline, from the pinned introspection fixture
+dagger run -- zig build codegen -- --out sdk/lib/src/gen.zig
+                          # live: introspects the running engine's schema
 ```
 
 ## Runtime and examples

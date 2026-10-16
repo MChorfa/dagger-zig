@@ -205,7 +205,7 @@ pub const GraphQLClient = struct {
                 // Calculate backoff with jitter and sleep
                 const jitter = executor.calculateJitter(backoff_ms);
                 const sleep_ms = backoff_ms + jitter;
-                const duration = std.Io.Duration.fromNanoseconds(sleep_ms * std.time.ns_per_ms);
+                const duration = std.Io.Duration.fromNanoseconds(@as(i96, @intCast(sleep_ms)) * std.time.ns_per_ms);
                 self.io.sleep(duration, .awake) catch {}; // Ignore cancel for retry
 
                 // Exponential backoff
@@ -250,11 +250,7 @@ pub const GraphQLClient = struct {
 
         const raw = self.readResponseBody(&resp) catch return error.OutOfMemory;
 
-        if (hasTopLevelErrors(raw)) {
-            self.extractDomainError(raw) catch {
-                self.allocator.free(raw);
-                return error.InvalidEnvelope;
-            };
+        if (self.checkAndExtractDomainError(raw) catch false) {
             self.allocator.free(raw);
             return error.DomainError;
         }
@@ -280,21 +276,23 @@ pub const GraphQLClient = struct {
         return out.toOwnedSlice(self.allocator);
     }
 
-    fn extractDomainError(self: *GraphQLClient, raw: []const u8) !void {
+    fn checkAndExtractDomainError(self: *GraphQLClient, raw: []const u8) !bool {
         const Outer = struct {
             errors: ?[]struct {
                 message: []const u8,
             } = null,
         };
-        const parsed = try std.json.parseFromSlice(Outer, self.allocator, raw, .{
+        var parsed = std.json.parseFromSlice(Outer, self.allocator, raw, .{
             .ignore_unknown_fields = true,
-        });
+        }) catch return false;
         defer parsed.deinit();
         if (parsed.value.errors) |list| if (list.len > 0) {
             self.last_error = .{
                 .message = try self.allocator.dupe(u8, list[0].message),
             };
+            return true;
         };
+        return false;
     }
 };
 
@@ -380,10 +378,6 @@ fn buildRequestBody(allocator: std.mem.Allocator, query_str: []const u8) ![]u8 {
     return result;
 }
 
-fn hasTopLevelErrors(body: []const u8) bool {
-    return std.mem.indexOf(u8, body, "\"errors\"") != null;
-}
-
 // ─────────────────────────── tests ──────────────────────────────────────────
 
 const testing = std.testing;
@@ -411,9 +405,21 @@ test "basic auth header format" {
     try testing.expectEqualStrings("http://127.0.0.1:1234/query", c.endpoint);
 }
 
-test "hasTopLevelErrors detects the key" {
-    try testing.expect(hasTopLevelErrors("{\"errors\":[]}"));
-    try testing.expect(!hasTopLevelErrors("{\"data\":{\"foo\":1}}"));
+test "domain error extraction detects errors and ignores data containing the word errors" {
+    var io_impl: std.Io.Threaded = .init(testing.allocator, .{});
+    defer io_impl.deinit();
+    const io = io_impl.io();
+
+    const params: ConnectParams = .{ .port = 1234, .session_token = "secret" };
+    var c = try GraphQLClient.init(testing.allocator, io, params, .{});
+    defer c.deinit();
+
+    try testing.expect(try c.checkAndExtractDomainError("{\"errors\":[{\"message\":\"failed execution\"}]}"));
+    try testing.expect(c.last_error != null);
+    try testing.expectEqualStrings("failed execution", c.last_error.?.message);
+
+    // Substring "errors" in payload stdout MUST NOT be treated as top-level GraphQL error
+    try testing.expect(!try c.checkAndExtractDomainError("{\"data\":{\"container\":{\"stdout\":\"passed with 0 errors\\n\"}}}"));
 }
 
 test "fork yields an independent client with shared connection" {

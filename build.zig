@@ -92,7 +92,7 @@ pub fn build(b: *std.Build) void {
     const bench_install = b.addInstallArtifact(bench_exe, .{});
     const run_bench = b.addRunArtifact(bench_exe);
     run_bench.step.dependOn(&bench_install.step);
-    if (b.args) |args| run_bench.addArgs(args);
+    addPassthru(b, run_bench);
     const bench_step = b.step("bench", "Run offline performance benchmarks (query builder, serialization)");
     bench_step.dependOn(&run_bench.step);
 
@@ -102,7 +102,7 @@ pub fn build(b: *std.Build) void {
     // Fails loudly with install instructions if no profiler is present.
     const flamegraph = b.addSystemCommand(&.{ "bash", "scripts/bench-flamegraph.sh" });
     flamegraph.step.dependOn(&bench_install.step); // ensure zig-out/bin/bench exists first
-    if (b.args) |args| flamegraph.addArgs(args);
+    addPassthru(b, flamegraph);
     const flamegraph_step = b.step("flamegraph", "Render a CPU flamegraph SVG of the benchmarks (requires `flamegraph`; see benches/README.md)");
     flamegraph_step.dependOn(&flamegraph.step);
 
@@ -154,11 +154,19 @@ pub fn build(b: *std.Build) void {
         .name = "dagger-codegen",
         .root_module = codegen_mod,
     });
-    b.installArtifact(codegen_exe);
     const run_codegen = b.addRunArtifact(codegen_exe);
-    if (b.args) |args| run_codegen.addArgs(args);
+    const schema_opt = b.option([]const u8, "schema", "Path to introspection schema JSON file");
+    const out_opt = b.option([]const u8, "out", "Path to output gen.zig (default: sdk/lib/src/gen.zig)");
+    if (schema_opt) |s| run_codegen.addArgs(&.{ "--schema", s });
+    if (out_opt) |o| run_codegen.addArgs(&.{ "--out", o });
+    addPassthru(b, run_codegen);
     const codegen_step = b.step("codegen", "Regenerate src/gen.zig from the live engine schema");
     codegen_step.dependOn(&run_codegen.step);
+
+    const codegen_tests = b.addTest(.{ .root_module = codegen_mod });
+    const run_codegen_tests = b.addRunArtifact(codegen_tests);
+    const codegen_test_step = b.step("test-codegen", "Run codegen unit tests (introspection, emit)");
+    codegen_test_step.dependOn(&run_codegen_tests.step);
 
     // ── examples ────────────────────────────────────────────────────────
     addExample(b, dagger_mod, target, optimize, "first-pipeline", "examples/first-pipeline/main.zig");
@@ -244,4 +252,12 @@ fn addExample(
     const step_name = std.fmt.allocPrint(b.allocator, "run-{s}", .{name}) catch @panic("OOM");
     const step_desc = std.fmt.allocPrint(b.allocator, "Run the {s} example", .{name}) catch @panic("OOM");
     b.step(step_name, step_desc).dependOn(&run.step);
+}
+
+fn addPassthru(b: *std.Build, run: *std.Build.Step.Run) void {
+    if (comptime @hasDecl(std.Build.Step.Run, "addPassthruArgs")) {
+        run.addPassthruArgs();
+    } else if (comptime @hasField(std.Build, "args")) {
+        if (@field(b, "args")) |args| run.addArgs(args);
+    }
 }

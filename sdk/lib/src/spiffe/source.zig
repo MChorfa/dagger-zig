@@ -62,13 +62,14 @@ pub const SocketConfig = union(enum) {
     pub fn resolve(self: SocketConfig, allocator: std.mem.Allocator) errs.SpiffeError![]const u8 {
         return switch (self) {
             .explicit => |p| allocator.dupe(u8, p) catch error.OutOfMemory,
-            .env_only => std.process.getEnvVarOwned(allocator, "SPIFFE_ENDPOINT_SOCKET") catch {
-                return error.SocketUnreachable;
+            .env_only => blk: {
+                const env = std.c.getenv("SPIFFE_ENDPOINT_SOCKET") orelse return error.SocketUnreachable;
+                break :blk allocator.dupe(u8, std.mem.span(env)) catch error.OutOfMemory;
             },
             .env_then_default => blk: {
-                if (std.process.getEnvVarOwned(allocator, "SPIFFE_ENDPOINT_SOCKET")) |p| {
-                    break :blk p;
-                } else |_| {}
+                if (std.c.getenv("SPIFFE_ENDPOINT_SOCKET")) |env| {
+                    break :blk allocator.dupe(u8, std.mem.span(env)) catch error.OutOfMemory;
+                }
                 break :blk allocator.dupe(u8, default_socket_path) catch error.OutOfMemory;
             },
             .custom => |f| f(allocator) catch error.SocketUnreachable,

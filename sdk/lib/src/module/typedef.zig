@@ -29,6 +29,7 @@
 
 const std = @import("std");
 const api = @import("../gen.zig");
+const meta_compat = @import("../meta_compat.zig");
 
 /// Tag matching Dagger's GraphQL TypeDefKind enum.
 pub const Kind = enum {
@@ -157,7 +158,7 @@ fn ofZigInContext(comptime T: type, comptime ctx: StructContext) TypeDef {
 
 fn pointerMapping(comptime T: type, comptime ptr: std.builtin.Type.Pointer) TypeDef {
     // `[]const u8` → STRING
-    if (ptr.size == .slice and ptr.child == u8 and ptr.is_const) {
+    if (ptr.size == .slice and ptr.child == u8 and meta_compat.ptrIsConst(ptr)) {
         return .{ .kind = .string };
     }
     // Other slices → LIST<element>
@@ -190,14 +191,14 @@ fn mapStruct(comptime T: type, comptime ctx: StructContext) TypeDef {
     // User-defined struct. When used as a return type, register it as
     // OBJECT_KIND so the engine creates a queryable GraphQL object. When
     // used as an argument, register it as INPUT_KIND.
-    const info = @typeInfo(T).@"struct";
-    comptime var fields: [info.fields.len]TypeDef.FieldDef = undefined;
+    const f_list = comptime meta_compat.structFields(T);
+    comptime var fields: [f_list.len]TypeDef.FieldDef = undefined;
     comptime {
-        for (info.fields, 0..) |f, i| {
+        for (f_list, 0..) |f, i| {
             fields[i] = .{
                 .name = f.name,
                 .type_def = ofZigInContext(f.type, ctx),
-                .default_json = extractDefaultJson(T, f),
+                .default_json = extractDefaultJson(f.type, f.default_value_ptr),
             };
         }
     }
@@ -225,10 +226,10 @@ fn mapStruct(comptime T: type, comptime ctx: StructContext) TypeDef {
 }
 
 fn mapEnum(comptime T: type) TypeDef {
-    const info = @typeInfo(T).@"enum";
-    comptime var names: [info.fields.len][]const u8 = undefined;
+    const e_names = comptime meta_compat.enumFieldNames(T);
+    comptime var names: [e_names.len][]const u8 = undefined;
     comptime {
-        for (info.fields, 0..) |f, i| names[i] = f.name;
+        for (e_names, 0..) |name, i| names[i] = name;
     }
     const names_const = names;
     return .{
@@ -240,19 +241,18 @@ fn mapEnum(comptime T: type) TypeDef {
     };
 }
 
-fn extractDefaultJson(comptime T: type, comptime f: std.builtin.Type.StructField) ?[]const u8 {
-    _ = T;
-    if (f.default_value_ptr == null) return null;
+fn extractDefaultJson(comptime FieldType: type, comptime default_value_ptr: ?*const anyopaque) ?[]const u8 {
+    const val_ptr = default_value_ptr orelse return null;
     // Emit a JSON literal for the default. Keep it simple: handle the
     // common scalar cases that actually appear in Dagger module args.
-    const info = @typeInfo(f.type);
+    const info = @typeInfo(FieldType);
     return switch (info) {
         .bool => blk: {
-            const ptr: *const bool = @ptrCast(@alignCast(f.default_value_ptr.?));
+            const ptr: *const bool = @ptrCast(@alignCast(val_ptr));
             break :blk if (ptr.*) "true" else "false";
         },
         .int => blk: {
-            const ptr: *const f.type = @ptrCast(@alignCast(f.default_value_ptr.?));
+            const ptr: *const FieldType = @ptrCast(@alignCast(val_ptr));
             break :blk std.fmt.comptimePrint("{d}", .{ptr.*});
         },
         else => null, // string and complex defaults: emit manually via description
@@ -296,9 +296,10 @@ pub fn functionOfMethod(
 ) FunctionDef {
     const method = @field(M, method_name);
     const fn_info = @typeInfo(@TypeOf(method)).@"fn";
+    const p_count = comptime meta_compat.fnParamCount(fn_info);
 
     // Require at least two params: self + ctx.
-    if (fn_info.params.len < 2) {
+    if (p_count < 2) {
         @compileError("dagger-zig: module method `" ++ method_name ++
             "` must take at least (self, ctx) parameters");
     }
@@ -312,17 +313,17 @@ pub fn functionOfMethod(
     // dispatch.zig checks the actual type.
 
     // The remaining parameters are the user-facing args.
-    const user_arg_count = fn_info.params.len - 2;
+    const user_arg_count = p_count - 2;
     comptime var args: [user_arg_count]FunctionDef.ArgDef = undefined;
     comptime var i: usize = 0;
     comptime {
         while (i < user_arg_count) : (i += 1) {
-            const p = fn_info.params[i + 2];
-            if (p.type == null) @compileError("dagger-zig: param " ++
+            const p_type = meta_compat.fnParamType(fn_info, i + 2);
+            if (p_type == null) @compileError("dagger-zig: param " ++
                 std.fmt.comptimePrint("{d}", .{i}) ++ " of `" ++
                 method_name ++ "` has no type (generic params not supported)");
 
-            const T = p.type.?;
+            const T = p_type.?;
             const is_optional = @typeInfo(T) == .optional;
             var td = ofZig(T);
             td.optional = is_optional;

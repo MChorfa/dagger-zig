@@ -37,7 +37,40 @@ const MyModule = struct {
 is walked at comptime, filtered for eligible methods, and converted into one
 specialized shim per callable method.
 
+```mermaid
+flowchart TD
+    Module["Module struct declaration"]
+    Reflection["Compile-time reflection via type info"]
+    Filter["Eligibility filter on receiver and context"]
+    Shim["Invoker shim code generation"]
+    TypeDef["Type definition mapping"]
+    Registration["Engine schema registration"]
+
+    Module -->|Inspect declarations| Reflection
+    Reflection -->|Verify method signature| Filter
+    Filter -->|Generate JSON invoker| Shim
+    Filter -->|Map Zig types to Dagger types| TypeDef
+    Shim -->|Bind to dispatch table| Registration
+    TypeDef -->|Publish object definitions| Registration
+```
+
 ## Handshake
+
+```mermaid
+flowchart TD
+    Engine["Dagger engine daemon"]
+    Subprocess["Spawned module binary"]
+    Handshake["Session handshake on standard output"]
+    GraphQL["Local GraphQL endpoint"]
+    Introspect["Schema introspection and registration"]
+    Dispatch["Comptime method dispatch"]
+
+    Engine -->|Spawns with environment| Subprocess
+    Subprocess -->|Reads port and bearer token| Handshake
+    Handshake -->|Authenticates client| GraphQL
+    GraphQL -->|Parent name empty| Introspect
+    GraphQL -->|Parent name present| Dispatch
+```
 
 The client starts by checking, in order:
 

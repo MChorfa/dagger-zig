@@ -31,6 +31,7 @@
 
 const std = @import("std");
 const errors = @import("errors.zig");
+const meta_compat = @import("meta_compat.zig");
 
 // ─────────────────────────── Safety Limits ───────────────────────────
 
@@ -125,6 +126,31 @@ pub const Selection = struct {
         return node;
     }
 
+    /// Select an inline fragment narrowing an interface/union field to a
+    /// concrete type: `node(id:"x"){ ... on Container { ... } }`.
+    ///
+    /// This is how the modern engine loads objects by ID: `node(id:)` returns
+    /// the `Node` interface and the `... on T` fragment scopes subsequent
+    /// selections to `T`. (`loadXFromID` fields were removed from the public
+    /// schema in v0.21.x.)
+    pub fn selectInlineFragment(
+        self: *const Selection,
+        arena: std.mem.Allocator,
+        type_name: []const u8,
+    ) !*Selection {
+        if (self.depth() >= MAX_SELECTION_DEPTH) {
+            return error.SelectionTooDeep;
+        }
+        const node = try arena.create(Selection);
+        node.* = .{
+            .name = try std.fmt.allocPrint(arena, "... on {s}", .{type_name}),
+            .alias = null,
+            .args = &.{},
+            .prev = self,
+        };
+        return node;
+    }
+
     /// Select a field with a GraphQL alias (`alias: fieldName`).
     pub fn selectWithAlias(
         self: *const Selection,
@@ -132,6 +158,9 @@ pub const Selection = struct {
         alias: []const u8,
         name: []const u8,
     ) !*Selection {
+        if (self.depth() >= MAX_SELECTION_DEPTH) {
+            return error.SelectionTooDeep;
+        }
         const node = try arena.create(Selection);
         node.* = .{
             .name = try arena.dupe(u8, name),
@@ -313,6 +342,99 @@ pub fn serializeEnum(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
     return allocator.dupe(u8, name);
 }
 
+/// Serialize an arbitrary argument value to a GraphQL input literal.
+///
+/// This is the codegen-time contract: generated bindings pass args through
+/// `serializeValue`, which dispatches on the Zig type at comptime:
+///
+///   | Zig type                     | GraphQL literal                |
+///   |------------------------------|--------------------------------|
+///   | []const u8 / *const [N:0]u8  | quoted string                  |
+///   | integer                      | decimal                        |
+///   | float                        | decimal                        |
+///   | bool                         | true / false                   |
+///   | enum                         | bare tag (toWire() if present) |
+///   | ?T                           | null or inner                  |
+///   | []T slice                    | [e, e, ...]                    |
+///   | struct with `toWire()`       | quoted string (scalar wrapper) |
+///   | other struct (input object)  | {field: value, ...}            |
+///
+/// Input-object fields named `@"keyword"` serialize under their unquoted
+/// GraphQL name.
+pub fn serializeValue(allocator: std.mem.Allocator, value: anytype) ![]u8 {
+    const T = @TypeOf(value);
+    return switch (@typeInfo(T)) {
+        .optional => if (value) |v| serializeValue(allocator, v) else allocator.dupe(u8, "null"),
+        .null => allocator.dupe(u8, "null"),
+        .bool => serializeBool(allocator, value),
+        .int, .comptime_int => serializeInt(allocator, @intCast(value)),
+        .float, .comptime_float => std.fmt.allocPrint(allocator, "{d}", .{value}),
+        .@"enum" => blk: {
+            if (@hasDecl(T, "toWire")) {
+                break :blk serializeEnum(allocator, value.toWire());
+            }
+            break :blk serializeEnum(allocator, @tagName(value));
+        },
+        .pointer => |p| switch (p.size) {
+            .slice => blk: {
+                if (p.child == u8) break :blk serializeString(allocator, value);
+                var out: std.ArrayList(u8) = .empty;
+                errdefer out.deinit(allocator);
+                try out.append(allocator, '[');
+                for (value, 0..) |item, i| {
+                    if (i > 0) try out.append(allocator, ',');
+                    const lit = try serializeValue(allocator, item);
+                    defer allocator.free(lit);
+                    try out.appendSlice(allocator, lit);
+                }
+                try out.append(allocator, ']');
+                break :blk out.toOwnedSlice(allocator);
+            },
+            // *const [N]u8 / *const [N:0]u8 — string literals and array refs.
+            .one => if (p.child == u8 or
+                (@typeInfo(p.child) == .array and @typeInfo(p.child).array.child == u8))
+                serializeString(allocator, value)
+            else
+                serializeValue(allocator, value.*),
+            else => @compileError("serializeValue: unsupported pointer type " ++ @typeName(T)),
+        },
+        .array => |a| if (a.child == u8)
+            serializeString(allocator, value[0..])
+        else
+            serializeValue(allocator, value[0..]),
+        .@"struct" => blk: {
+            // Scalar wrappers (ID types, Platform, JSON) carry `toWire`.
+            if (@hasDecl(T, "toWire")) {
+                break :blk serializeString(allocator, value.toWire());
+            }
+            // Input objects: `{name:literal,...}`, skipping null optionals.
+            var out: std.ArrayList(u8) = .empty;
+            errdefer out.deinit(allocator);
+            try out.append(allocator, '{');
+            var first = true;
+            inline for (comptime meta_compat.structFields(T)) |f| {
+                const fv = @field(value, f.name);
+                const skip = switch (@typeInfo(f.type)) {
+                    .optional => fv == null,
+                    else => false,
+                };
+                if (!skip) {
+                    if (!first) try out.append(allocator, ',');
+                    first = false;
+                    try out.appendSlice(allocator, f.name);
+                    try out.append(allocator, ':');
+                    const lit = try serializeValue(allocator, fv);
+                    defer allocator.free(lit);
+                    try out.appendSlice(allocator, lit);
+                }
+            }
+            try out.append(allocator, '}');
+            break :blk out.toOwnedSlice(allocator);
+        },
+        else => @compileError("serializeValue: unsupported arg type " ++ @typeName(T)),
+    };
+}
+
 // ─────────────────────────── tests ───────────────────────────────────────────
 
 const testing = std.testing;
@@ -440,4 +562,117 @@ test "string escape" {
 
 test "empty selection is rejected" {
     try testing.expectError(error.EmptySelection, Selection.root.build(testing.allocator));
+}
+
+// ── serializeValue contract (codegen relies on this) ───────────────────────
+
+const TestScalar = struct {
+    value: []const u8,
+    pub fn toWire(self: TestScalar) []const u8 {
+        return self.value;
+    }
+};
+
+const TestEnum = enum {
+    locked,
+    shared,
+    pub fn toWire(self: TestEnum) []const u8 {
+        return switch (self) {
+            .locked => "LOCKED",
+            .shared => "SHARED",
+        };
+    }
+};
+
+const TestInput = struct {
+    name: []const u8,
+    value: []const u8,
+    count: ?i64 = null,
+};
+
+test "serializeValue: scalars and strings" {
+    const a = testing.allocator;
+    const s = try serializeValue(a, "hello");
+    defer a.free(s);
+    try testing.expectEqualStrings("\"hello\"", s);
+
+    const i = try serializeValue(a, @as(i64, 42));
+    defer a.free(i);
+    try testing.expectEqualStrings("42", i);
+
+    const b = try serializeValue(a, true);
+    defer a.free(b);
+    try testing.expectEqualStrings("true", b);
+
+    const f = try serializeValue(a, @as(f64, 1.5));
+    defer a.free(f);
+    try testing.expectEqualStrings("1.5", f);
+}
+
+test "serializeValue: optional and null" {
+    const a = testing.allocator;
+    const some: ?[]const u8 = "x";
+    const s = try serializeValue(a, some);
+    defer a.free(s);
+    try testing.expectEqualStrings("\"x\"", s);
+
+    const none: ?i64 = null;
+    const n = try serializeValue(a, none);
+    defer a.free(n);
+    try testing.expectEqualStrings("null", n);
+}
+
+test "serializeValue: enum emits bare wire tag" {
+    const a = testing.allocator;
+    const e = try serializeValue(a, TestEnum.shared);
+    defer a.free(e);
+    try testing.expectEqualStrings("SHARED", e);
+}
+
+test "serializeValue: scalar wrapper emits quoted toWire" {
+    const a = testing.allocator;
+    const w = try serializeValue(a, TestScalar{ .value = "abc123" });
+    defer a.free(w);
+    try testing.expectEqualStrings("\"abc123\"", w);
+}
+
+test "serializeValue: slices become lists" {
+    const a = testing.allocator;
+    const items: []const []const u8 = &.{ "a", "b" };
+    const l = try serializeValue(a, items);
+    defer a.free(l);
+    try testing.expectEqualStrings("[\"a\",\"b\"]", l);
+
+    const ints: []const i64 = &.{ 1, 2, 3 };
+    const li = try serializeValue(a, ints);
+    defer a.free(li);
+    try testing.expectEqualStrings("[1,2,3]", li);
+}
+
+test "serializeValue: input object emits GraphQL literal, skips null optionals" {
+    const a = testing.allocator;
+    const lit = try serializeValue(a, TestInput{ .name = "n", .value = "v" });
+    defer a.free(lit);
+    try testing.expectEqualStrings("{name:\"n\",value:\"v\"}", lit);
+
+    const lit2 = try serializeValue(a, TestInput{ .name = "n", .value = "v", .count = 7 });
+    defer a.free(lit2);
+    try testing.expectEqualStrings("{name:\"n\",value:\"v\",count:7}", lit2);
+}
+
+test "selectInlineFragment emits ... on Type" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+
+    const s1 = try Selection.root.select(a, "node");
+    const s2 = try s1.argStr(a, "id", "xyz");
+    const s3 = try s2.selectInlineFragment(a, "Container");
+    const s4 = try s3.select(a, "id");
+
+    const q = try s4.build(testing.allocator);
+    defer testing.allocator.free(q);
+    try testing.expectEqualStrings(
+        \\query{node(id:"xyz"){... on Container{id}}}
+    , q);
 }

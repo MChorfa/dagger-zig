@@ -13,9 +13,9 @@
 //!         source: dagger.Directory,
 //!     ) !dagger.Container {
 //!         _ = self;
-//!         return ctx.dag().container()
+//!         return ctx.dag().container(.{})
 //!             .from("golang:1.23-alpine")
-//!             .withDirectory("/src", source);
+//!             .withDirectory("/src", source, .{});
 //!     }
 //! };
 //!

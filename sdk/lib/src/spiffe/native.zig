@@ -105,7 +105,7 @@ pub const NativeWorkloadAPISource = struct {
 const testing = std.testing;
 
 test "all network ops return NotImplementedInV010" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -133,7 +133,7 @@ test "all network ops return NotImplementedInV010" {
 }
 
 test "close marks source closed" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 

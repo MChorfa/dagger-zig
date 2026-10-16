@@ -86,11 +86,16 @@ pub const ShelloutSource = struct {
 
         // Run: spire-agent api fetch x509 -socketPath <path> -write <tempdir>
         // The command writes svid.0.pem, svid.0.key, bundle.0.pem into -write dir.
+        var seed: [8]u8 = undefined;
+        std.posix.getrandom(&seed) catch {
+            seed = @bitCast(std.time.milliTimestamp());
+        };
+        const rand_id = std.mem.readInt(u64, &seed, .little);
         var tmpdir_buf: [128]u8 = undefined;
         const tmpdir = std.fmt.bufPrint(
             &tmpdir_buf,
             "/tmp/spiffe-{x}",
-            .{std.crypto.random.int(u64)},
+            .{rand_id},
         ) catch return error.TransportError;
 
         // Directory creation in 0.16 — actual method names (makePath vs
@@ -187,7 +192,7 @@ fn parseX509FromDir(
 const testing = std.testing;
 
 test "init and close are idempotent" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
