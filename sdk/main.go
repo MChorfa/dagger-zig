@@ -46,6 +46,8 @@ import (
 	runtimeutil "dagger/dagger-zig-sdk/runtimeutil"
 )
 
+var dag = dagger.Connect()
+
 // The Zig toolchain version. Pinned — bumping it is a coordinated release
 // because every module built by this SDK inherits the Zig version.
 //
@@ -57,9 +59,9 @@ const zigVersion = "0.16.0"
 
 // Paths inside the runtime container.
 const (
-	userSrcPath   = "/user-module" // user's module source (workdir)
-	sdkLibPath    = "/sdk-lib"     // vendored dagger_sdk Zig library
-	schemaPath    = "/schema.json" // introspection JSON (mounted if provided)
+	userSrcPath   = "/user-module"    // user's module source (workdir)
+	sdkLibPath    = "/sdk-lib"        // vendored dagger_sdk Zig library
+	schemaPath    = "/schema.json"    // introspection JSON (mounted if provided)
 	sdkLibLinkDir = ".dagger-sdk-lib" // relative symlink name inside build dir
 )
 
@@ -129,16 +131,87 @@ func (m *DaggerZigSdk) ModuleRuntime(
 	return ctr, nil
 }
 
+// InitModule scaffolds a new Zig module inside a workspace.
+//
+// Forward-compatibility hook for the workspace SDK contract (dagger/dagger
+// main: core/sdk/module.go AsModuleInitializer). The engine discovers this
+// function by name and calls it during `dagger module init <sdk>`; engines
+// on the v0.21.x line never invoke it. Required shape:
+//
+//	initModule(ws: Workspace!, name: String!, path: String!, ...): Changeset!
+//
+// `name` is the module name and `path` the module's directory inside the
+// workspace. The returned Changeset carries only the SDK-owned files; the
+// engine merges it with its own manifest edits (dagger-module.toml is
+// engine-owned and intentionally not written here).
+//
+// We do not implement `targetRuntime`: when absent, the engine records the
+// SDK's own installed ref as [runtime] source, which is correct — this
+// module is both the SDK and the runtime.
+func (m *DaggerZigSdk) InitModule(
+	ctx context.Context,
+	ws *dagger.Workspace,
+	name string,
+	path string,
+) (*dagger.Changeset, error) {
+	before := ws.Directory(path)
+	after := before.
+		WithNewFile("main.zig", zigcodegen.UserModuleMainZig(name)).
+		WithNewFile("build.zig", zigcodegen.UserModuleBuildZig()).
+		WithNewFile("build.zig.zon", zigcodegen.UserModuleBuildZigZon()).
+		WithNewFile("internal/dagger/dagger.gen.zig", zigcodegen.GeneratedModuleBindings())
+
+	return after.Changes(before), nil
+}
+
+// InitClient scaffolds a Zig client for an installed module.
+//
+// Forward-compatibility hook for the workspace SDK contract (dagger/dagger
+// main: core/sdk/module.go AsClientInitializer). The engine calls it during
+// `dagger module client add`; engines on the v0.21.x line never invoke it.
+// Required shape:
+//
+//	initClient(ws: Workspace!, path: String!, module: String!, ...): Changeset!
+//
+// `path` is the client output directory inside the workspace and `module`
+// the name of the module the client targets. The emitted scaffold compiles
+// the session layer only: Zig has no dynamic dispatch, so calling the
+// target module's functions requires typed stubs that a future client
+// generator will emit from the module's typedefs.
+func (m *DaggerZigSdk) InitClient(
+	ctx context.Context,
+	ws *dagger.Workspace,
+	path string,
+	module string,
+) (*dagger.Changeset, error) {
+	before := ws.Directory(path)
+
+	// Clients run on the host (`dagger run zig build run`), outside the
+	// runtime container — so there is no /sdk-lib mount. Vendor the SDK
+	// library into the client directory instead; build.zig.zon resolves
+	// dagger_sdk from that path.
+	sdkLibDir := dag.CurrentModule().Source().Directory("lib")
+
+	after := before.
+		WithNewFile("main.zig", zigcodegen.UserClientMainZig(module)).
+		WithNewFile("build.zig", zigcodegen.UserClientBuildZig()).
+		WithNewFile("build.zig.zon", zigcodegen.UserModuleBuildZigZon()).
+		WithNewFile("internal/dagger/dagger.gen.zig", zigcodegen.GeneratedModuleBindings()).
+		WithDirectory(sdkLibLinkDir, sdkLibDir)
+
+	return after.Changes(before), nil
+}
+
 // Codegen returns the generated-code changeset that `dagger develop`
 // applies to the user's source tree. We emit three files:
 //
 //   - build.zig      — wires dagger_sdk as a dependency and installs a
-//                      `module` executable via the `module-runtime` step.
+//     `module` executable via the `module-runtime` step.
 //   - build.zig.zon  — declares the dagger_sdk path dependency pointing
-//                      at .dagger-sdk-lib (symlinked to /sdk-lib at
-//                      runtime by ModuleBuildScript).
+//     at .dagger-sdk-lib (symlinked to /sdk-lib at
+//     runtime by ModuleBuildScript).
 //   - internal/dagger/dagger.gen.zig — re-export shim so users can also
-//                      `@import("dagger").Container` etc.
+//     `@import("dagger").Container` etc.
 //
 // If the user already has a build.zig or build.zig.zon, Codegen still
 // overwrites them — the SDK owns the build graph. Users customise their

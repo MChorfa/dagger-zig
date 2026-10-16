@@ -1,15 +1,29 @@
-![dagger-zig logo](assets/logo.svg)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/graph.svg?title=dagger-zig&subtitle=Native+Zig+SDK+for+the+Dagger+Engine&logo=zig&theme=zinc&mode=dark" />
+    <img alt="dagger-zig" src="https://shieldcn.dev/header/graph.svg?title=dagger-zig&subtitle=Native+Zig+SDK+for+the+Dagger+Engine&logo=zig&theme=zinc&mode=light" />
+  </picture>
+</p>
 
-# dagger-zig
+<p align="center">
+  <a href="https://github.com/MChorfa/dagger-zig/releases"><img src="https://shieldcn.dev/github/release/MChorfa/dagger-zig.svg?variant=secondary" alt="Release" /></a>
+  <a href="https://github.com/MChorfa/dagger-zig/actions/workflows/ci.yml"><img src="https://shieldcn.dev/github/ci/MChorfa/dagger-zig.svg?workflow=ci.yml&branch=main&variant=secondary" alt="CI Status" /></a>
+  <a href="https://github.com/MChorfa/dagger-zig/stargazers"><img src="https://shieldcn.dev/github/stars/MChorfa/dagger-zig.svg?variant=secondary" alt="Stars" /></a>
+  <a href="https://github.com/MChorfa/dagger-zig/network/members"><img src="https://shieldcn.dev/github/forks/MChorfa/dagger-zig.svg?variant=secondary" alt="Forks" /></a>
+  <a href="https://github.com/MChorfa/dagger-zig/blob/main/LICENSE"><img src="https://shieldcn.dev/github/license/MChorfa/dagger-zig.svg?variant=secondary" alt="License" /></a>
+  <a href="https://github.com/MChorfa/dagger-zig/commits/main"><img src="https://shieldcn.dev/github/last-commit/MChorfa/dagger-zig.svg?variant=secondary" alt="Last Commit" /></a>
+</p>
 
-[![Release](https://img.shields.io/github/v/release/MChorfa/dagger-zig?sort=semver)](https://github.com/MChorfa/dagger-zig/releases)
-[![Powered by Dagger](https://img.shields.io/badge/Powered%20by-Dagger-131226.svg)](https://dagger.io)
-[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d.svg)](https://ziglang.org)
-[![CI](https://github.com/MChorfa/dagger-zig/actions/workflows/ci.yml/badge.svg)](https://github.com/MChorfa/dagger-zig/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/MChorfa/dagger-zig/badge)](https://securityscorecards.dev/viewer/?uri=github.com/MChorfa/dagger-zig)
-[![SLSA Build L3](https://img.shields.io/badge/SLSA-Build%20L3-2ea44f.svg)](https://slsa.dev)
-[![Sigstore](https://img.shields.io/badge/Sigstore-signed-2ea44f.svg)](https://sigstore.dev)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+<p align="center">
+  <img src="https://shieldcn.dev/badge/Zig-0.16%20%7C%200.17-18181b.svg?logo=zig&variant=secondary" alt="Zig 0.16 | 0.17" />
+  <img src="https://shieldcn.dev/badge/Engine-v0.21.10-18181b.svg?logo=dagger&variant=secondary" alt="Dagger Engine" />
+  <img src="https://shieldcn.dev/badge/CI-self--hosting-18181b.svg?logo=dagger&variant=secondary" alt="Self-Hosting CI" />
+  <img src="https://shieldcn.dev/badge/SLSA-Build%20L3-18181b.svg?variant=secondary" alt="SLSA Level 3" />
+  <img src="https://shieldcn.dev/badge/Sigstore-signed-18181b.svg?variant=secondary" alt="Sigstore Signed" />
+  <img src="https://shieldcn.dev/badge/Dependencies-std%20only-18181b.svg?variant=secondary" alt="Zero 3rd-Party Deps" />
+  <img src="https://shieldcn.dev/badge/Platforms-linux%20%7C%20darwin-18181b.svg?variant=secondary" alt="Multi-Platform" />
+  <img src="https://shieldcn.dev/badge/APCA-compliant-166534.svg?wcag=3&variant=secondary" alt="WCAG 3.0 APCA" />
+</p>
 
 A native Zig SDK for the [Dagger](https://dagger.io) engine. The code depends only on the Zig standard library and targets Zig 0.16.
 
@@ -182,12 +196,48 @@ flowchart TD
 * Constant module receivers. Module functions accept `self: *const Self`. Disallowing state mutation during dispatch guarantees safe parallel invocation across concurrent engine requests.
 * Go bootstrap shim. The `sdk/` directory contains a minimal Go shim required by the Dagger engine to launch external language modules. All library internals, pipelines, and user code execute entirely in Zig.
 
+## Ecosystem & Dogfooding
+
+`dagger-zig` powers production CI/CD across sovereign and open-source Zig projects:
+
+* **[shieldcn-zig](https://github.com/MChorfa/shieldcn-zig)**: A clean-room, pure-Zig badge generation engine powering the dynamic badges in this README. `shieldcn-zig`'s multi-architecture build, test, and container packaging pipelines are written as native Zig Dagger modules using `dagger-zig/sdk@v0.3.5`:
+
+```mermaid
+flowchart LR
+    Source["Source workspace"]
+    Verification["Containerized test and scan"]
+    Artifact["Release binary build"]
+    Attestation["SBOM and SLSA attestation"]
+    Badge["Shieldcn badge generation"]
+    Distribution["Hermetic release bundle"]
+
+    Source -->|Mount directory| Verification
+    Verification -->|Pass validation| Artifact
+    Artifact -->|Generate signatures| Attestation
+    Attestation -->|Export quality metadata| Badge
+    Artifact -->|Package binaries| Distribution
+    Badge -->|Vendor offline SVG badges| Distribution
+```
+
+  ```bash
+  # Inside shieldcn-zig:
+  dagger call lint --src=.
+  dagger call test --src=.
+  dagger call build --src=. export --path=./build-amd64
+  dagger call build-aarch-64 --src=. export --path=./build-aarch64
+  dagger call container --src=. --arch=amd64 export --path=./shieldcn-amd64.tar
+  ```
+
+* **eBPF and OCI artifact delivery**:
+  `dagger-zig` pipelines package and distribute compiled eBPF bytecode (`.bpf.o`), loaders, verification ledgers (`verification.json`), and SLSA provenance as standard OCI artifacts with custom media-type attachments.
+
 ## Documentation
 
 Comprehensive guides are in [`docs/`](docs/):
 
 | Document | Purpose |
 | --- | --- |
+| [zero-to-hero](docs/zero-to-hero.md) | Complete Zero to Hero guide and production cookbook |
 | [getting-started](docs/getting-started.md) | First project walkthrough |
 | [module-authoring](docs/module-authoring.md) | Module development instructions |
 | [architecture](docs/architecture.md) | Design rationale and internals |

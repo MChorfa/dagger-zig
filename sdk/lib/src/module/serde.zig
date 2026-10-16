@@ -14,6 +14,7 @@ const context_mod = @import("context.zig");
 const Context = context_mod.Context;
 const api = @import("../gen.zig");
 const module_api = @import("../module_api.zig");
+const meta_compat = @import("../meta_compat.zig");
 
 /// Deserialise argument `arg_name` from `args_json` into a value of type T.
 pub fn deserializeArg(
@@ -60,7 +61,7 @@ fn deserializeJsonValue(comptime T: type, ctx: *Context, v: std.json.Value) !T {
             .null => null,
             else => @as(T, try deserializeJsonValue(opt.child, ctx, v)),
         },
-        .pointer => |ptr| if (ptr.size == .slice and ptr.child == u8 and ptr.is_const) blk: {
+        .pointer => |ptr| if (ptr.size == .slice and ptr.child == u8 and meta_compat.ptrIsConst(ptr)) blk: {
             // String
             const s = switch (v) {
                 .string => |s| s,
@@ -100,13 +101,12 @@ fn deserializeStruct(comptime T: type, ctx: *Context, v: std.json.Value) !T {
     if (T == api.Host) return hydrateHandle(api.Host, ctx, v);
 
     // User struct: recurse per field.
-    const info = @typeInfo(T).@"struct";
     const obj = switch (v) {
         .object => |o| o,
         else => return error.TypeMismatch,
     };
     var out: T = undefined;
-    inline for (info.fields) |f| {
+    inline for (comptime meta_compat.structFields(T)) |f| {
         if (obj.get(f.name)) |fv| {
             @field(out, f.name) = try deserializeJsonValue(f.type, ctx, fv);
         } else if (f.default_value_ptr) |dp| {
@@ -165,7 +165,7 @@ fn serializeJsonValue(comptime T: type, value: T, w: *std.Io.Writer) !void {
         .int => try w.print("{d}", .{value}),
         .float => try w.print("{d}", .{value}),
         .optional => if (value) |v| try serializeJsonValue(@TypeOf(v), v, w) else try w.writeAll("null"),
-        .pointer => |ptr| if (ptr.size == .slice and ptr.child == u8 and ptr.is_const) {
+        .pointer => |ptr| if (ptr.size == .slice and ptr.child == u8 and meta_compat.ptrIsConst(ptr)) {
             try std.json.Stringify.value(value, .{}, w);
         } else if (ptr.size == .slice) {
             try w.writeAll("[");
@@ -187,18 +187,17 @@ fn serializeJsonValue(comptime T: type, value: T, w: *std.Io.Writer) !void {
 }
 
 fn serializeStruct(comptime T: type, value: T, w: *std.Io.Writer) !void {
-    // Dagger handle types: emit their ID.
     if (comptime isDaggerHandle(T)) {
         var v = value;
         const id = try v.id();
+        defer v.allocator.free(id.value);
         try std.json.Stringify.value(id.value, .{}, w);
         return;
     }
 
     // User struct: emit as JSON object.
-    const info = @typeInfo(T).@"struct";
     try w.writeAll("{");
-    inline for (info.fields, 0..) |f, i| {
+    inline for (comptime meta_compat.structFields(T), 0..) |f, i| {
         if (i > 0) try w.writeAll(",");
         try std.json.Stringify.value(f.name, .{}, w);
         try w.writeAll(":");
@@ -227,7 +226,7 @@ const testing = std.testing;
 
 test "deserialize primitive scalars from json value" {
     // Build a per-dispatch context by hand.
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 
@@ -269,7 +268,7 @@ test "deserialize user struct with defaults" {
         parallelism: u32 = 4,
     };
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
     var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
@@ -298,7 +297,7 @@ test "deserialize user struct with defaults" {
 test "deserialize enum from string" {
     const Stage = enum { build, test_, deploy };
 
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
     _ = io;

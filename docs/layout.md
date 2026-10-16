@@ -4,7 +4,7 @@ This repo is easiest to think about in four clusters:
 
 | Cluster | What lives here |
 | --- | --- |
-| Public SDK | `src/root.zig`, `src/querybuilder.zig`, `src/gen_sample.zig`, `src/c_api.zig` |
+| Public SDK | `src/root.zig`, `src/querybuilder.zig`, `src/gen.zig` (generated), `src/c_api.zig` |
 | Runtime core | `src/core/` for engine session handling, transport, resilience, cache safety, and secrets |
 | Module + SPIFFE | `src/module/` and `src/spiffe/` for codegen/runtime dispatch and workload identity |
 | Tooling + docs | `ci/`, `sdk/`, `codegen/`, `examples/`, `docs/` |

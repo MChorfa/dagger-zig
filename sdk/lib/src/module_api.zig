@@ -143,60 +143,26 @@ pub const ModuleQuery = struct {
     }
 
     /// Load a Container from its opaque ID. Used by the dispatcher to
-    /// hydrate handle-typed arguments.
+    /// hydrate handle-typed arguments. Uses the modern `node(id:)` loader
+    /// scoped by an inline fragment.
     pub fn loadContainerFromID(self: ModuleQuery, id: []const u8) !api.Container {
-        const s1 = try self.selection.select(self.arena, "loadContainerFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.Container, self, "Container", id);
     }
 
     pub fn loadDirectoryFromID(self: ModuleQuery, id: []const u8) !api.Directory {
-        const s1 = try self.selection.select(self.arena, "loadDirectoryFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.Directory, self, "Directory", id);
     }
 
     pub fn loadFileFromID(self: ModuleQuery, id: []const u8) !api.File {
-        const s1 = try self.selection.select(self.arena, "loadFileFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.File, self, "File", id);
     }
 
     pub fn loadSecretFromID(self: ModuleQuery, id: []const u8) !api.Secret {
-        const s1 = try self.selection.select(self.arena, "loadSecretFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.Secret, self, "Secret", id);
     }
 
     pub fn loadCacheVolumeFromID(self: ModuleQuery, id: []const u8) !api.CacheVolume {
-        const s1 = try self.selection.select(self.arena, "loadCacheVolumeFromID");
-        const s2 = try s1.argStr(self.arena, "id", id);
-        return .{
-            .allocator = self.allocator,
-            .arena = self.arena,
-            .selection = s2,
-            .gql = self.gql,
-        };
+        return loadNode(api.CacheVolume, self, "CacheVolume", id);
     }
 
     pub fn loadServiceFromID(self: ModuleQuery, id: []const u8) !api.Service {
@@ -254,6 +220,18 @@ pub const ModuleQuery = struct {
         };
     }
 };
+
+fn loadNode(comptime T: type, self: ModuleQuery, comptime type_name: []const u8, id: []const u8) !T {
+    const s1 = try Selection.root.select(self.arena, "node");
+    const s2 = try s1.arg(self.arena, "id", .{ .eager = try qb.serializeString(self.arena, id) });
+    const s3 = try s2.selectInlineFragment(self.arena, type_name);
+    return .{
+        .allocator = self.allocator,
+        .arena = self.arena,
+        .selection = s3,
+        .gql = self.gql,
+    };
+}
 
 /// Convert an ordinary api.Query into a ModuleQuery with the same selection
 /// chain. They are structurally identical; the split is just for readability.

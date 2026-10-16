@@ -28,11 +28,11 @@ const MyModule = struct {
         source: dagger.Directory,
     ) !dagger.Container {
         _ = self;
-        return try ctx.dag().container()
+        return try ctx.dag().container(.{})
             .from("golang:1.23-alpine")
-            .withDirectory("/src", source)
-            .withWorkdir("/src")
-            .withExec(&.{ "go", "build", "./..." });
+            .withDirectory("/src", source, .{})
+            .withWorkdir("/src", .{})
+            .withExec(&.{ "go", "build", "./..." }, .{});
     }
 };
 

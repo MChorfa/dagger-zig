@@ -197,7 +197,7 @@ export fn dagger_client_dag(client: ?*ClientHandle) ?*QueryHandle {
 export fn dagger_query_container(q: ?*QueryHandle) ?*ContainerHandle {
     clearLastError();
     const qh = q orelse return null;
-    const ctr = qh.client.inner.dag().container() catch |e| {
+    const ctr = qh.client.inner.dag().container(.{}) catch |e| {
         _ = reportError(e);
         return null;
     };
@@ -272,7 +272,7 @@ export fn dagger_container_with_workdir(c: ?*ContainerHandle, path: ?[*:0]const 
     clearLastError();
     const ch = c orelse return null;
     const p = cStrOr(path) orelse return null;
-    const new_ctr = ch.inner.withWorkdir(p) catch |e| {
+    const new_ctr = ch.inner.withWorkdir(p, .{}) catch |e| {
         _ = reportError(e);
         return null;
     };
@@ -287,7 +287,7 @@ export fn dagger_container_with_env_variable(c: ?*ContainerHandle, name: ?[*:0]c
     const ch = c orelse return null;
     const n = cStrOr(name) orelse return null;
     const v = cStrOr(value) orelse return null;
-    const new_ctr = ch.inner.withEnvVariable(n, v) catch |e| {
+    const new_ctr = ch.inner.withEnvVariable(n, v, .{}) catch |e| {
         _ = reportError(e);
         return null;
     };
@@ -309,7 +309,7 @@ export fn dagger_container_with_exec(c: ?*ContainerHandle, argv: ?[*]const [*:0]
     var i: usize = 0;
     while (i < argv_len) : (i += 1) slice[i] = std.mem.span(av[i]);
 
-    const new_ctr = ch.inner.withExec(slice) catch |e| {
+    const new_ctr = ch.inner.withExec(slice, .{}) catch |e| {
         _ = reportError(e);
         return null;
     };
@@ -324,7 +324,7 @@ export fn dagger_container_with_mounted_cache(c: ?*ContainerHandle, path: ?[*:0]
     const ch = c orelse return null;
     const cv = cache orelse return null;
     const p = cStrOr(path) orelse return null;
-    const new_ctr = ch.inner.withMountedCache(p, cv.inner) catch |e| {
+    const new_ctr = ch.inner.withMountedCache(p, cv.inner, .{}) catch |e| {
         _ = reportError(e);
         return null;
     };
@@ -373,7 +373,7 @@ export fn dagger_container_publish(c: ?*ContainerHandle, address: ?[*:0]const u8
     const out_ptr = out orelse return DAGGER_ERR_NULL_ARG;
     const addr = cStrOr(address) orelse return DAGGER_ERR_NULL_ARG;
     out_ptr.* = null;
-    const digest = ch.inner.publish(addr) catch |e| return reportError(e);
+    const digest = ch.inner.publish(addr, .{}) catch |e| return reportError(e);
     defer gpa().free(digest);
     out_ptr.* = dupToC(digest) catch |e| return reportError(e);
     return DAGGER_OK;
@@ -403,7 +403,7 @@ export fn dagger_directory_entries(d: ?*DirectoryHandle, out: ?*?[*]?[*:0]u8, ou
     out_ptr.* = null;
     len_ptr.* = 0;
 
-    const entries = dh.inner.entries() catch |e| return reportError(e);
+    const entries = dh.inner.entries(.{}) catch |e| return reportError(e);
     defer {
         for (entries) |e| gpa().free(e);
         gpa().free(entries);

@@ -154,11 +154,19 @@ pub fn build(b: *std.Build) void {
         .name = "dagger-codegen",
         .root_module = codegen_mod,
     });
-    b.installArtifact(codegen_exe);
     const run_codegen = b.addRunArtifact(codegen_exe);
+    const schema_opt = b.option([]const u8, "schema", "Path to introspection schema JSON file");
+    const out_opt = b.option([]const u8, "out", "Path to output gen.zig (default: sdk/lib/src/gen.zig)");
+    if (schema_opt) |s| run_codegen.addArgs(&.{ "--schema", s });
+    if (out_opt) |o| run_codegen.addArgs(&.{ "--out", o });
     run_codegen.addPassthruArgs();
     const codegen_step = b.step("codegen", "Regenerate src/gen.zig from the live engine schema");
     codegen_step.dependOn(&run_codegen.step);
+
+    const codegen_tests = b.addTest(.{ .root_module = codegen_mod });
+    const run_codegen_tests = b.addRunArtifact(codegen_tests);
+    const codegen_test_step = b.step("test-codegen", "Run codegen unit tests (introspection, emit)");
+    codegen_test_step.dependOn(&run_codegen_tests.step);
 
     // ── examples ────────────────────────────────────────────────────────
     addExample(b, dagger_mod, target, optimize, "first-pipeline", "examples/first-pipeline/main.zig");

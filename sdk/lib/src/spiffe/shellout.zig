@@ -187,7 +187,7 @@ fn parseX509FromDir(
 const testing = std.testing;
 
 test "init and close are idempotent" {
-    var io_impl: std.Io.Threaded = .init(std.testing.allocator);
+    var io_impl: std.Io.Threaded = .init(std.testing.allocator, .{});
     defer io_impl.deinit();
     const io = io_impl.io();
 

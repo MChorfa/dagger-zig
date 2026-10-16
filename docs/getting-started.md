@@ -38,9 +38,9 @@ pub fn main() !void {
     defer client.close();
 
     const out = try client.dag()
-        .container()
+        .container(.{})
         .from("alpine:latest")
-        .withExec(&.{"echo", "hello from zig"})
+        .withExec(&.{"echo", "hello from zig"}, .{})
         .stdout();
     defer gpa.free(out);
 

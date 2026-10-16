@@ -43,7 +43,7 @@ The SDK uses Zig error sets to keep failure paths explicit and cheap.
 Use `try` to propagate failures:
 
 ```zig
-const ctr = try client.dag().container();
+const ctr = try client.dag().container(.{});
 const run = try ctr.from("alpine:latest");
 ```
 
@@ -59,7 +59,7 @@ const client = dagger.connect(gpa, io, cfg) catch |err| {
 Use `defer` to clean up owned memory and handles on error paths:
 
 ```zig
-var span = try trace.Span.init(allocator, "build", .{});
+var span = try trace.Span.init(allocator, io, "build", .{});
 defer span.deinit();
 defer span.end();
 ```

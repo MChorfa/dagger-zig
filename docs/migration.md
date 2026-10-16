@@ -27,7 +27,7 @@ out, err := client.Container().
 
 ```python
 out = await (
-    client.container()
+    client.container(.{})
     .from_("alpine")
     .with_exec(["echo", "hello"])
     .stdout()
@@ -38,9 +38,9 @@ out = await (
 
 ```zig
 const out = try client.dag()
-    .container()
+    .container(.{})
     .from("alpine")
-    .withExec(&.{"echo", "hello"})
+    .withExec(&.{"echo", "hello"}, .{})
     .stdout();
 defer gpa.free(out);
 ```
@@ -66,7 +66,7 @@ ctr := client.Container().
 
 ```python
 dir = client.host().directory(".")
-ctr = (client.container()
+ctr = (client.container(.{})
     .from_("node")
     .with_directory("/src", dir))
 ```
@@ -78,9 +78,9 @@ const dir = try client.dag()
     .host()
     .directory(".");
 const ctr = try client.dag()
-    .container()
+    .container(.{})
     .from("node")
-    .withDirectory("/src", dir);
+    .withDirectory("/src", dir, .{});
 ```
 
 **Key differences:**
@@ -103,7 +103,7 @@ ctr := client.Container().
 
 ```python
 secret = client.set_secret("api-key", os.environ["API_KEY"])
-ctr = (client.container()
+ctr = (client.container(.{})
     .from_("alpine")
     .with_secret_variable("API_KEY", secret))
 ```
@@ -114,7 +114,7 @@ ctr = (client.container()
 const secret = try client.dag()
     .setSecret("api-key", api_key);
 const ctr = try client.dag()
-    .container()
+    .container(.{})
     .from("alpine")
     .withSecret("/run/secrets/api-key", secret);
 ```
@@ -206,7 +206,7 @@ func (m *MyModule) Build(ctx context.Context, source *dagger.Directory) (*dagger
 class MyModule:
     @dagger.function
     async def build(self, source: dagger.Directory) -> dagger.Container:
-        return await dag.container().from_("golang").with_directory("/src", source)
+        return await dag.container(.{}).from_("golang").with_directory("/src", source)
 ```
 
 ### Zig SDK
@@ -220,9 +220,9 @@ const MyModule = struct {
     ) !dagger.Container {
         _ = self;
         return ctx.dag()
-            .container()
+            .container(.{})
             .from("golang")
-            .withDirectory("/src", source);
+            .withDirectory("/src", source, .{});
     }
 };
 
@@ -252,10 +252,10 @@ _, err := ctr.Publish(ctx, "myimage:latest")
 
 ```zig
 const ctr = try client.dag()
-    .container()
+    .container(.{})
     .from("golang")
-    .withExec(&.{"go", "build"});
-const digest = try ctr.publish("myimage:latest");
+    .withExec(&.{"go", "build"}, .{});
+const digest = try ctr.publish("myimage:latest", .{});
 defer gpa.free(digest);
 ```
 
@@ -272,9 +272,9 @@ out, _ := ctr.Stdout(ctx)
 
 ```zig
 const out = try client.dag()
-    .container()
+    .container(.{})
     .from("golang")
-    .withExec(&.{"go", "test"})
+    .withExec(&.{"go", "test"}, .{})
     .stdout();
 defer gpa.free(out);
 ```

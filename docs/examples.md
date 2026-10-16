@@ -16,7 +16,7 @@ fn pull(io: std.Io, parent: *dagger.Client, image: []const u8) std.Io.Cancelable
     _ = io;
     var c = parent.branch() catch return error.Canceled;
     defer c.close();
-    const ctr = c.dag().container() catch return error.Canceled;
+    const ctr = c.dag().container(.{}) catch return error.Canceled;
     _ = ctr.from(image) catch return error.Canceled;
 }
 

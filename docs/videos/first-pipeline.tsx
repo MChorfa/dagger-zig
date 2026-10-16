@@ -73,9 +73,9 @@ pub fn main() !void {
 
     // Build a container
     const output = try client.dag()
-        .container()
+        .container(.{})
         .from("alpine:latest")
-        .withExec(&.{"echo", "Hello from Zig!"})
+        .withExec(&.{"echo", "Hello from Zig!"}, .{})
         .stdout();
 
     std.debug.print("{s}\\n", .{output});
