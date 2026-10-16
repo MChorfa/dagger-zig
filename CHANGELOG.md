@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/MChorfa/dagger-zig/compare/v0.3.5...v0.4.0) (2026-10-16)
+
+
+### Features
+
+* **sdk:** achieve zero-to-hero readiness with dual Zig 0.16/0.17 support ([#50](https://github.com/MChorfa/dagger-zig/issues/50)) ([3eb64fb](https://github.com/MChorfa/dagger-zig/commit/3eb64fbdfb4d2bde25d80f7e5aa667a9f05b6e7e))
+
 ## [0.3.5](https://github.com/MChorfa/dagger-zig/compare/v0.3.4...v0.3.5) (2026-07-25)
 
 
