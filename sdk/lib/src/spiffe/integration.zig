@@ -21,12 +21,12 @@
 //! var shell = try spiffe.ShelloutSource.init(gpa, io, .{}, null);
 //! defer shell.deinit();
 //!
-//! const ctr = try client.dag().container().from("registry.internal/tool:v1");
+//! const ctr = try client.dag().container(.{}).from("registry.internal/tool:v1");
 //! const authed = try integration.spiffeRegistryAuth(
 //!     ctr, client, shell.source(),
 //!     .{ .registry = "registry.internal", .vault_addr = "https://vault.internal" },
 //! );
-//! const digest = try authed.publish("registry.internal/output:v1");
+//! const digest = try authed.publish("registry.internal/output:v1", .{});
 //! ```
 
 const std = @import("std");

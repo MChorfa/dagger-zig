@@ -38,7 +38,7 @@ Tagged releases carry SLSA build provenance and a keyless signature, wired in `r
 > token, `attestation.bundle`. The current CI path passes `null` for that token,
 > so the publish-time release workflow is the source of the user-facing release
 > attestations and bundles.
-
+>
 > The older `ci/attest` / `ci/sign` Zig modules (a `provenance/v0.2` predicate generator
 > and cosign blob helpers) are not used by the release flow — it uses the workflow-level
 > generators above instead.
@@ -48,7 +48,7 @@ Tagged releases carry SLSA build provenance and a keyless signature, wired in `r
 One command (runs all three checks below for every tarball):
 
 ```bash
-scripts/release-verify.sh v0.3.5   # tag defaults to the latest release
+scripts/release-verify.sh v0.4.0   # tag defaults to the latest release
 ```
 
 Or run the checks individually:

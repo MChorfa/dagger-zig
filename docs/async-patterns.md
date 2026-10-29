@@ -22,9 +22,9 @@ fn fetchOS(io: std.Io, parent: *dagger.Client, image: Image, out: *[]u8) std.Io.
     var client = parent.branch() catch return error.Canceled;
     defer client.close();
 
-    const ctr = client.dag().container() catch return error.Canceled;
+    const ctr = client.dag().container(.{}) catch return error.Canceled;
     const based = ctr.from(image) catch return error.Canceled;
-    const run = based.withExec(&.{ "cat", "/etc/os-release" }) catch return error.Canceled;
+    const run = based.withExec(&.{ "cat", "/etc/os-release" }, .{}) catch return error.Canceled;
     out.* = run.stdout() catch return error.Canceled;
 }
 

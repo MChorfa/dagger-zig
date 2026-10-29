@@ -23,7 +23,9 @@ tag changes from release to release, but the required checks stay the same.
 ## Version Alignment
 
 - `build.zig.zon` version matches the intended tag.
-- `src/core/version.zig` matches the intended tag.
+- `sdk/lib/build.zig.zon` matches the intended tag.
+- `sdk/lib/src/core/version.zig` string and numeric constants match the intended tag.
+- `release-please-manifest.json` matches the intended tag.
 - Release notes or changelog entries exist for the new tag.
 
 ## Supply Chain
@@ -37,11 +39,13 @@ tag changes from release to release, but the required checks stay the same.
 ## Tagging
 
 ```bash
-git tag -s v0.3.5 -m "Release v0.3.5"
-git push origin v0.3.5
+TAG=vX.Y.Z  # Replace with the next, unpublished release tag.
+git tag -s "$TAG" -m "Release $TAG"
+git push origin "$TAG"
 ```
 
-Replace `v0.3.5` with the next release tag when you are preparing a new cut.
+Do not recreate or move an existing release tag. Version alignment fixes apply
+to the next commit; they do not change already published release artifacts.
 
 ## Post-Release
 
@@ -57,5 +61,5 @@ zig build
 zig build test
 zig build test-module
 zig build bench
-scripts/release-verify.sh v0.3.5
+scripts/release-verify.sh v0.4.0
 ```

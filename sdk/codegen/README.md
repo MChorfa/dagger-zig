@@ -19,7 +19,7 @@ pub const connect = sdk.connect;
 ```
 
 That's enough because dagger-zig's generated API surface is currently
-hand-written in `src/gen_sample.zig`. When users author a module, their
+generated in `src/gen.zig` from the introspection schema. When users author a module, their
 `build.zig.zon` pulls in dagger-zig as a dep, and `@import("dagger_sdk")`
 gives them the whole client. No per-user-module code generation yet.
 

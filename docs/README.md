@@ -19,10 +19,10 @@
 
 ## At a glance
 
-| | |
+| Property | Details |
 | --- | --- |
 | **SDK dependencies** | Zero external dependencies; Zig stdlib only |
-| **Zig baseline** | 0.16 |
+| **Zig support** | 0.16 and 0.17 |
 | **Client model** | Synchronous API with `std.Io.Group` fan-out |
 | **Extras** | Offline benchmarks, release provenance, SPIFFE support |
 

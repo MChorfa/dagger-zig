@@ -19,7 +19,7 @@ Get root query builder for fluent API chaining.
 
 ```zig
 const ctr = try client.dag()
-    .container()
+    .container(.{})
     .from("alpine");
 ```
 
@@ -38,7 +38,7 @@ Create container from image reference.
 Execute command, return new container with layer.
 
 ```zig
-const ctr2 = try ctr1.withExec(&.{"go", "build", "./..."});
+const ctr2 = try ctr1.withExec(&.{"go", "build", "./..."}, .{});
 ```
 
 ### `stdout() []const u8`
@@ -55,7 +55,7 @@ defer gpa.free(output);
 Mount directory into container.
 
 ```zig
-const ctr = try ctr.withDirectory("/src", source);
+const ctr = try ctr.withDirectory("/src", source, .{});
 ```
 
 ### `withSecretVariable(name, secret) Container`
@@ -78,7 +78,7 @@ Create empty directory.
 Add new file with content.
 
 ```zig
-const dir = try dir.withNewFile("main.go", sourceCode);
+const dir = try dir.withNewFile("main.go", sourceCode, .{});
 ```
 
 ## Secret
@@ -99,5 +99,5 @@ Get or create named cache volume.
 
 ```zig
 const cache = try ctx.dag().cacheVolume("go-mod-cache");
-const ctr = try ctr.withMountedCache("/go/pkg/mod", cache);
+const ctr = try ctr.withMountedCache("/go/pkg/mod", cache, .{});
 ```

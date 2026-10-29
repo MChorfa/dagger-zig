@@ -4,6 +4,7 @@
 
 - [Overview](README.md)
 - [Getting Started](getting-started.md)
+- [Zero to Hero](zero-to-hero.md)
 - [Examples](examples.md)
 - [Build Guide](build.md)
 - [IDE Setup](ide-setup.md)

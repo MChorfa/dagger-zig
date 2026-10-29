@@ -18,7 +18,7 @@ Typical use cases:
 
 ```zig
 const cache = try client.dag().cacheVolume("npm-cache-v1");
-const ctr_with_cache = try ctr.withMountedCache("/root/.npm", cache);
+const ctr_with_cache = try ctr.withMountedCache("/root/.npm", cache, .{});
 ```
 
 ## Fail-Safe Behavior
@@ -48,7 +48,7 @@ Use the strict modes only when cache availability is guaranteed.
 
 ```zig
 const cache = try client.dag().cacheVolume("zig-global-cache");
-const ctr_with_cache = try ctr.withMountedCache("/var/cache/zig", cache);
+const ctr_with_cache = try ctr.withMountedCache("/var/cache/zig", cache, .{});
 ```
 
 ## Operational Guidance

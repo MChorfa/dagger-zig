@@ -19,13 +19,13 @@ const std = @import("std");
 const dagger = @import("dagger_sdk");
 const trace = dagger.tracing;
 
-pub fn build(client: *dagger.Client) !void {
-    var span = try trace.Span.init(std.heap.page_allocator, "build-container", .{});
+pub fn build(client: *dagger.Client, io: std.Io) !void {
+    var span = try trace.Span.init(std.heap.page_allocator, io, "build-container", .{});
     defer span.deinit();
     defer span.end();
 
     try span.setAttribute("image", "alpine:latest");
-    const ctr = try client.dag().container().from("alpine:latest");
+    const ctr = try client.dag().container(.{}).from("alpine:latest");
     try span.addEvent("container-created", .{});
 
     _ = ctr;
@@ -38,7 +38,7 @@ pub fn build(client: *dagger.Client) !void {
 Use `Tracer` when you want a simple span stack:
 
 ```zig
-var tracer = try trace.Tracer.init(std.heap.page_allocator);
+var tracer = try trace.Tracer.init(std.heap.page_allocator, io);
 defer tracer.deinit();
 
 const root = try tracer.startSpan("pipeline");
@@ -69,13 +69,14 @@ const tracedBuild = trace.trace("build", buildFn);
 Use `Tracer.exportJson()` for local debugging or fixtures:
 
 ```zig
-var tracer = try trace.Tracer.init(std.heap.page_allocator);
+var tracer = try trace.Tracer.init(std.heap.page_allocator, io);
 defer tracer.deinit();
 
 // ... start spans ...
 
-var stdout = std.io.getStdOut().writer();
-try tracer.exportJson(stdout);
+var out: std.Io.Writer.Allocating = .init(std.heap.page_allocator);
+defer out.deinit();
+try tracer.exportJson(&out.writer);
 ```
 
 ## Practical Guidance
@@ -87,9 +88,10 @@ try tracer.exportJson(stdout);
 
 ## Caveat
 
-The current implementation uses lightweight internal IDs and deterministic
-counters rather than a full production tracer backend. It is good for local
-inspection and SDK instrumentation, not a drop-in observability platform.
+Timestamps come from the caller's `std.Io` real clock and trace/span IDs are
+CSPRNG-seeded random values (`io.random`). What this module does not provide is
+an OTLP exporter or context-propagation headers — exported JSON is suited to
+local inspection and test fixtures, not a drop-in observability backend.
 
 ## Related Pages
 

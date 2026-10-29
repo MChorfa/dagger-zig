@@ -25,6 +25,7 @@
 
 const std = @import("std");
 const td_mod = @import("typedef.zig");
+const meta_compat = @import("../meta_compat.zig");
 const serde = @import("serde.zig");
 const context_mod = @import("context.zig");
 const Context = context_mod.Context;
@@ -51,23 +52,25 @@ pub fn build(comptime M: type) []const Entry(M) {
         @compileError("dagger-zig: module type must be a struct, got " ++ @typeName(M));
     }
 
+    const decl_list = comptime meta_compat.structDeclNames(M);
+
     // Count eligible methods first (decls don't expose method-ness directly).
     comptime var count: usize = 0;
     comptime {
-        for (info.@"struct".decls) |decl| {
-            if (isEligibleMethod(M, decl.name)) count += 1;
+        for (decl_list) |decl_name| {
+            if (isEligibleMethod(M, decl_name)) count += 1;
         }
     }
 
     comptime var entries: [count]Entry(M) = undefined;
     comptime var idx: usize = 0;
     comptime {
-        for (info.@"struct".decls) |decl| {
-            if (!isEligibleMethod(M, decl.name)) continue;
+        for (decl_list) |decl_name| {
+            if (!isEligibleMethod(M, decl_name)) continue;
             entries[idx] = .{
-                .name = decl.name,
-                .def = td_mod.functionOfMethod(M, decl.name),
-                .invoke = makeInvoker(M, decl.name),
+                .name = decl_name,
+                .def = td_mod.functionOfMethod(M, decl_name),
+                .invoke = makeInvoker(M, decl_name),
             };
             idx += 1;
         }
@@ -94,13 +97,13 @@ fn isEligibleMethod(comptime M: type, comptime decl_name: []const u8) bool {
     const info = @typeInfo(T);
     if (info != .@"fn") return false;
     const fn_info = info.@"fn";
-    if (fn_info.params.len < 2) return false;
+    if (meta_compat.fnParamCount(fn_info) < 2) return false;
 
-    const p0_type = fn_info.params[0].type orelse return false;
+    const p0_type = meta_compat.fnParamType(fn_info, 0) orelse return false;
     const p0_is_self = (p0_type == *const M) or (p0_type == *M) or (p0_type == M);
     if (!p0_is_self) return false;
 
-    const p1_type = fn_info.params[1].type orelse return false;
+    const p1_type = meta_compat.fnParamType(fn_info, 1) orelse return false;
     // Context is in a sibling file; resolve at usage site to avoid circular.
     if (p1_type != *Context) return false;
 
@@ -119,17 +122,17 @@ fn makeInvoker(
 ) *const fn (module: *const M, ctx: *Context, args_json: []const u8, out_writer: *std.Io.Writer) anyerror!void {
     const method = @field(M, method_name);
     const fn_info = @typeInfo(@TypeOf(method)).@"fn";
-    const user_arg_count = fn_info.params.len - 2;
+    const user_arg_count = meta_compat.fnParamCount(fn_info) - 2;
 
     // Build a tuple type for the user-visible args.
     const ArgsTuple = comptime blk: {
         var types: [user_arg_count]type = undefined;
         for (0..user_arg_count) |i| {
-            types[i] = fn_info.params[i + 2].type orelse
+            types[i] = meta_compat.fnParamType(fn_info, i + 2) orelse
                 @compileError("dagger-zig: method `" ++ method_name ++
                     "` has a param with no declared type");
         }
-        break :blk std.meta.Tuple(&types);
+        break :blk meta_compat.Tuple(&types);
     };
 
     const Shim = struct {
@@ -141,7 +144,7 @@ fn makeInvoker(
             // field by name.
             inline for (0..user_arg_count) |i| {
                 const arg_name = std.fmt.comptimePrint("arg{d}", .{i});
-                const ArgT = fn_info.params[i + 2].type.?;
+                const ArgT = meta_compat.fnParamType(fn_info, i + 2).?;
                 args[i] = try serde.deserializeArg(ArgT, ctx, args_json, arg_name);
             }
 
