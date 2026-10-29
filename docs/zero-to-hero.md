@@ -36,8 +36,8 @@ To add the SDK to an existing Zig project, edit `build.zig.zon`:
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .dagger_sdk = .{
-            .url = "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.3.5.tar.gz",
-            .hash = "dagger_sdk-0.3.5-A7nZl...YOUR_HASH_HERE",
+            .url = "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.4.0.tar.gz",
+            .hash = "dagger_sdk-0.3.5-LXrZ7GawGACw8A-ST4QbS4wFrBflzYwGM22R1ZcMSKVQ",
         },
     },
     .paths = .{
@@ -437,7 +437,7 @@ A module directory must contain a `dagger.json` configuration file:
 {
   "name": "builder",
   "engineVersion": "v0.21.7",
-  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.5",
+  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.4.0",
   "source": "."
 }
 ```
@@ -880,8 +880,8 @@ Add `dagger_sdk` to `build.zig.zon`:
     .version = "0.1.0",
     .dependencies = .{
         .dagger_sdk = .{
-            .url = "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.3.5.tar.gz",
-            .hash = "...",
+            .url = "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.4.0.tar.gz",
+            .hash = "dagger_sdk-0.3.5-LXrZ7GawGACw8A-ST4QbS4wFrBflzYwGM22R1ZcMSKVQ",
         },
     },
     .paths = .{ "build.zig", "build.zig.zon", "src" },

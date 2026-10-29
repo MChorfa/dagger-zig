@@ -4,16 +4,26 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - "**.md"
+      - "**/*.md"
       - ".markdownlint.yaml"
       - "docs/**"
+      - "ci/**"
+      - "sdk/**"
+      - "build.zig"
+      - "build.zig.zon"
+      - "LICENSE"
       - ".github/workflows/markdown-lint.yml"
   pull_request:
     branches: [main]
     paths:
-      - "**.md"
+      - "**/*.md"
       - ".markdownlint.yaml"
       - "docs/**"
+      - "ci/**"
+      - "sdk/**"
+      - "build.zig"
+      - "build.zig.zon"
+      - "LICENSE"
       - ".github/workflows/markdown-lint.yml"
   workflow_dispatch:
 

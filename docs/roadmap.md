@@ -1,7 +1,8 @@
 # Roadmap
 
 This page tracks what is shipped now, what is being hardened, and what stays
-deferred.
+deferred. See the [v1.0 readiness checklist](v1.0-roadmap.md) for proposed
+release gates and evidence still to collect.
 
 ## Shipped
 

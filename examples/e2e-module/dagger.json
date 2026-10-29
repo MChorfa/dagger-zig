@@ -2,7 +2,7 @@
   "name": "e2e-module",
   "engineVersion": "v0.21.9",
   "sdk": {
-    "source": "github.com/MChorfa/dagger-zig/sdk@v0.3.4"
+    "source": "github.com/MChorfa/dagger-zig/sdk@v0.4.0"
   },
   "source": "."
 }

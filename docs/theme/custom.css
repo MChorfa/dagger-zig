@@ -1,0 +1,63 @@
+/* dagger-zig docs theme.
+ * Decorative variables are scoped to .content. Text inherits mdBook's active
+ * theme colors; the orange brand accent is not used as a text color.
+ */
+.content {
+    --dz-accent: #ff6b35;
+    --dz-border: var(--table-border-color);
+}
+
+@media only screen and (min-width: 1200px) {
+    .content {
+        max-width: 900px;
+    }
+}
+
+.content h1 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.content h2 {
+    margin-top: 2.5em;
+    border-bottom: 1px solid var(--dz-border);
+    padding-bottom: 0.3em;
+}
+
+.content table {
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    width: 100%;
+}
+
+.content table th,
+.content table td {
+    padding: 0.6em 0.8em;
+    border: 1px solid var(--dz-border);
+}
+
+.content blockquote {
+    border-left: 4px solid var(--dz-accent);
+    padding: 0.6em 1em;
+}
+
+/* Underlines identify links without relying on color, including visited links.
+ * Use the surrounding text color in every theme rather than orange text.
+ */
+.content a:not(.header),
+.content a:not(.header):visited {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.content a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+@media print {
+    .content {
+        max-width: 100%;
+    }
+}

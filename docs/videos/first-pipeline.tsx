@@ -31,18 +31,20 @@ export const FirstPipeline: React.FC = () => {
         height={1080}
         defaultProps={{
           title: "1. Project Setup",
-          code: `// build.zig.zon
+          code: `// build.zig.zon excerpt; retain zig init fingerprint and paths.
+// Run zig fetch --save=dagger_sdk with this URL to record its hash.
 .{
     .name = .my_pipeline,
-            .version = "0.3.2",
+    .version = "0.1.0", // Your package version, not the SDK version.
     .dependencies = .{
         .dagger_sdk = .{
-            .url = "git+https://github.com/MChorfa/dagger-zig#v0.3.2",
+            .url = "https://github.com/MChorfa/dagger-zig/archive/refs/tags/v0.4.0.tar.gz",
+            .hash = "dagger_sdk-0.3.5-LXrZ7GawGACw8A-ST4QbS4wFrBflzYwGM22R1ZcMSKVQ",
         },
     },
 }`,
-          highlightLines: [6, 7, 8, 9],
-          voiceover: "First, add dagger-zig as a dependency in your build.zig.zon file.",
+          highlightLines: [8, 9, 10],
+          voiceover: "Initialize your project with zig init. Use zig fetch with the release URL to record the dependency hash. Your package version is independent of the SDK version. See Getting Started for the build.zig wiring.",
         }}
       />
 
@@ -59,28 +61,24 @@ export const FirstPipeline: React.FC = () => {
           code: `const std = @import("std");
 const dagger = @import("dagger_sdk");
 
-pub fn main() !void {
-    // Initialize allocator and I/O
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    
-    var io_impl: std.Io.Threaded = .init(gpa.allocator());
-    defer io_impl.deinit();
+pub fn main(init: std.process.Init) !void {
+    const gpa = init.gpa;
+    const io = init.io;
 
     // Connect to Dagger
-    var client = try dagger.connect(gpa.allocator(), io_impl.io(), .{});
+    var client = try dagger.connect(gpa, io, .{});
     defer client.close();
 
     // Build a container
-    const output = try client.dag()
-        .container(.{})
-        .from("alpine:latest")
-        .withExec(&.{"echo", "Hello from Zig!"}, .{})
-        .stdout();
+    const ctr = try client.dag().container(null);
+    const alpine = try ctr.from("alpine:latest", null);
+    const exec = try alpine.withExec(&.{ "echo", "Hello from Zig!" }, null, null, null, null, null, null, null, null, null, null);
+    const output = try exec.stdout();
+    defer gpa.free(output);
 
     std.debug.print("{s}\\n", .{output});
 }`,
-          highlightLines: [12, 13, 14, 15, 16, 17],
+          highlightLines: [9, 13, 14, 15, 16, 17],
           voiceover: "The key steps: connect to Dagger, build a container from an image, run a command, and get the output.",
         }}
       />

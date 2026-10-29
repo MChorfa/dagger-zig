@@ -27,7 +27,7 @@
 
 A native Zig SDK for the [Dagger](https://dagger.io) engine. The code depends only on the Zig standard library and targets Zig 0.16 and 0.17.
 
-The current release is v0.3.5. It provides a synchronous client for Linux and macOS, concurrent pipelines using `std.Io.Group` and `Client.branch`, module authoring, and tracing. Windows support is planned.
+The current release is v0.4.0. It provides a synchronous client for Linux and macOS, concurrent pipelines using `std.Io.Group` and `Client.branch`, module authoring, and tracing. Windows support is planned.
 
 The project is self-hosting. The CI pipeline in [`ci/`](ci/) is a Dagger module written in Zig with this SDK.
 
@@ -53,14 +53,9 @@ Windows support, the C ABI via `zig build c-lib`, the native SPIFFE Workload API
 const std = @import("std");
 const dagger = @import("dagger_sdk");
 
-pub fn main() !void {
-    var gpa_state: std.heap.GeneralPurposeAllocator(.{}) = .{};
-    defer _ = gpa_state.deinit();
-    const gpa = gpa_state.allocator();
-
-    var io_impl: std.Io.Threaded = .init(gpa, .{});
-    defer io_impl.deinit();
-    const io = io_impl.io();
+pub fn main(init: std.process.Init) !void {
+    const gpa = init.gpa;
+    const io = init.io;
 
     var client = try dagger.connect(gpa, io, .{});
     defer client.close();
@@ -108,7 +103,7 @@ pub fn main(init: std.process.Init) !void {
 ```json
 {
   "name": "my-pipeline",
-  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.3.4",
+  "sdk": "github.com/MChorfa/dagger-zig/sdk@v0.4.0",
   "source": "."
 }
 ```
@@ -125,7 +120,7 @@ Additional examples include [parallel pipelines](examples/parallel/main.zig) usi
 Tagged releases include cryptographic signatures and SLSA Build Level 3 provenance:
 
 ```bash
-scripts/release-verify.sh v0.3.4
+scripts/release-verify.sh v0.4.0
 ```
 
 Detailed verification steps using `slsa-verifier`, `gh attestation verify`, and `cosign verify-blob` are documented in [docs/compliance.md](docs/compliance.md).
